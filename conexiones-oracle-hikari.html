@@ -1,0 +1,31 @@
+Pues bien con la siguiente consulta parece que vemos las conexiones que hay abierta.
+
+select username, schemaname, osuser, process, machine, status, v$Session.*
+
+from v$Session
+
+where schemaname = 'MUR'
+
+and machine
+
+like 'frontback%';
+
+Para solucionar este "problemón" básicamente tenemos que configurar el Hikari que son unas simples Properties.
+
+# HikariCP settings
+    hikari:
+      minimumIdle: 0
+      maximumPoolSize: 10
+      idleTimeout: 30000
+      maxLifetime: 30000
+      connectionTimeout: 30000
+
+# JPA settings
+  jpa:
+    database-platform: org.hibernate.dialect.Oracle12cDialect
+    show-sql: true
+
+
+
+
+
