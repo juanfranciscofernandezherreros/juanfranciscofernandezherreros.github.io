@@ -1,0 +1,43 @@
+Como convertir un boolean a String usando mapstructs
+
+Básicamente tendremos que utilizar uses con MapStruct 
+
+Tenemos el DTO
+
+public class RiskFactorDTO {
+
+  private Boolean intradayVolFlag;
+ 
+ 
+}
+
+El DAO
+
+ @Column(name = "EWMASCALINGFLAG")
+  private String ewMAScalingFlag;
+  
+En el mapper correspondiente utilizamos la siguiente expresion :   @Mapper(uses = UtilsTransform.class)
+  
+  @Mapper(uses = UtilsTransform.class)
+public interface RiskFactorDTOMapper {
+
+  @Mapping(source = "riskGroup", target = "id.riskGroup")
+  @Mapping(source = "riskUnderlyingCode", target = "id.riskUnderlyingCode")
+  @Mapping(source = "algorithmType", target = "id.algorithmType")
+  @Mapping(source = "riskFactorCode", target = "id.riskFactorCode")
+  RiskFactorDAO toRiskFactorDAO(RiskFactorDTO riskFactorDTO);
+
+  RiskFactorPKDAO toRiskFactorPKDAO(RiskFactorDTO riskFactorDTO);
+}
+
+public class UtilsTransform {
+
+  public String booleanToString(final Boolean bool) {
+
+    if (bool) {
+      return "Y";
+    }
+    return "N";
+  }
+
+}
