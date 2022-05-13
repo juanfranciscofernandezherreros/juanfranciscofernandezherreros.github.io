@@ -1,5 +1,282 @@
-  bueno vamos a ver un poco como ir mejorando nuestros microservicios.
-  
-  <a href="conexiones-oracle-hikari.html">Conexiones oracle</a>
-  <a href="mapstructs-transform-boolean-to-string.html">Transform boolean to string</a>
-  <a href="lombok.html">Lombok</a> 
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Juan Francisco Fernández Herreros | Backend Developer</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="crossorigin"/>
+    <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&amp;family=Roboto:wght@300;400;500;700&amp;display=swap"/>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&amp;family=Roboto:wght@300;400;500;700&amp;display=swap" media="print" onload="this.media='all'"/>
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&amp;family=Roboto:wght@300;400;500;700&amp;display=swap"/>
+    </noscript>
+    <link href="css/font-awesome/css/all.min.css?ver=1.2.0" rel="stylesheet">
+    <link href="css/bootstrap.min.css?ver=1.2.0" rel="stylesheet">
+    <link href="css/aos.css?ver=1.2.0" rel="stylesheet">
+    <link href="css/main.css?ver=1.2.0" rel="stylesheet">
+    <noscript>
+      <style type="text/css">
+        [data-aos] {
+            opacity: 1 !important;
+            transform: translate(0) scale(1) !important;
+        }
+      </style>
+    </noscript>
+  </head>
+  <body id="top">
+    <header class="d-print-none">
+      <div class="container text-center text-lg-left">
+        <div class="py-3 clearfix">
+          <h1 class="site-title mb-0">Juan Francisco Fernández Herreros</h1>
+          <div class="site-nav">
+            <nav role="navigation">
+              <ul class="nav justify-content-center">
+                <li class="nav-item"><a class="nav-link" href="https://www.linkedin.com/in/juanfranciscofernandezherreros/" title="Twitter"><i class="fab fa-linkedin"></i><span class="menu-title sr-only">LinkedIn</span></a>
+                </li>                
+                </li>
+                <li class="nav-item"><a class="nav-link" href="https://github.com/juanfranciscofernandezherreros" title="Github"><i class="fab fa-github"></i><span class="menu-title sr-only">Github</span></a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </header>
+    <div class="page-content">
+      <div class="container">
+<div class="cover shadow-lg bg-white">
+  <div class="cover-bg p-3 p-lg-4 text-white">
+    <div class="row">
+      <div class="col-lg-4 col-md-5">
+        <div class="avatar hover-effect bg-white shadow-sm p-1"><img src="images/avatar.jpg" width="200" height="200"/></div>
+      </div>
+      <div class="col-lg-8 col-md-7 text-center text-md-start">
+        <h2 class="h1 mt-2" data-aos="fade-left" data-aos-delay="0">Juan Francisco Fernández Herreros</h2>
+        <p data-aos="fade-left" data-aos-delay="100">Backend Developer</p>
+        <div class="d-print-none" data-aos="fade-left" data-aos-delay="200"><a class="btn btn-light text-dark shadow-sm mt-1 me-1" target="_blank">Download CV</a><a class="btn btn-success shadow-sm mt-1" href="#contact">Blog</a></div>
+      </div>
+    </div>
+  </div>
+  <div class="about-section pt-4 px-3 px-lg-4 mt-1" style="text-align:justify">
+    <div class="row">
+      <div class="col-md-6">
+        <h2 class="h3 mb-3">Sobre mí</h2>
+        <p>
+Interés en el área de desarrollo back-end. Interesado en el mundo del microservicios y pruebas end-to-end. Me considero una persona autodidacta y con ganas de estar en constante aprendizaje. Perfil multidisciplinar que no tiene problemas en cambiar de sector. Especialmente interesado en el sector bancario. Movilidad disponible a nivel nacional.
+</p>
+      </div>
+      <div class="col-md-5 offset-md-1">
+        <div class="row mt-2">
+          <div class="col-sm-4">
+            <div class="pb-1">Edad</div>
+          </div>
+          <div class="col-sm-8">
+            <div class="pb-1 text-secondary">29</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="pb-1">Email</div>
+          </div>
+          <div class="col-sm-8">
+            <div class="pb-1 text-secondary">juanfranciscofernandezherreros@gmail.com</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="pb-1">Teléfono</div>
+          </div>
+          <div class="col-sm-8">
+            <div class="pb-1 text-secondary">+34669198862</div>
+          </div>
+          <div class="col-sm-4">
+            <div class="pb-1">Localización</div>
+          </div>
+          <div class="col-sm-8">
+            <div class="pb-1 text-secondary">Collado Villalba</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr class="d-print-none"/>
+  <div class="skills-section px-3 px-lg-4">
+    <h2 class="h3 mb-3">Habilidades</h2>
+    <div class="row">
+      <div class="col-md-3">
+        <div class="mb-2"><span>Java</span>          
+        </div>
+        <div class="mb-2"><span>Spring</span>         
+        </div>
+        <div class="mb-2"><span>SpringBoot</span>         
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="mb-2"><span>Jenkins</span>         
+        </div>
+        <div class="mb-2"><span>Junit</span>          
+        </div>
+        <div class="mb-2"><span>Mockito</span>          
+        </div>
+      </div>
+<div class="col-md-3">
+        <div class="mb-2"><span>Postman</span>          
+        </div>
+        <div class="mb-2"><span>API | Swagger </span>          
+        </div>
+        <div class="mb-2"><span>JMeter</span>          
+        </div>
+      </div>
+    <div class="col-md-3">
+        <div class="mb-2"><span>Jacoco</span>        
+        </div>
+        <div class="mb-2"><span>Sonar</span>          
+        </div>
+        <div class="mb-2"><span>IntelliJ</span>          
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr class="d-print-none"/>
+  <div class="work-experience-section px-3 px-lg-4">
+    <h2 class="h3 mb-4">Experiencia</h2>
+    <div class="timeline">
+      <div class="timeline-card timeline-card-primary card shadow-sm">
+        <div class="card-body">
+          <div class="h5 mb-1">Java Software Engineer<span class="text-muted h6"> at VIEWNEXT</span></div>
+          <div class="text-muted text-small mb-2">  jul. 2021 - actualidad · 11 meses</div>
+          <div>- Miembro del equipo de desarrollo del centro </div>
+          <div>- Spring , SpringBoot , Swagger , Docker , Jenkins , Jmeter</div>
+          <div>- Construccion de pruebas automáticas con Jmeter , Jenkins y Ant</div>
+        </div>
+      </div>
+      <div class="timeline-card timeline-card-primary card shadow-sm">
+        <div class="card-body">
+          <div class="h5 mb-1">Java Software Engineer<span class="text-muted h6"> at VECI (Viajes el Corte Inglés) | atSistemas</span></div>
+          <div class="text-muted text-small mb-2">nov. 2020 - jun. 2021 · 8 meses</div>
+          <div> - Miembro del equipo de desarrollo de TAM participando en labores de análisis, diseño, codificación, pruebas, implantación y mantenimiento en una arquitectura basada en microservicios.</div>
+          <div> - Mantenimiento de aplicaciones legacy. </div>
+          <div> - Prácticamente la misma tecnología que el proyecto anterior. </div>
+          <div> - Integración de SOAP con servicios REST </div>
+        </div>
+      </div>
+      <div class="timeline-card timeline-card-primary card shadow-sm">
+        <div class="card-body">
+          <div class="h5 mb-1">Java Software Engineer<span class="text-muted h6"> at Bankinter | atSistemas</span></div>
+          <div class="text-muted text-small mb-2">ene. 2019 - nov. 2020 · 1 año 11 meses</div>
+          <div> - Miembro del equipo de desarrollo de la app de particulares y broker participando en labores de análisis, diseño, codificación , pruebas, implantación y mantenimiento en una arquitectura basada en Microservicios.</div>
+          <div> - Migración de aplicaciones hacia arquitectura de Microservicios (SpringBoot , Spring y Spring Cloud Netflix OSS.). </div>
+          <div> - Trabajo en entorno de integración continua (Git, Jenkins, Sonar). </div>
+          <div> - Diseño, integración y consumo de API Rest usando RAML.  </div>
+          <div> - Pruebas automatizadas (Postman, Jenkins, Newman). </div>
+          <div> - Control de la calidad de código (Cobertura , Mockito , Junit4) </div>
+          <div> - Trabajo bajo metodología agile</div>
+        </div>
+      </div>
+     <div class="timeline-card timeline-card-primary card shadow-sm">
+        <div class="card-body">
+          <div class="h5 mb-1">Java Software Engineer<span class="text-muted h6"> at Innofis|CREALOGIX</div>
+          <div class="text-muted text-small mb-2"> feb. 2018 - dic. 2018 · 11 meses</div>
+          <div> - Miembro del equipo de desarrollo de NCB participando en labores de desarrollo realizando una migración de una aplicación basada en SpringWebFlow a una API Rest.</div>
+          <div> - Trabajo en conjunto con el equipo de FrontEnd</div>
+          <div> - Las tecnologías utilizadas han sido las siguientes : Jenkins , Newman , Postman , SpringBoot , GIT , Bitbucket , SonarQube , Maven</div>
+        </div>
+      </div>
+       <div class="timeline-card timeline-card-primary card shadow-sm">
+        <div class="card-body">
+          <div class="h5 mb-1">Junior Java Software Developer<span class="text-muted h6"> at GFT</div>
+          <div class="text-muted text-small mb-2"> jun. 2016 - dic. 2017 · 1 año 7 meses</div>
+          <div> 
+        - Miembro del equipo de mantenimiento y testing de Deutsche Bank participando en labores de pruebas automatizadas con Selenium , Serenity , SOAP UI y Cucumber realizando también pruebas manuales utilizando Junit , Mockito y Cobertura además de trabajar en el mantenimiento de una aplicación basada en Struts1 , Xml y Spring.
+
+</div>        
+        </div>
+      </div>
+<div class="timeline-card timeline-card-primary card shadow-sm">
+        <div class="card-body">
+          <div class="h5 mb-1">Junior Java Software Developer<span class="text-muted h6"> at GFI</div>
+          <div class="text-muted text-small mb-2"> dic. 2015 - may. 2016 · 6 meses</div>
+          <div> - Miembro del equipo de desarrollo de NCB participando en labores de desarrollo realizando una migración de una aplicación basada en SpringWebFlow a una API Rest.</div>
+          <div> - Trabajo en conjunto con el equipo de FrontEnd</div>
+          <div> - Las tecnologías utilizadas han sido las siguientes : Jenkins , Newman , Postman , SpringBoot , GIT , Bitbucket , SonarQube , Maven</div>
+        </div>
+      </div>
+<div class="timeline-card timeline-card-primary card shadow-sm">
+        <div class="card-body">
+          <div class="h5 mb-1"> Junior Java Software Developer <span class="text-muted h6"> at Luca TIC</div>
+          <div class="text-muted text-small mb-2"> sept. 2015 - dic. 2015 · 4 meses</div>
+          <div> - Miembro del equipo de mantenimiento de la Agencia Tributaria de Cataluña trabajando en un framework propio. </div>
+          <div> - Herramientas utilizadas fueron las siguientes : Subversion , Eclipse ,MAVEN ,Java,XML,SQL</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <hr class="d-print-none"/>
+  <div class="page-break"></div>
+  <div class="education-section px-3 px-lg-4 pb-4">
+    <h2 class="h3 mb-4">Educación</h2>
+    <div class="timeline">
+      <div class="timeline-card timeline-card-success card shadow-sm">
+        <div class="card-body">
+          <div class="h5 mb-1">CFGS DAW (Desarrollo de Aplicaciones Web)<span class="text-muted h6"> from IES Carles Vallbona</span></div>
+          <div class="text-muted text-small mb-2">2011 - 2013</div>
+            <ul>            
+	            <li class="ta-justify">Sistemas informáticos.</li>
+	            <li class="ta-justify">Bases de datos.</li>
+	            <li class="ta-justify">Programación.</li>
+	            <li class="ta-justify">Lenguajes de marcas y sistemas de gestión de información.</li>
+	            <li class="ta-justify">Entornos de desarrollo.</li>
+	            <li class="ta-justify">Desarrollo web en entorno cliente.</li>
+	            <li class="ta-justify">Desarrollo web en entorno servidor.</li>
+	            <li class="ta-justify">Despliegue de aplicaciones web.</li>
+	            <li class="ta-justify">Diseño de interfaces WEB.</li>
+	            <li class="ta-justify">Proyecto de desarrollo de aplicaciones web</li>
+	            <li class="ta-justify">Formación y orientación laboral.</li>
+	            <li class="ta-justify">Empresa e iniciativa emprendedora.</li>
+	            <li class="ta-justify">Formación en centros de trabajo.</li>
+            </ul>
+
+	            </div>
+
+
+        </div>
+      </div>     
+    </div>
+  </div>
+  <hr class="d-print-none"/>
+      <div class="col d-none d-print-block">
+        <div class="mt-2">
+          <div>            
+            <div class="mb-2">
+              <div class="text-dark"><i class="fab fa-linkedin mr-1"></i><span>https://www.instagram.com/templateflip</span>
+              </div>
+            </div>
+            <div class="mb-2">
+              <div class="text-dark"><i class="fab fa-github mr-1"></i><span>https://github.com/templateflip</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div></div>
+    </div>
+    <footer class="pt-4 pb-4 text-muted text-center d-print-none">
+      <div class="container">
+        <div class="my-3">
+          <div class="h4">Juan Francisco Fernández Herreros</div>
+            <nav role="navigation">
+              <ul class="nav justify-content-center">                
+                <li class="nav-item"><a class="nav-link" href="https://www.linkedin.com/in/juanfranciscofernandezherreros/" title="Instagram"><i class="fab fa-linkedin"></i><span class="menu-title sr-only">LinkedIn</span></a>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="https://github.com/juanfranciscofernandezherreros" title="Github"><i class="fab fa-github"></i><span class="menu-title sr-only">Github</span></a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>      
+      </div>
+    </footer>
+    <script src="scripts/bootstrap.bundle.min.js?ver=1.2.0"></script>
+    <script src="scripts/aos.js?ver=1.2.0"></script>
+    <script src="scripts/main.js?ver=1.2.0"></script>
+  </body>
+</html>
