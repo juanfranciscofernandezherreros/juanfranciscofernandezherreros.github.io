@@ -1,0 +1,78 @@
+uso-de-lombook-para-mejorar-codigo
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+Lombok @AllArgsConstructor, @NoArgsConstructor and @RequiredArgsConstructor
+
+In this tutorial, we'll look at the Lombok @Getter and @Setter annotations to generate getter and setter methods automatically.
+
+2. Use @Getter and @Setter on Class
+
+@Getter
+@Setter
+public class Account {
+
+    private String username;
+    private String password;
+}
+
+public class Account {
+
+    private String username;
+    private String password;
+
+    public String getUsername() {
+        return this.username;
+    }
+
+    public String getPassword() {
+        return this.password;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+
+3. Use @Getter and @Setter on Fields
+
+public class Account {
+
+    @Getter
+    @Setter
+    private String username;
+
+    @Getter
+    @Setter
+    private String password;
+}
+
+public class Account {
+
+    private String username;
+    private String password;
+
+    public String getUsername() {
+        return this.username;
+    }
+
+    public String getPassword() {
+        return this.password;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}

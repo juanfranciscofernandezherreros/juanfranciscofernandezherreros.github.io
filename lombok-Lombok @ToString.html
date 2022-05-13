@@ -1,0 +1,182 @@
+uso-de-lombook-para-mejorar-codigo
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+Lombok @ToString
+
+In this tutorial, we'll look at the Lombok @ToString annotation to generate the toString method automatically.
+
+<dependency>
+    <groupId>org.projectlombok</groupId>
+    <artifactId>lombok</artifactId>
+    <version>1.18.8</version>
+</dependency>
+
+3. Use @ToString
+
+@ToString
+public class Developer {
+
+    private String name;
+    private String language;
+}
+
+public class Developer {
+
+    private String name;
+    private String language;
+
+    public String toString() {
+        return "Developer(name=" + this.name + ", language=" + this.language + ")";
+    }
+}
+
+4. Exclude Fields for @ToString
+
+4.1. Exclude at Class Level
+
+@ToString(exclude = {"language", "salary"})
+public class Developer {
+
+    private String name;
+    private String language;
+    private int salary;
+}
+
+public class Developer {
+
+    private String name;
+    private String language;
+    private int salary;
+
+    public String toString() {
+        return "Developer(name=" + this.name + ")";
+    }
+}
+
+4.2. Exclude at Field Level
+
+@ToString
+public class Developer {
+
+    private String name;
+    @ToString.Exclude
+    private String language;
+    @ToString.Exclude
+    private int salary;
+}
+
+public class Developer {
+
+    private String name;
+    private String language;
+    private int salary;
+
+    public String toString() {
+        return "Developer(name=" + this.name + ")";
+    }
+}
+
+5. Include Fields for @ToString
+
+
+@ToString(onlyExplicitlyIncluded = true)
+public class Developer {
+
+    @ToString.Include
+    private String name;
+    private String language;
+    @ToString.Include
+    private int experienceInYears;
+}
+
+public class Developer {
+
+    private String name;
+    private String language;
+    private int experienceInYears;
+
+    public String toString() {
+        return "Developer(name=" + this.name + ", experienceInYears=" + this.experienceInYears + ")";
+    }
+}
+
+5.2. Include at Class Level
+
+@ToString(of = {"name", "experienceInYears"})
+public class Developer {
+
+    private String name;
+    private String language;
+    private int experienceInYears;
+}
+
+public class Developer {
+
+    private String name;
+    private String language;
+    private int experienceInYears;
+
+    public String toString() {
+        return "Developer(name=" + this.name + ", experienceInYears=" + this.experienceInYears + ")";
+    }
+}
+
+5.3. Include at Method Level
+
+@ToString
+public class Developer {
+
+    private String name;
+    private String language;
+    private int experienceInYears;
+
+    @ToString.Include
+    public boolean isJunior() {
+        return experienceInYears < 2;
+    }
+}
+
+public class Developer {
+
+    private String name;
+    private String language;
+    private int experienceInYears;
+
+    @ToString.Include
+    public boolean isJunior() {
+        return experienceInYears < 2;
+    }
+
+    public String toString() {
+        return "Developer(name=" + this.name + ", language=" + this.language + ", experienceInYears=" + this.experienceInYears
+          + ", isJunior=" + this.isJunior() + ")";
+    }
+	
+6. Inheritance and Call Super Class
+
+@ToString(callSuper = true)
+public class Developer extends Person {
+
+    private String name;
+    private String language;
+}
+
+public class Developer extends Person {
+
+    private String name;
+    private String language;
+
+    public String toString() {
+        return "Developer(super=" + super.toString() + ", name=" + this.name + ", language=" + this.language + ")";
+    }
+}
+
+However, this configuration takes effect only for the current class. In order to enable calling superclass globally, we must use the lombok.toString.callSuper property - inside the lombok.config file:
+
+# [call | skip | warn] (default: skip)
+lombok.toString.callSuper = call

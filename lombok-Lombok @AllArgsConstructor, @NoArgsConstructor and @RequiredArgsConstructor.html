@@ -1,0 +1,97 @@
+uso-de-lombook-para-mejorar-codigo
+
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
+
+Lombok @AllArgsConstructor, @NoArgsConstructor and @RequiredArgsConstructor
+
+In this tutorial, we'll look at the Lombok @AllArgsConstructor, @NoArgsConstructor, and @RequiredArgsConstructor annotations.
+
+When we use these annotations, Lombok generates the constructors automatically for us.
+
+2. @AllArgsConstructor For All Arguments Constructor
+
+@AllArgsConstructor
+public class Employee {
+
+    private String name;
+    private int salary;
+}
+
+public class Employee {
+
+    private String name;
+    private int salary;
+
+    public Employee(String name, int salary) {
+        this.name = name;
+        this.salary = salary;
+    }
+}
+
+2.1. Static Factory Method for @AllArgsConstructor
+
+@AllArgsConstructor(staticName = "of")
+class Department {
+
+    private String location;
+    private String employeeNumber;
+}
+
+class Department {
+
+    private String location;
+    private String employeeNumber;
+
+    private Department(String location, String employeeNumber) {
+        this.location = location;
+        this.employeeNumber = employeeNumber;
+    }
+
+    public static Department of(String location, String employeeNumber) {
+        return new Department(location, employeeNumber);
+    }
+}
+
+3. @NoArgsConstructor For No Argument Constructor
+
+@NoArgsConstructor
+public class Employee {
+
+    private String name;
+    private int salary;
+}
+
+public class Employee {
+
+    private String name;
+    private int salary;
+
+    public Employee() {
+    }
+}
+
+4. @RequiredArgsConstructor for Final and @NonNull Fields
+
+@RequiredArgsConstructor
+public class Employee {
+
+    private final String name;
+    private int salary;
+}
+
+public class Employee {
+
+    private final String name;
+    private int salary;
+
+    public Employee(String name) {
+        this.name = name;
+    }
+}
+
+http://www.javabyexamples.com/delombok-allargsconstructor-noargsconstructor-and-requiredargsconstructor
