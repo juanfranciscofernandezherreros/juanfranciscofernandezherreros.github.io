@@ -1,0 +1,12 @@
+
+  @Mapping(target = "scenarioId", expression = "java(ivPKDTO.getFormatToDate(ivPKDTO.getScenarioId()))")
+
+	public String getFormatToDate(final String scenarioDate) {
+		return scenarioDate.substring(Constants.START_POSITION_OF_DAY, Constants.END_POSITION_OF_DAY)
+		  .concat("/")
+		  .concat(
+			scenarioDate.substring(Constants.START_POSITION_OF_MONTH, Constants.END_POSITION_OF_MONTH))
+		  .concat("/")
+		  .concat(
+			scenarioDate.substring(Constants.START_POSITION_OF_YEAR, Constants.END_POSITION_OF_YEAR));
+	  }
