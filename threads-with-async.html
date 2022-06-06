@@ -1,0 +1,72 @@
+@Async
+@CompletableFuture
+
+Vamos a configurar los threads en SpringBoot usando la isguiente configuracion
+
+@Configuration
+@EnableAsync
+public class AsyncConfiguration {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(AsyncConfiguration.class);
+
+  @Bean(name = "taskExecutor")
+  public Executor taskExecutor() {
+    LOGGER.debug("Creating Async Task Executor");
+    final ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+    executor.setCorePoolSize(1);
+    executor.setMaxPoolSize(8);
+    executor.setQueueCapacity(0); /** Cuantas peticiones en cola **/
+    executor.setThreadNamePrefix("Test-");
+    executor.initialize();
+    return executor;
+  }
+
+}
+
+Ahora vamos a la capa del servicio
+
+@Service
+public class CSVService_1 {
+
+  @Autowired
+  RiskGroupRepository repository;
+
+  @Autowired
+  StaticDataRepository staticDataRepository;
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(CSVService_1.class);
+
+  @Async
+  public CompletableFuture<ByteArrayInputStream> load(String model) {
+    LOGGER.info("[CSVService1] load , {}" + model);
+    CompletableFuture completableFuture = null;
+    if(model.equals("riskgroups")) {
+      List<RiskGroupDAO> tutorials = repository.findAll();
+	}
+	}
+	
+	
+	@RestController
+@RequestMapping("/api/")
+public class DownloadController {
+
+  private static final Logger LOGGER = LoggerFactory.getLogger(DownloadController.class);
+
+
+  @Autowired
+  private CSVService_1 csvService_1;
+
+  @GetMapping("/download")
+  public ResponseEntity<Resource> getFile(@RequestParam("report") final String report) throws ExecutionException, InterruptedException {
+    LOGGER.info("[DownloadController] getFile , {}" + report);
+    String filename = "tutorials.csv";
+    CompletableFuture<ByteArrayInputStream> riskgroups = csvService_1.load("riskgroups");
+    CompletableFuture<ByteArrayInputStream> statics = csvService_1.load("statics");
+    ByteArrayInputStream in = riskgroups.get();
+    InputStreamResource file = new InputStreamResource(in);
+    return ResponseEntity.ok()
+      .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=" + filename)
+      .contentType(MediaType.parseMediaType("application/csv"))
+      .body(file);
+  }
+}

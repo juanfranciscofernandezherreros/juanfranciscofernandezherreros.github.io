@@ -1,0 +1,49 @@
+Enlace a la terminal del Pod a MongoDB
+
+	https://XXXXXXX:8443/console/project/darwin-dev/browse/pods/mongodb-bme-mongodb-sharded-mongos-787c6588bb-pn47s?tab=terminal
+ 
+Usuario de lectura y escritura en MongoDB 
+
+	user: dbz_mur
+	pswrd; dbz_mur_77_psw
+ 
+Cadena de conexión a la BD's desde el terminal
+
+	mongo admin --username dbz_mur -p dbz_mur_77_psw
+ 
+Entrar a MUR
+
+	use MUR
+ 
+Ver las colecciones
+
+	show collections
+ 
+Crear collection:
+
+	db.createCollection("DATA.MUR.MAPPINGMETADATA")
+	
+Borrar collection:
+
+	db.getCollection("DATA.MUR.MAPPINGMETADATA").drop()
+
+Insertar datos en collection:
+
+
+	db.getCollection("DATA.MUR.MAPPINGMETADATA").insert({docu 1
+	}, {docu 2})
+
+
+
+
+db.getCollection("DATA.KS.PRICEDATA").find()
+db.getCollection("DATA.MUR.MAPPINGMETADATA").find()
+
+
+
+db.getCollection("DATA.MUR.STATICCODES").find({"STATICTYPE":"CCY"}).pretty()
+
+
+db.getCollection("DATA.MUR.STATICCODES").insert([]);
+
+db.getCollection("DATA.MUR.RISKGROUPS").find()
