@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lista de la Compra</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 80%;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .category {
+            margin-top: 20px;
+        }
+        .category h2 {
+            color: #007BFF;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+        }
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .checkbox-group label {
+            width: 48%;
+        }
+        .submit-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        .submit-btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Lista de la Compra</h1>
+
+    <div class="category">
+        <h2>Cereales, azúcares y derivados</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 350g Pan integral de trigo</label>
+            <label><input type="checkbox"> 120g Arroz integral con quinoa para microondas</label>
+            <label><input type="checkbox"> 80g Edamame</label>
+            <label><input type="checkbox"> 80g Avena</label>
+            <label><input type="checkbox"> 70g Espaguetis integrales</label>
+            <label><input type="checkbox"> 70g Arroz blanco crudo</label>
+            <label><input type="checkbox"> 60g Tortitas maíz hacendado</label>
+            <label><input type="checkbox"> 40g Fajita integral (Tortilla mejicana de trigo integral)</label>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>Hortalizas y verduras</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 625g Tomate crudo</label>
+            <label><input type="checkbox"> 300g Zanahoria</label>
+            <label><input type="checkbox"> 70g Pepino</label>
+            <label><input type="checkbox"> 350g Calabacín / zapallito / zucchini</label>
+            <label><input type="checkbox"> 140g Cebolla hervida</label>
+            <label><input type="checkbox"> 330g Cebolla o cebolleta</label>
+            <label><input type="checkbox"> 11g Ajo</label>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>Frutas</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 750g Melón</label>
+            <label><input type="checkbox"> 150g Piña natural</label>
+            <label><input type="checkbox"> 100g Sandía</label>
+            <label><input type="checkbox"> 850g Plátano, banana</label>
+            <label><input type="checkbox"> 40g Arándanos</label>
+            <label><input type="checkbox"> 40g Limón</label>
+            <label><input type="checkbox"> 680g Manzana roja</label>
+            <label><input type="checkbox"> 116g Aguacate / palta</label>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>Leche y derivados</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 375g Yogur natural</label>
+            <label><input type="checkbox"> 1625g Leche semidesnatada UHT</label>
+            <label><input type="checkbox"> 100g Queso de untar ligero</label>
+            <label><input type="checkbox"> 875g Yogur desnatado edulcorado sabores</label>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>Carnes, pescados y huevos</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 210g Jamón serrano</label>
+            <label><input type="checkbox"> 235g Atún al natural en conserva</label>
+            <label><input type="checkbox"> 225g Huevo de gallina</label>
+            <label><input type="checkbox"> 180g Pechuga de pavo al corte FRIAL</label>
+            <label><input type="checkbox"> 180g Clara de huevo pasteurizada</label>
+            <label><input type="checkbox"> 40g Carne picada ternera</label>
+            <label><input type="checkbox"> 220g Merluza</label>
+            <label><input type="checkbox"> 100g Solomillo de cerdo</label>
+            <label><input type="checkbox"> 55g Tiras de pechuga de pollo al natural comercial</label>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>Otros</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 150g proteína de suero 90%</label>
+            <label><input type="checkbox"> 10g Canela Ceylan</label>
+            <label><input type="checkbox"> 5.5g Sal común</label>
+            <label><input type="checkbox"> 1.5g Pimienta negra</label>
+            <label><input type="checkbox"> 1g Orégano</label>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>Aceites y grasas</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 116g Aceite de oliva</label>
+            <label><input type="checkbox"> 20g Tomate frito comercial</label>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>Patatas, legumbres y frutos secos</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 200g Garbanzos cocidos</label>
+            <label><input type="checkbox"> 170g Patata</label>
+        </div>
+    </div>
+
+    <div class="category">
+        <h2>Be bebidas no alcohólicas</h2>
+        <div class="checkbox-group">
+            <label><input type="checkbox"> 5g Vinagre</label>
+        </div>
+    </div>
+
+    <button class="submit-btn">Guardar Lista</button>
+</div>
+
+</body>
+</html>
