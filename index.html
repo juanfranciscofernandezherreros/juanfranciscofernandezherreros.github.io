@@ -1,12 +1,285 @@
-
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Documento vacío</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Guía Completa de Apache Kafka (Niveles Básico a Avanzado)</title>
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; margin: 20px; }
+        h1, h2, h3 { color: #2c3e50; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+    </style>
 </head>
 <body>
+
+    <header>
+        <h1>Guía Completa de Apache Kafka 🚀</h1>
+        <p>Análisis detallado de la infraestructura, flujo, procesamiento y optimización de Kafka.</p>
+        <p>Creado por Fernandez Herreros, Juan Francisco (External) | Lectura de 4 minutos</p>
+    </header>
+
+    <main>
+
+        <section id="fundamentos">
+            <h2>I. Fundamentos de Mensaje y Clúster (Nivel Básico)</h2>
+            <p>Se centra en la unidad de datos y la infraestructura central de Kafka.</p>
+            
+            <article>
+                <h3>A. Componentes del Clúster</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Definición</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Broker</td>
+                            <td>El **servidor** que aloja y almacena mensajes Kafka. Se necesitan varios para la tolerancia a fallos.</td>
+                        </tr>
+                        <tr>
+                            <td>Topic</td>
+                            <td>El **almacén lógico** para los mensajes. Los productores escriben en él y los consumidores leen de él.</td>
+                        </tr>
+                        <tr>
+                            <td>Partition</td>
+                            <td>La **unidad física** dentro del Topic que permite la **escalabilidad** y el **paralelismo**. Cada partición es un log de mensajes ordenado.</td>
+                        </tr>
+                        <tr>
+                            <td>Offset</td>
+                            <td>El **identificador secuencial único** para cada mensaje dentro de una Partition. Usado por los consumidores para rastrear su posición de lectura.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+
+            <article>
+                <h3>B. Componentes del Flujo</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Definición</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Producer</td>
+                            <td>La aplicación que **envía** mensajes a un Topic.</td>
+                        </tr>
+                        <tr>
+                            <td>Consumer</td>
+                            <td>La aplicación que **lee** mensajes de una o más Partitions.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+            
+            <article>
+                <h3>C. Componentes del Mensaje</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Definición</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Value</td>
+                            <td>El **dato real** transmitido (ej., un objeto JSON o Avro).</td>
+                        </tr>
+                        <tr>
+                            <td>Key</td>
+                            <td>Un campo usado para **garantizar la agrupación** y el orden de mensajes relacionados en la **misma Partition**.</td>
+                        </tr>
+                        <tr>
+                            <td>Headers</td>
+                            <td>**Metadatos** adjuntos al mensaje para seguimiento o enrutamiento.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+        </section>
+        
+        <section id="estructura">
+            <h2>II. Estructura, Compatibilidad y Acceso (Nivel Intermedio)</h2>
+            <p>Se enfoca en asegurar la calidad de los datos y la flexibilidad en la integración.</p>
+            
+            <article>
+                <h3>A. Estructura de Datos (Garantía de Calidad)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Definición</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Avro</td>
+                            <td>Formato de serialización **basado en esquema**. Permite la evolución de datos compatible hacia adelante y hacia atrás.</td>
+                        </tr>
+                        <tr>
+                            <td>Schema Registry</td>
+                            <td>Un **almacén centralizado** para todos los esquemas de datos. Vital para la compatibilidad entre Productores y Consumidores.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+            
+            <article>
+                <h3>B. Integración y Acceso Flexible (APIs)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Definición</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Kafka REST Proxy</td>
+                            <td>Una **pasarela HTTP** que permite a cualquier aplicación interactuar con el clúster usando peticiones web estándar (en lugar de librerías nativas).</td>
+                        </tr>
+                        <tr>
+                            <td>REST Data Flow</td>
+                            <td>Interacción: No-Producer $\rightarrow$ REST Proxy $\rightarrow$ Schema Registry $\rightarrow$ Kafka Cluster.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+        </section>
+        
+        <section id="procesamiento">
+            <h2>III. Procesamiento Continuo (Kafka Streams & ksqlDB)</h2>
+            <p>Se enfoca en el procesamiento de datos en tiempo real y la gestión de estado.</p>
+            
+            <article>
+                <h3>A. Abstracciones de Datos (Kafka Streams API)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Abstracción</th>
+                            <th>Representación</th>
+                            <th>Naturaleza</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>KStream</td>
+                            <td>Flujo de **Eventos** (ej., clics, transacciones).</td>
+                            <td>Inmutable. Cada registro es un hecho que ha ocurrido.</td>
+                        </tr>
+                        <tr>
+                            <td>KTable</td>
+                            <td>**Tabla de Estado** (ej., stock actual, perfil de usuario).</td>
+                            <td>Mutable. El último registro para una clave dada sobrescribe el anterior.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+
+            <article>
+                <h3>B. Motor de Procesamiento y Operaciones de Estado</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Componente</th>
+                            <th>Definición</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ksqlDB</td>
+                            <td>Una **base de datos de streaming** que ejecuta lógica de Kafka Streams usando comandos **SQL** continuos (CREATE STREAM..., CREATE TABLE...) sin código de programación.</td>
+                        </tr>
+                        <tr>
+                            <td>Changelog Topic</td>
+                            <td>Topic interno compactado que actúa como el **respaldo durable** del estado local de una KTable. Usado para recuperación de fallos.</td>
+                        </tr>
+                        <tr>
+                            <td>Repartitioning</td>
+                            <td>Proceso interno de **"barajado"** que consume y produce datos a un Topic temporal para asegurar que la nueva **Key** esté correctamente alineada. Esencial antes de operaciones con estado (join, groupBy).</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+        </section>
+
+        <section id="rendimiento">
+            <h2>IV. Optimización de Rendimiento (Nivel Avanzado)</h2>
+            <p>Análisis detallado de configuraciones para Alto Throughput y Procesamiento por Lotes.</p>
+            
+            <article>
+                <h3>A. Optimización del Producer (Escritura por Lotes)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Propiedad</th>
+                            <th>Propósito</th>
+                            <th>Efecto Principal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>batch.size & linger.ms</td>
+                            <td>**Batching**. Define el tamaño máximo (bytes) y tiempo de espera (ms) antes de enviar.</td>
+                            <td>Reduce llamadas de red (mayor eficiencia, menor latencia).</td>
+                        </tr>
+                        <tr>
+                            <td>delivery.timeout.ms</td>
+                            <td>**Timeout Total de Entrega**. Tiempo total permitido para la entrega, incluyendo almacenamiento en búfer y reintentos.</td>
+                            <td>Establece la vida útil máxima de un mensaje en el productor.</td>
+                        </tr>
+                        <tr>
+                            <td>max.block.ms</td>
+                            <td>**Tiempo de Bloqueo**. Tiempo que el método send() se bloqueará si los búferes están llenos.</td>
+                            <td>Previene el bloqueo indefinido de la aplicación.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+
+            <article>
+                <h3>B. Optimización del Consumer (Lectura por Lotes)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Propiedad</th>
+                            <th>Propósito</th>
+                            <th>Efecto Principal</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>listener.type: batch & max.poll.records</td>
+                            <td>**Procesamiento por Lotes**. Configura la recepción de un lote completo y su tamaño máximo.</td>
+                            <td>Aumenta el **throughput** al procesar más mensajes a la vez.</td>
+                        </tr>
+                        <tr>
+                            <td>fetch.min.bytes & fetch.max.wait.ms</td>
+                            <td>**Eficiencia de Red**. Fuerza al Broker a esperar por un mínimo de bytes o un límite de tiempo.</td>
+                            <td>Reduce el **polling** ineficiente y garantiza lotes grandes.</td>
+                        </tr>
+                        <tr>
+                            <td>max.poll.interval.ms</td>
+                            <td>**Tolerancia de Procesamiento**. Tiempo máximo que el Consumer tiene para **procesar** el lote.</td>
+                            <td>**Crítico** para prevenir rebalances innecesarios.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+        </section>
+
+    </main>
+
+    <footer>
+        <p>Fin de la Guía. Este contenido está diseñado para la comprensión de la arquitectura de Apache Kafka.</p>
+    </footer>
 
 </body>
 </html>
