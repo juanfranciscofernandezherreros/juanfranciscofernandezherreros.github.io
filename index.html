@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Juan Francisco Fernández Herreros</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#eef1f0;
+    --ink:#14202b;
+    --accent:#1d5c8a;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){ --bg:#0e1c2a; --ink:#e7eef3; --accent:#6fb7e0; }
+  }
+  :root[data-theme="dark"]{ --bg:#0e1c2a; --ink:#e7eef3; --accent:#6fb7e0; }
+
+  html,body{ height:100%; margin:0; }
+  body{
+    display:flex; align-items:center; justify-content:center;
+    background:var(--bg);
+  }
+  a{
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight:600;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    font-size:clamp(1.6rem, 5vw, 2.8rem);
+    color:var(--ink);
+    text-decoration:none;
+    text-align:center;
+    padding:0 24px;
+  }
+  a:hover, a:focus-visible{ color:var(--accent); }
+</style>
+</head>
+<body>
+<a href="https://juanfranciscofernandezherreros.github.io/gitops-hello-world-guia/part-1/">Juan Francisco Fernández Herreros</a>
+</body>
+</html>
