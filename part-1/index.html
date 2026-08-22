@@ -624,7 +624,7 @@
         <pre class="live-cmd"><span class="c">kubectl</span> -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d</pre>
       </div>
     </div>
-    <p class="live-note">Heads up if you're reading this on GitHub Pages: those two links only work on the computer where the cluster is actually running — <code class="mono">localhost</code> means "this machine," not "the internet." Follow the commands in section 08 to spin up your own copy and get your own working links.</p>
+    <p class="live-note">Heads up if you're reading this on GitHub Pages: those two links only work on the computer where the cluster is actually running — <code class="mono">localhost</code> means "this machine," not "the internet." Follow section 05 to spin up your own copy and get your own working links.</p>
   </div>
 
   <section id="mental-model">
@@ -856,9 +856,90 @@
     </div>
   </section>
 
+  <section id="startup">
+    <div class="section-head"><span class="num">05</span><h2>Bringing it all up — from a restart, or from zero</h2></div>
+    <p class="muted">Section 06 assumes the cluster and ArgoCD already exist. Here's how to actually get there, on a fresh machine or after Docker Desktop was closed.</p>
+
+    <span class="flow-tag auto" style="margin-top:20px;">just resuming</span>
+    <p class="muted">The cluster still exists — Docker Desktop (or the machine) was just closed for a while.</p>
+    <div class="flow" style="margin-top:16px;">
+      <div class="flow-step">
+        <span class="idx">1</span>
+        <span class="actor you">You</span>
+        <span class="msg">Start Docker Desktop and wait for its engine to actually be ready — <code class="mono">docker ps</code> should stop erroring.</span>
+      </div>
+      <div class="flow-step">
+        <span class="idx">2</span>
+        <span class="actor k8s">kind</span>
+        <span class="msg">The cluster's container has a restart policy, so it comes back on its own as soon as Docker's engine is up — no <code class="mono">kind create cluster</code> needed. Confirm with <code class="mono">kubectl get nodes</code>; if it points at the wrong cluster, <code class="mono">kubectl config use-context kind-hello-world</code>.</span>
+      </div>
+      <div class="flow-step">
+        <span class="idx">3</span>
+        <span class="actor k8s">Kubernetes + Argo</span>
+        <span class="msg">Pods that show <code class="mono">Unknown</code> right after the restart flip back to <code class="mono">Running</code> on their own within about a minute — that's kubelet reconnecting, not a real failure. No action needed, just wait and re-check <code class="mono">kubectl get pods -n argocd</code>.</span>
+      </div>
+      <div class="flow-step">
+        <span class="idx">4</span>
+        <span class="actor you">You</span>
+        <span class="msg">What does <em>not</em> come back on its own: the two <code class="mono">kubectl port-forward</code> processes from the "Live locally" panel. Re-run both:</span>
+      </div>
+    </div>
+    <pre style="margin-top:14px;"><span class="c">kubectl</span> -n argocd port-forward svc/argocd-server 8081:443 &amp;
+<span class="c">kubectl</span> -n hello-world port-forward svc/hello-world 8080:8080 &amp;</pre>
+    <p class="muted" style="margin-top:10px;">If a port-forward errors with <code class="mono">unable to listen on any of the requested ports</code>, an old one from before the restart is still holding it — find and kill that process first, then retry.</p>
+
+    <span class="flow-tag manual" style="margin-top:32px;">starting from zero</span>
+    <p class="muted">No cluster exists yet — first time on this machine, or you ran <code class="mono">kind delete cluster</code>.</p>
+    <div class="flow" style="margin-top:16px;">
+      <div class="flow-step">
+        <span class="idx">1</span>
+        <span class="actor you">You</span>
+        <span class="msg">Start Docker Desktop, then create the cluster:</span>
+      </div>
+    </div>
+    <pre style="margin-top:14px;"><span class="c">kind</span> create cluster --name hello-world</pre>
+    <div class="flow" style="margin-top:0;">
+      <div class="flow-step">
+        <span class="idx">2</span>
+        <span class="actor you">You</span>
+        <span class="msg">Install ArgoCD into it:</span>
+      </div>
+    </div>
+    <pre style="margin-top:14px;"><span class="c">kubectl</span> create namespace argocd
+<span class="c">kubectl</span> apply -n argocd --server-side --force-conflicts \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+<span class="c">kubectl</span> -n argocd rollout status deploy/argocd-server</pre>
+    <p class="muted" style="margin-top:10px;"><code class="mono">--server-side</code> matters: a plain <code class="mono">apply</code> fails here because the <code class="mono">ApplicationSet</code> CRD is bigger than the 262144-byte limit on the <code class="mono">last-applied-configuration</code> annotation a normal apply writes.</p>
+    <div class="flow" style="margin-top:16px;">
+      <div class="flow-step">
+        <span class="idx">3</span>
+        <span class="actor you">You</span>
+        <span class="msg">Build the app and get its image into the cluster (full detail in section 09):</span>
+      </div>
+    </div>
+    <pre style="margin-top:14px;"><span class="c">mvn</span> -f app/pom.xml clean package
+<span class="c">docker</span> build -t hello-world:local app
+<span class="c">kind</span> load docker-image hello-world:local --name hello-world</pre>
+    <div class="flow" style="margin-top:16px;">
+      <div class="flow-step">
+        <span class="idx">4</span>
+        <span class="actor you">You</span>
+        <span class="msg">Register the service with Argo, from a clone of <span class="inline-file">gitops-config</span>:</span>
+      </div>
+    </div>
+    <pre style="margin-top:14px;"><span class="c">kubectl</span> apply -f applications/hello-world.yaml</pre>
+    <div class="flow" style="margin-top:16px;">
+      <div class="flow-step">
+        <span class="idx">5</span>
+        <span class="actor you">You</span>
+        <span class="msg">Open the two doors: same two <code class="mono">port-forward</code> commands as the "just resuming" path above, then <code class="mono">curl http://localhost:8080/hello</code> to confirm.</span>
+      </div>
+    </div>
+  </section>
+
   <section id="terminal-walkthrough">
-    <div class="section-head"><span class="num">05</span><h2>Terminal walkthrough — every command, for real</h2></div>
-    <p class="muted">The screenshots in section 04 show the result in the browser. These show the actual terminal output behind it — the same commands from section 08, run on this machine, in order, nothing staged.</p>
+    <div class="section-head"><span class="num">06</span><h2>Terminal walkthrough — every command, for real</h2></div>
+    <p class="muted">The screenshots in section 04 show the result in the browser. These show the actual terminal output behind it — the same commands from section 09, run on this machine, in order, nothing staged.</p>
     <div class="evidence" style="margin-top:22px;">
       <div class="evidence-item">
         <div class="shot"><img src="data:image/png;base64,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" alt="Terminal output of kind get clusters and kubectl get nodes" /></div>
@@ -928,7 +1009,7 @@
   </section>
 
   <section id="scenario-a">
-    <div class="section-head"><span class="num">06</span><h2>Sequence — changing the deployment</h2></div>
+    <div class="section-head"><span class="num">07</span><h2>Sequence — changing the deployment</h2></div>
     <span class="flow-tag auto">100% automatic</span>
     <p class="muted">Example: scaling from 1 to 3 replicas by editing <span class="inline-file">gitops-config/manifests/hello-world/deployment.yaml</span>.</p>
     <div class="flow" style="margin-top:16px;">
@@ -961,7 +1042,7 @@
   </section>
 
   <section id="scenario-b">
-    <div class="section-head"><span class="num">07</span><h2>Sequence — changing the code</h2></div>
+    <div class="section-head"><span class="num">08</span><h2>Sequence — changing the code</h2></div>
     <span class="flow-tag manual">manual in this base</span>
     <p class="muted">There's no CI or registry yet, so building and publishing the new image is on you.</p>
     <div class="flow" style="margin-top:16px;">
@@ -994,7 +1075,7 @@
   </section>
 
   <section id="commands">
-    <div class="section-head"><span class="num">08</span><h2>Reference commands</h2></div>
+    <div class="section-head"><span class="num">09</span><h2>Reference commands</h2></div>
     <div class="cmd-group">
       <h4>Local build</h4>
       <pre><span class="c">mvn</span> -f app/pom.xml clean package
