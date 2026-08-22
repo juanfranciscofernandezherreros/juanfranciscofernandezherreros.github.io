@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Before You Begin — GitOps 101</title>
+<meta name="description" content="What to install before Part 1: Git, Docker Desktop, kind, kubectl, Java, Maven, and the ArgoCD CLI — with the exact commands and how to check each one worked." />
+<meta property="og:type" content="article" />
+<meta property="og:title" content="Before You Begin — GitOps 101" />
+<meta property="og:description" content="What to install before Part 1: Git, Docker Desktop, kind, kubectl, Java, Maven, and the ArgoCD CLI — with the exact commands and how to check each one worked." />
+<meta property="og:url" content="https://juanfranciscofernandezherreros.github.io/part-0/" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Before You Begin — GitOps 101" />
+<meta name="twitter:description" content="What to install before Part 1, with the exact commands and how to verify each one." />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  /* ---------- tokens ---------- */
+  :root{
+    --bg:#eef1f0;
+    --surface:#ffffff;
+    --surface-2:#e6ebe9;
+    --ink:#14202b;
+    --ink-soft:#4a5a66;
+    --line:#c7d0ce;
+    --line-strong:#9fb0ac;
+    --accent:#1d5c8a;
+    --accent-ink:#ffffff;
+    --accent-soft:#e2edf4;
+    --good:#1f7a4d;
+    --good-soft:#e2f2e8;
+    --warn:#a15d10;
+    --warn-soft:#f6e8d6;
+    --code-bg:#122336;
+    --code-ink:#dfeef7;
+    --code-accent:#7ec8ea;
+    --code-line:#26415a;
+    --shadow:0 1px 2px rgba(20,32,43,.06), 0 8px 24px -12px rgba(20,32,43,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+      --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+      --good:#5fd394; --good-soft:#12301f; --warn:#e3a855; --warn-soft:#332209;
+      --code-bg:#081522; --code-ink:#dfeef7; --code-accent:#7ec8ea; --code-line:#1d3348;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+    --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+    --good:#5fd394; --good-soft:#12301f; --warn:#e3a855; --warn-soft:#332209;
+    --code-bg:#081522; --code-ink:#dfeef7; --code-accent:#7ec8ea; --code-line:#1d3348;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
+      repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
+      var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:var(--accent); }
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  h1,h2,h3{
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    text-wrap:balance; color:var(--ink); margin:0;
+  }
+
+  .sheet{ max-width:920px; margin:48px auto 96px; padding:0 24px; }
+
+  .titleblock{
+    background:var(--surface); border:1px solid var(--line-strong); box-shadow:var(--shadow);
+    padding:28px 32px 24px; position:relative;
+  }
+  .lang-switch{
+    position:absolute; top:20px; right:24px;
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; letter-spacing:.06em;
+  }
+  .lang-switch a{ color:var(--ink-soft); text-decoration:none; }
+  .lang-switch a:hover{ color:var(--accent); text-decoration:underline; }
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace; font-size:.72rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+  }
+  .titleblock h1{ font-size:clamp(2.1rem, 5vw, 3rem); line-height:1.02; max-width:16ch; }
+  .titleblock p.lede{
+    margin:14px 0 0; max-width:62ch; color:var(--ink-soft); font-size:1.02rem; line-height:1.55;
+  }
+
+  section{ margin-top:56px; }
+  .section-head{
+    display:flex; align-items:baseline; gap:12px;
+    border-bottom:1px solid var(--line-strong); padding-bottom:10px; margin-bottom:22px;
+  }
+  .section-head .num{ font-family:"IBM Plex Mono", monospace; color:var(--accent); font-size:.85rem; }
+  .section-head h2{ font-size:1.5rem; }
+  p{ line-height:1.6; color:var(--ink); max-width:70ch; }
+  p.muted{ color:var(--ink-soft); }
+
+  code, .mono{ font-family:"IBM Plex Mono", monospace; }
+  .inline-file{
+    font-family:"IBM Plex Mono", monospace; font-size:.92em;
+    background:var(--accent-soft); color:var(--accent); padding:.05em .4em; border-radius:3px;
+  }
+
+  .note{
+    background:var(--accent-soft); border-left:3px solid var(--accent);
+    padding:16px 20px; margin-bottom:24px;
+  }
+  .note h4{
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-weight:600; font-size:.92rem;
+    text-transform:none; letter-spacing:0; color:var(--accent); margin:0 0 8px;
+  }
+  .note p{ font-size:.9rem; margin:0 0 8px; }
+  .note p:last-child{ margin-bottom:0; }
+
+  .glossary-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
+  .term-card{ background:var(--surface); border:1px solid var(--line); padding:12px 14px; }
+  .term-card dt{
+    font-family:"IBM Plex Mono", monospace; font-weight:500; font-size:.86rem; color:var(--ink); margin:0 0 4px;
+  }
+  .term-card dd{ margin:0; font-size:.85rem; color:var(--ink-soft); line-height:1.5; }
+  @media (max-width:640px){ .glossary-grid{ grid-template-columns:1fr; } }
+
+  .cmd-group{ margin-bottom:22px; }
+  .cmd-group h4{
+    font-family:"IBM Plex Mono", monospace; font-size:.76rem; letter-spacing:.1em;
+    text-transform:uppercase; color:var(--ink-soft); margin:0 0 8px; font-weight:500;
+  }
+  .cmd-group p.why{ font-size:.86rem; color:var(--ink-soft); margin:6px 0 0; }
+  pre{
+    margin:0; background:var(--code-bg); color:var(--code-ink); border:1px solid var(--code-line);
+    border-radius:4px; padding:14px 16px; overflow-x:auto;
+    font-family:"IBM Plex Mono", monospace; font-size:.86rem; line-height:1.6;
+  }
+  pre .c{ color:var(--code-accent); }
+
+  .next{ display:grid; gap:12px; }
+  .next-item{
+    display:grid; grid-template-columns:22px 1fr; gap:12px; padding:14px 16px;
+    background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow);
+  }
+  .next-item .mark{ color:var(--accent); font-family:"IBM Plex Mono", monospace; }
+  .next-item h4{
+    margin:0 0 4px; font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-weight:600;
+    font-size:.98rem; text-transform:none; letter-spacing:0;
+  }
+  .next-item p{ margin:0; font-size:.9rem; color:var(--ink-soft); }
+
+  footer{
+    margin-top:64px; padding-top:18px; border-top:1px solid var(--line-strong);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; color:var(--ink-soft);
+  }
+</style>
+</head>
+<body>
+<div class="sheet">
+
+  <div class="titleblock">
+    <p class="lang-switch"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">GitOps 101 — Part 0</p>
+    <h1>Before You Begin</h1>
+    <p class="lede">Part 1 walks through deploying a microservice with ArgoCD, and it assumes eight things are already installed on your machine. This is the part where you actually install them — what each one is for, the exact command, and how to check it worked.</p>
+  </div>
+
+  <section id="what">
+    <div class="section-head"><span class="num">00</span><h2>What you'll have by the end</h2></div>
+    <p class="muted">A machine that can build a small Java app, package it as a container, run a local Kubernetes cluster, and talk to it — everything <a href="../part-1/">Part 1 — Hello World with ArgoCD</a> needs. About 20-30 minutes, most of it downloads.</p>
+  </section>
+
+  <section id="tools">
+    <div class="section-head"><span class="num">01</span><h2>The tools, and why each one</h2></div>
+    <p class="muted">Eight things, four jobs. Nothing here is specific to ArgoCD except the last one.</p>
+    <dl class="glossary-grid" style="margin-top:20px;">
+      <div class="term-card">
+        <dt>Git</dt>
+        <dd>Downloads the two repos Part 1 uses (<code class="mono">hello-world-argocd</code>, <code class="mono">gitops-config</code>) and lets you push changes to them.</dd>
+      </div>
+      <div class="term-card">
+        <dt>A GitHub account</dt>
+        <dd>Where those two repos live. Free, sign up at <a href="https://github.com/signup">github.com/signup</a> if you don't have one yet — nothing else here needs an account.</dd>
+      </div>
+      <div class="term-card">
+        <dt>Docker Desktop</dt>
+        <dd>Runs containers, and underneath, the entire local Kubernetes cluster — <code class="mono">kind</code> is just a thin layer on top of it.</dd>
+      </div>
+      <div class="term-card">
+        <dt>kind</dt>
+        <dd>Creates and deletes the local Kubernetes cluster itself, inside Docker.</dd>
+      </div>
+      <div class="term-card">
+        <dt>kubectl</dt>
+        <dd>Talks to whatever cluster <code class="mono">kind</code> created — every command that starts with <code class="mono">kubectl</code> in Part 1 needs this.</dd>
+      </div>
+      <div class="term-card">
+        <dt>Java 21 + Maven</dt>
+        <dd>Compiles the demo microservice. Specific to this particular demo being a Spring Boot app — a different Part 1 demo would need a different language toolchain instead.</dd>
+      </div>
+      <div class="term-card">
+        <dt>ArgoCD CLI</dt>
+        <dd>The <code class="mono">argocd</code> command — lets you trigger a sync from the terminal instead of the web UI. Everything it does can also be done by clicking in the browser, so this one's the closest to optional.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section id="install">
+    <div class="section-head"><span class="num">02</span><h2>Install them (Windows)</h2></div>
+    <p class="muted">One command per tool, using <code class="mono">winget</code> (built into Windows 10/11 — no separate install needed). Run these in PowerShell.</p>
+
+    <div class="cmd-group" style="margin-top:20px;">
+      <h4>Git</h4>
+      <pre><span class="c">winget</span> install Git.Git</pre>
+    </div>
+    <div class="cmd-group">
+      <h4>Docker Desktop</h4>
+      <pre><span class="c">winget</span> install Docker.DockerDesktop</pre>
+      <p class="why">Needs a sign-in the first time you launch it (free for personal use), and a restart on some machines. Start it now — the rest of this page assumes it's running.</p>
+    </div>
+    <div class="cmd-group">
+      <h4>kind</h4>
+      <pre><span class="c">winget</span> install Kubernetes.kind</pre>
+    </div>
+    <div class="cmd-group">
+      <h4>kubectl</h4>
+      <p class="why">Already included with Docker Desktop on Windows — nothing extra to install. If it's ever missing: <code class="mono">winget install Kubernetes.kubectl</code>.</p>
+    </div>
+    <div class="cmd-group">
+      <h4>Java 21</h4>
+      <pre><span class="c">winget</span> install EclipseAdoptium.Temurin.21.JDK</pre>
+    </div>
+    <div class="cmd-group">
+      <h4>Maven</h4>
+      <pre><span class="c">winget</span> install Apache.Maven</pre>
+    </div>
+    <div class="cmd-group">
+      <h4>ArgoCD CLI</h4>
+      <pre><span class="c">winget</span> install argoproj.argocd</pre>
+    </div>
+    <p class="muted">After installing, close and reopen your terminal — <code class="mono">winget</code> updates your PATH, but only new terminal windows pick it up.</p>
+  </section>
+
+  <section id="verify">
+    <div class="section-head"><span class="num">03</span><h2>Verify everything</h2></div>
+    <p class="muted">One command per tool. Every one should print a version number — no version, no install, is a broken PATH, not a broken tool.</p>
+    <div class="cmd-group" style="margin-top:20px;">
+      <pre><span class="c">git</span> --version
+<span class="c">docker</span> --version
+<span class="c">kind</span> version
+<span class="c">kubectl</span> version --client
+<span class="c">java</span> -version
+<span class="c">mvn</span> -version
+<span class="c">argocd</span> version --client</pre>
+    </div>
+    <div class="note">
+      <h4>One extra check for Docker specifically</h4>
+      <p><code class="mono">docker --version</code> only proves the CLI is installed, not that the engine is running. Run <code class="mono">docker ps</code> too — an empty table (<code class="mono">CONTAINER ID   IMAGE   COMMAND ...</code> with no rows) means it's up. A connection error means Docker Desktop is still starting, or needs to be launched.</p>
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="section-head"><span class="num">04</span><h2>You're ready</h2></div>
+    <div class="next">
+      <div class="next-item">
+        <span class="mark">→</span>
+        <div>
+          <h4>Continue to Part 1</h4>
+          <p><a href="../part-1/">Hello World with ArgoCD</a> — the glossary, the architecture, and the full walkthrough, starting with <code class="mono">git clone</code>.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>GitOps 101</span>
+    <span>Part 0 of the series</span>
+  </footer>
+
+</div>
+</body>
+</html>
