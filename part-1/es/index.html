@@ -226,6 +226,25 @@
     .live-grid{ grid-template-columns:1fr; }
   }
 
+  /* ---------- note callout ---------- */
+  .note{
+    background:var(--accent-soft);
+    border-left:3px solid var(--accent);
+    padding:16px 20px;
+    margin-bottom:24px;
+  }
+  .note h4{
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    font-weight:600;
+    font-size:.92rem;
+    text-transform:none;
+    letter-spacing:0;
+    color:var(--accent);
+    margin:0 0 8px;
+  }
+  .note p{ font-size:.9rem; margin:0 0 8px; }
+  .note p:last-child{ margin-bottom:0; }
+
   /* ---------- section rhythm ---------- */
   section{ margin-top:56px; }
   .section-head{
@@ -839,6 +858,12 @@
   <section id="startup">
     <div class="section-head"><span class="num">04</span><h2>Levantar todo — tras un reinicio, o desde cero</h2></div>
     <p class="muted">La sección 05 asume que el clúster y ArgoCD ya existen. Aquí tienes cómo llegar ahí de verdad, en una máquina nueva o después de cerrar Docker Desktop.</p>
+
+    <div class="note" style="margin-top:20px;">
+      <h4>"Iniciar" Argo y "configurar" Argo son dos cosas distintas</h4>
+      <p><strong>Instalarlo</strong> (los comandos de abajo) es solo aplicar un manifiesto de Kubernetes — ArgoCD no es un programa que se lanza, es un puñado de Deployments y un StatefulSet que Kubernetes programa igual que cualquier otra app. En cuanto esos pods están en <code class="mono">Running</code>, Argo ya está "iniciado" — y sin vigilar nada todavía.</p>
+      <p><strong>Configurar qué vigila</strong> es un paso aparte: crear un recurso <code class="mono">Application</code> (<span class="inline-file">applications/hello-world.yaml</span>, aplicado en el camino "empezando desde cero" de abajo). Esa es la única "configuración" que toca esta guía — los dos ConfigMaps que configuran el comportamiento del propio ArgoCD (<code class="mono">argocd-cm</code>, <code class="mono">argocd-rbac-cm</code>) se dejan con sus valores por defecto, algo normal para una instalación de este tamaño.</p>
+    </div>
 
     <span class="flow-tag auto" style="margin-top:20px;">solo reanudando</span>
     <p class="muted">El clúster todavía existe — Docker Desktop (o la máquina) simplemente estuvo cerrado un rato.</p>

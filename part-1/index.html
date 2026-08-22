@@ -225,6 +225,25 @@
     .live-grid{ grid-template-columns:1fr; }
   }
 
+  /* ---------- note callout ---------- */
+  .note{
+    background:var(--accent-soft);
+    border-left:3px solid var(--accent);
+    padding:16px 20px;
+    margin-bottom:24px;
+  }
+  .note h4{
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    font-weight:600;
+    font-size:.92rem;
+    text-transform:none;
+    letter-spacing:0;
+    color:var(--accent);
+    margin:0 0 8px;
+  }
+  .note p{ font-size:.9rem; margin:0 0 8px; }
+  .note p:last-child{ margin-bottom:0; }
+
   /* ---------- section rhythm ---------- */
   section{ margin-top:56px; }
   .section-head{
@@ -838,6 +857,12 @@
   <section id="startup">
     <div class="section-head"><span class="num">04</span><h2>Bringing it all up — from a restart, or from zero</h2></div>
     <p class="muted">Section 05 assumes the cluster and ArgoCD already exist. Here's how to actually get there, on a fresh machine or after Docker Desktop was closed.</p>
+
+    <div class="note" style="margin-top:20px;">
+      <h4>"Starting" Argo and "configuring" Argo are two different things</h4>
+      <p><strong>Installing it</strong> (the commands below) just means applying a Kubernetes manifest — ArgoCD isn't a program you launch, it's a handful of Deployments and a StatefulSet that Kubernetes schedules like any other app. Once those pods are <code class="mono">Running</code>, Argo is "started" — and watching nothing yet.</p>
+      <p><strong>Configuring what it watches</strong> is a separate step: creating an <code class="mono">Application</code> resource (<span class="inline-file">applications/hello-world.yaml</span>, applied in the "starting from zero" path below). That's the only "configuration" this guide ever touches — the two ConfigMaps that configure ArgoCD's own behavior (<code class="mono">argocd-cm</code>, <code class="mono">argocd-rbac-cm</code>) are left at their defaults, which is normal for a setup this size.</p>
+    </div>
 
     <span class="flow-tag auto" style="margin-top:20px;">just resuming</span>
     <p class="muted">The cluster still exists — Docker Desktop (or the machine) was just closed for a while.</p>
