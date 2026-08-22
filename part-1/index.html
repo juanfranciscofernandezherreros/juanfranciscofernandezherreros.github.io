@@ -340,7 +340,47 @@
     width:100%;
     height:auto;
     border:1px solid var(--line);
+    cursor:zoom-in;
   }
+
+  /* ---------- lightbox ---------- */
+  dialog.lightbox-overlay{
+    border:none;
+    padding:32px;
+    background:transparent;
+    max-width:100vw;
+    max-height:100vh;
+  }
+  dialog.lightbox-overlay::backdrop{
+    background:color-mix(in srgb, var(--ink) 78%, transparent);
+  }
+  dialog.lightbox-overlay[open]{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .lightbox-overlay img{
+    max-width:92vw;
+    max-height:88vh;
+    width:auto;
+    border:1px solid var(--line-strong);
+    box-shadow:0 20px 60px -20px rgba(0,0,0,.6);
+    cursor:zoom-out;
+  }
+  .lightbox-close{
+    position:absolute;
+    top:20px; right:24px;
+    width:40px; height:40px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    color:var(--ink);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:1.1rem;
+    line-height:1;
+    cursor:pointer;
+  }
+  .lightbox-close:hover{ color:var(--accent); }
   .evidence-item .step-idx{
     font-family:"IBM Plex Mono", monospace;
     font-size:.72rem;
@@ -977,32 +1017,38 @@
     </div>
   </section>
 
-  <section id="next">
-    <div class="section-head"><span class="num">09</span><h2>What Part 1 leaves open</h2></div>
-    <p class="muted">This part gets you to a working GitOps loop, but two things are still manual. That's exactly where the next parts of this series pick up.</p>
-    <div class="next" style="margin-top:20px;">
-      <div class="next-item">
-        <span class="mark">→</span>
-        <div>
-          <h4>Part 2 — CI builds and publishes the image</h4>
-          <p>GitHub Actions in <span class="inline-file">hello-world-argocd</span>: on every push, build + push to a registry (e.g. GHCR) with a new tag, and commit that tag into <span class="inline-file">gitops-config</span>. That turns Scenario B (section 07) into just another case of Scenario A (section 06).</p>
-        </div>
-      </div>
-      <div class="next-item">
-        <span class="mark">→</span>
-        <div>
-          <h4>Part 3 — one ApplicationSet for many services</h4>
-          <p>Once there are 2-3 more microservices, replace one <code class="mono">Application</code> file per service with a single <code class="mono">ApplicationSet</code> that generates them all — same pattern as <span class="inline-file">crud-automation/argocd/applicationset.yaml</span>.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <footer>
     <span>hello-world-argocd + gitops-config</span>
     <span>kind-hello-world · namespace hello-world · Part 1 of the series</span>
   </footer>
 
 </div>
+
+<dialog class="lightbox-overlay" id="lightbox" aria-label="Screenshot preview">
+  <button class="lightbox-close" type="button" aria-label="Close image">✕</button>
+  <img id="lightbox-img" src="" alt="" />
+</dialog>
+
+<script>
+(function(){
+  var overlay = document.getElementById('lightbox');
+  var overlayImg = document.getElementById('lightbox-img');
+  var closeBtn = overlay.querySelector('.lightbox-close');
+
+  document.querySelectorAll('.evidence-item .shot img').forEach(function(img){
+    img.addEventListener('click', function(){
+      overlayImg.src = img.src;
+      overlayImg.alt = img.alt;
+      overlay.showModal();
+    });
+  });
+  overlay.addEventListener('close', function(){ overlayImg.src = ''; });
+  overlayImg.addEventListener('click', function(){ overlay.close(); });
+  closeBtn.addEventListener('click', function(){ overlay.close(); });
+  overlay.addEventListener('click', function(e){
+    if (e.target === overlay) overlay.close();
+  });
+})();
+</script>
 </body>
 </html>
