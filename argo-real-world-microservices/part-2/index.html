@@ -137,6 +137,15 @@
   pre .c{ color:var(--code-accent); }
   pre .k{ color:#9fd6a8; }
 
+  .next{ display:grid; gap:12px; }
+  .next-item{
+    display:grid; grid-template-columns:22px 1fr; gap:12px; padding:14px 16px;
+    background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow);
+  }
+  .next-item .mark{ color:var(--accent); font-family:"IBM Plex Mono", monospace; }
+  .next-item h4{ margin:0 0 4px; font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-weight:600; font-size:.98rem; text-transform:none; letter-spacing:0; }
+  .next-item p{ margin:0; font-size:.9rem; color:var(--ink-soft); }
+
   footer{
     margin-top:64px; padding-top:18px; border-top:1px solid var(--line-strong);
     display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
@@ -275,6 +284,18 @@
     <div class="cmd-group">
       <h4>Force a re-read instead of waiting ~3 min</h4>
       <pre><span class="c">kubectl</span> -n argocd annotate application hello-world argocd.argoproj.io/refresh=hard --overwrite</pre>
+    </div>
+  </section>
+
+  <section id="next-part">
+    <div class="next">
+      <div class="next-item">
+        <span class="mark">→</span>
+        <div>
+          <h4><a href="../part-3/">Part 3 — Generating a New Microservice</a></h4>
+          <p>Using crud-automation to generate a second service from scratch and onboard it into this same repo — real terminal output for every step.</p>
+        </div>
+      </div>
     </div>
   </section>
 
