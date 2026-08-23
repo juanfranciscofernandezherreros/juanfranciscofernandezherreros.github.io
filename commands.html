@@ -1,0 +1,472 @@
+---
+layout: default
+title: Command Reference
+description: >-
+  Every terminal command used across the Argo Real World Microservices
+  series, centralized in one glossary — grouped by tool, with a link back
+  to where each one comes from.
+permalink: /commands/
+---
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#eef1f0;
+    --surface:#ffffff;
+    --surface-2:#e6ebe9;
+    --ink:#14202b;
+    --ink-soft:#4a5a66;
+    --line:#c7d0ce;
+    --line-strong:#9fb0ac;
+    --accent:#1d5c8a;
+    --accent-ink:#ffffff;
+    --accent-soft:#e2edf4;
+    --code-bg:#122336;
+    --code-ink:#dfeef7;
+    --code-accent:#7ec8ea;
+    --code-line:#26415a;
+    --shadow:0 1px 2px rgba(20,32,43,.06), 0 8px 24px -12px rgba(20,32,43,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+      --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+      --code-bg:#081522; --code-ink:#dfeef7; --code-accent:#7ec8ea; --code-line:#1d3348;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+    --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+    --code-bg:#081522; --code-ink:#dfeef7; --code-accent:#7ec8ea; --code-line:#1d3348;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
+      repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
+      var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  a{ color:var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  h1,h2,h3{
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    text-wrap:balance; color:var(--ink); margin:0;
+  }
+  code, .mono{ font-family:"IBM Plex Mono", monospace; }
+
+  .sheet{ max-width:920px; margin:48px auto 96px; padding:0 24px; }
+
+  .titleblock{
+    background:var(--surface); border:1px solid var(--line-strong); box-shadow:var(--shadow);
+    padding:28px 32px 24px; position:relative;
+  }
+  .back-link{
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; letter-spacing:.06em;
+    margin:0 0 14px;
+  }
+  .back-link a{ color:var(--ink-soft); text-decoration:none; }
+  .back-link a:hover{ color:var(--accent); text-decoration:underline; }
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace; font-size:.72rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+  }
+  .titleblock h1{ font-size:clamp(2.1rem, 5vw, 3rem); line-height:1.02; max-width:20ch; }
+  .titleblock p.lede{
+    margin:14px 0 0; max-width:64ch; color:var(--ink-soft); font-size:1.02rem; line-height:1.55;
+  }
+
+  .toolbar{ margin-top:28px; }
+  #cmd-search{
+    width:100%;
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    font-size:.94rem;
+    padding:11px 14px;
+    background:var(--surface);
+    color:var(--ink);
+    border:1px solid var(--line-strong);
+    box-shadow:var(--shadow);
+    border-radius:3px;
+  }
+
+  .toc{
+    margin:16px 0 0;
+    padding:0;
+    list-style:none;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .toc a{
+    display:inline-block;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.72rem;
+    letter-spacing:.04em;
+    padding:5px 12px;
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    border-radius:999px;
+    text-decoration:none;
+    color:var(--ink-soft);
+  }
+  .toc a:hover{ border-color:var(--accent); color:var(--accent); }
+
+  .tool-section{ margin-top:48px; scroll-margin-top:24px; }
+  .tool-section.hidden{ display:none; }
+  .section-head{
+    display:flex; align-items:baseline; gap:12px;
+    border-bottom:1px solid var(--line-strong); padding-bottom:10px; margin-bottom:18px;
+  }
+  .section-head h2{ font-size:1.5rem; }
+  .section-head .count{
+    font-family:"IBM Plex Mono", monospace; font-size:.78rem; color:var(--ink-soft);
+  }
+
+  .cmd-entry{
+    background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow);
+    padding:16px 18px; margin-bottom:14px;
+  }
+  .cmd-entry.hidden{ display:none; }
+  .cmd-entry h3{
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-weight:600;
+    text-transform:none; letter-spacing:0; font-size:.98rem; margin:0 0 8px;
+  }
+  .cmd-entry pre{
+    margin:0 0 10px; background:var(--code-bg); color:var(--code-ink); border:1px solid var(--code-line);
+    border-radius:4px; padding:12px 14px; overflow-x:auto;
+    font-family:"IBM Plex Mono", monospace; font-size:.84rem; line-height:1.6;
+  }
+  .cmd-entry pre .c{ color:var(--code-accent); }
+  .cmd-entry p{ margin:0 0 10px; font-size:.88rem; line-height:1.55; color:var(--ink-soft); }
+  .cmd-entry .refs{
+    display:flex; flex-wrap:wrap; gap:6px;
+  }
+  .cmd-entry .refs a{
+    font-family:"IBM Plex Mono", monospace; font-size:.68rem; letter-spacing:.06em;
+    text-transform:uppercase; padding:4px 10px; border-radius:3px; text-decoration:none;
+    background:var(--accent-soft); color:var(--accent);
+  }
+  .cmd-entry .refs a:hover{ text-decoration:underline; }
+
+  #no-results{
+    text-align:center; padding:32px 20px; color:var(--ink-soft); font-size:.92rem;
+  }
+  #no-results.hidden{ display:none; }
+
+  footer{
+    margin-top:64px; padding-top:18px; border-top:1px solid var(--line-strong);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; color:var(--ink-soft);
+  }
+</style>
+
+<div class="sheet">
+
+  <div class="titleblock">
+    <p class="back-link"><a href="{{ '/' | relative_url }}">← Back to series</a></p>
+    <p class="eyebrow">Argo Real World Microservices — Reference</p>
+    <h1>Command Reference</h1>
+    <p class="lede">Every command from Parts 0–3, pulled out of the articles and grouped by tool — one place to copy from instead of hunting back through each part. Each entry links back to where it comes from.</p>
+  </div>
+
+  <div class="toolbar">
+    <input type="search" id="cmd-search" placeholder="Filter commands… (e.g. kubectl, port-forward, docker)" aria-label="Filter commands" />
+    <ul class="toc">
+      <li><a href="#winget">winget</a></li>
+      <li><a href="#git">git</a></li>
+      <li><a href="#docker">docker</a></li>
+      <li><a href="#kind">kind</a></li>
+      <li><a href="#kubectl">kubectl</a></li>
+      <li><a href="#argocd">argocd</a></li>
+      <li><a href="#maven-java">maven / java</a></li>
+      <li><a href="#python">python</a></li>
+      <li><a href="#curl">curl</a></li>
+    </ul>
+  </div>
+
+  <section class="tool-section" id="winget">
+    <div class="section-head"><h2>winget</h2><span class="count">6</span></div>
+
+    <div class="cmd-entry">
+      <h3>Install Git</h3>
+      <pre><span class="c">winget</span> install Git.Git</pre>
+      <p>First tool to install — everything else in the series is pulled from a Git repo.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Install Docker Desktop</h3>
+      <pre><span class="c">winget</span> install Docker.DockerDesktop</pre>
+      <p>Runs containers and, underneath, the entire local Kubernetes cluster — needs a sign-in and sometimes a restart on first launch.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Install kind</h3>
+      <pre><span class="c">winget</span> install Kubernetes.kind</pre>
+      <p>Creates and deletes the local Kubernetes cluster itself, inside Docker.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Install Java 21</h3>
+      <pre><span class="c">winget</span> install EclipseAdoptium.Temurin.21.JDK</pre>
+      <p>Compiles the demo Spring Boot microservice.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Install Maven</h3>
+      <pre><span class="c">winget</span> install Apache.Maven</pre>
+      <p>Builds and packages the demo microservice into a jar.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Install the ArgoCD CLI</h3>
+      <pre><span class="c">winget</span> install argoproj.argocd</pre>
+      <p>The <code class="mono">argocd</code> command — lets you trigger a sync from the terminal instead of the web UI.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="git">
+    <div class="section-head"><h2>git</h2><span class="count">2</span></div>
+
+    <div class="cmd-entry">
+      <h3>Check the install</h3>
+      <pre><span class="c">git</span> --version</pre>
+      <p>Every install in Part 0 gets verified the same way: no version printed means a broken PATH, not a broken tool.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#verify' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Clone both repos</h3>
+      <pre><span class="c">git</span> clone https://github.com/juanfranciscofernandezherreros/hello-world-argocd.git
+<span class="c">git</span> clone https://github.com/juanfranciscofernandezherreros/gitops-config.git</pre>
+      <p>Starting from zero: the microservice's own repo, plus the GitOps repo Argo actually watches.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#startup' | relative_url }}">Part 1</a></p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="docker">
+    <div class="section-head"><h2>docker</h2><span class="count">2</span></div>
+
+    <div class="cmd-entry">
+      <h3>Check the install</h3>
+      <pre><span class="c">docker</span> --version</pre>
+      <p>Only proves the CLI is installed, not that the engine is running — pair with <code class="mono">docker ps</code> (an empty table means it's up).</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#verify' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Build the image</h3>
+      <pre><span class="c">docker</span> build -t hello-world:local app</pre>
+      <p>Wraps the compiled jar and a JRE into an image, using the app's Dockerfile. Same pattern for any generated service — just swap the image name and folder.</p>
+      <p class="refs">
+        <a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a>
+        <a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="kind">
+    <div class="section-head"><h2>kind</h2><span class="count">3</span></div>
+
+    <div class="cmd-entry">
+      <h3>Check the install</h3>
+      <pre><span class="c">kind</span> version</pre>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#verify' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Create the cluster</h3>
+      <pre><span class="c">kind</span> create cluster --name hello-world</pre>
+      <p>Only needed the first time on a machine, or after <code class="mono">kind delete cluster</code> — the cluster's container has a restart policy and comes back on its own otherwise.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#startup' | relative_url }}">Part 1</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Load a locally built image into the cluster</h3>
+      <pre><span class="c">kind</span> load docker-image hello-world:local --name hello-world</pre>
+      <p>There's no registry in this setup — the image is injected straight into the kind node instead. Same command for any generated service.</p>
+      <p class="refs">
+        <a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a>
+        <a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="kubectl">
+    <div class="section-head"><h2>kubectl</h2><span class="count">9</span></div>
+
+    <div class="cmd-entry">
+      <h3>Check the install</h3>
+      <pre><span class="c">kubectl</span> version --client</pre>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#verify' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Install ArgoCD itself into the cluster</h3>
+      <pre><span class="c">kubectl</span> create namespace argocd
+<span class="c">kubectl</span> apply -n argocd --server-side --force-conflicts \
+  -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+<span class="c">kubectl</span> -n argocd rollout status deploy/argocd-server</pre>
+      <p><code class="mono">--server-side</code> matters here: a plain <code class="mono">apply</code> fails because the <code class="mono">ApplicationSet</code> CRD is bigger than the 262144-byte limit on the annotation a normal apply writes.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#startup' | relative_url }}">Part 1</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Read the initial admin password</h3>
+      <pre><span class="c">kubectl</span> -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d</pre>
+      <p>Needed once, to log into the ArgoCD web UI as <code class="mono">admin</code> the first time.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/' | relative_url }}">Part 1</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Open the two local doors (ArgoCD UI + the app)</h3>
+      <pre><span class="c">kubectl</span> -n argocd port-forward svc/argocd-server 8081:443 &amp;
+<span class="c">kubectl</span> -n hello-world port-forward svc/hello-world 8080:8080 &amp;</pre>
+      <p>Both run in the background (<code class="mono">&amp;</code>) — the ArgoCD UI on 8081, the app itself on 8080. Doesn't survive a machine restart; re-run after one.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#startup' | relative_url }}">Part 1</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Register a service with Argo</h3>
+      <pre><span class="c">kubectl</span> apply -f applications/hello-world.yaml</pre>
+      <p>Creates the <code class="mono">Application</code> resource that tells Argo what to watch and where to put it. The only manual <code class="mono">kubectl apply</code> in the whole workflow — everything after this is Argo syncing on its own.</p>
+      <p class="refs">
+        <a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a>
+        <a href="{{ '/argo-real-world-microservices/part-2/gitops-config/#commands' | relative_url }}">Part 2</a>
+      </p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Check the pods came up, then reach the service</h3>
+      <pre><span class="c">kubectl</span> -n hello-world get pods
+<span class="c">kubectl</span> -n hello-world port-forward svc/hello-world 8080:8080</pre>
+      <p>Same two-step check works for any namespace — swap in the generated service's own namespace and port.</p>
+      <p class="refs">
+        <a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a>
+        <a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a>
+      </p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Ask Argo what it thinks is true right now</h3>
+      <pre><span class="c">kubectl</span> get application hello-world -n argocd
+<span class="c">kubectl</span> get application hello-world -n argocd -o jsonpath='{.status.sync.status} {.status.health.status}'</pre>
+      <p>Reads Argo's own record of an <code class="mono">Application</code> instead of the workload it manages — the second form prints just the sync/health status, handy for scripting.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-2/gitops-config/#commands' | relative_url }}">Part 2</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Force Argo to re-read Git now</h3>
+      <pre><span class="c">kubectl</span> -n argocd annotate application hello-world argocd.argoproj.io/refresh=hard --overwrite</pre>
+      <p>Skips the ~3 minute automatic polling interval — same effect as clicking "Refresh" in the UI, from the terminal.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-2/gitops-config/#commands' | relative_url }}">Part 2</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Register + verify a generated service</h3>
+      <pre><span class="c">kubectl</span> apply -f applications/godbyemicroservices.yaml
+<span class="c">kubectl</span> -n godbyemicroservices get pods
+<span class="c">kubectl</span> -n godbyemicroservices port-forward svc/godbyemicroservices 8082:8080</pre>
+      <p>The same onboarding pattern from Part 1, applied to a second, independently generated service.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a></p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="argocd">
+    <div class="section-head"><h2>argocd (CLI)</h2><span class="count">2</span></div>
+
+    <div class="cmd-entry">
+      <h3>Check the install</h3>
+      <pre><span class="c">argocd</span> version --client</pre>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#verify' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Force a sync from the terminal</h3>
+      <pre><span class="c">argocd</span> app sync hello-world   # optional: don't wait for the automatic refresh</pre>
+      <p>Everything this does can also be done by clicking in the ArgoCD UI — the CLI is the closest thing to optional in the whole toolchain.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a></p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="maven-java">
+    <div class="section-head"><h2>maven / java</h2><span class="count">2</span></div>
+
+    <div class="cmd-entry">
+      <h3>Check the installs</h3>
+      <pre><span class="c">java</span> -version
+<span class="c">mvn</span> -version</pre>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#verify' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Build the jar</h3>
+      <pre><span class="c">mvn</span> -f app/pom.xml clean package</pre>
+      <p>Compiles the Spring Boot app, runs its tests, and produces the jar that <code class="mono">docker build</code> packages next. Same command regardless of which generated service you're building.</p>
+      <p class="refs">
+        <a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a>
+        <a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="python">
+    <div class="section-head"><h2>python</h2><span class="count">2</span></div>
+
+    <div class="cmd-entry">
+      <h3>Generate a new microservice</h3>
+      <pre><span class="c">python</span> generate_crud.py GodbyeMicroservices "id:int" --architecture minimal</pre>
+      <p>The <code class="mono">crud-automation</code> generator — entity name, fields, and the minimal architecture flag produce a full, independent Spring Boot service.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Publish the generated service to GitHub</h3>
+      <pre><span class="c">python</span> -c "from crud_generator.github_repo import push_to_github; print(push_to_github('crud-godbyemicroservices-minimal'))"</pre>
+      <p>Pushes the freshly generated repo up to GitHub so <code class="mono">gitops-config</code> and Argo can actually reach it.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a></p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="curl">
+    <div class="section-head"><h2>curl</h2><span class="count">2</span></div>
+
+    <div class="cmd-entry">
+      <h3>Hit the running service</h3>
+      <pre><span class="c">curl</span> http://localhost:8080/hello</pre>
+      <p>Confirms the container actually started and Spring Boot is serving requests, through the <code class="mono">kubectl port-forward</code> tunnel.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Hit a generated service</h3>
+      <pre><span class="c">curl</span> http://localhost:8082/godbyemicroservices</pre>
+      <p>Same check as Part 1, against the second service's own port-forward.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a></p>
+    </div>
+  </section>
+
+  <p id="no-results" class="hidden">No commands match that search.</p>
+
+  <footer>
+    <span>Argo Real World Microservices</span>
+    <span>Command reference · Parts 0–3</span>
+  </footer>
+
+</div>
+
+<script src="{{ '/assets/js/commands-filter.js' | relative_url }}"></script>
