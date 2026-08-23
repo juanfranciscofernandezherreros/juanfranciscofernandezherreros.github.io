@@ -1,17 +1,16 @@
 <!doctype html>
-<html lang="es">
+<html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>El repo de configuración — Argo Real World Microservices</title>
-<meta name="description" content="Un recorrido por gitops-config: el repo que ArgoCD vigila de verdad. Qué vive en manifests/ y en applications/, el recurso Application línea a línea, y cómo añadir un segundo servicio." />
+<title>The Config Repo — Argo Real World Microservices</title>
+<meta name="description" content="A tour of gitops-config: the repo ArgoCD actually watches. What lives in manifests/ vs applications/, reading the Application resource line by line, and how to add a second service." />
 <meta property="og:type" content="article" />
-<meta property="og:title" content="El repo de configuración — Argo Real World Microservices" />
-<meta property="og:description" content="Un recorrido por gitops-config: el repo que ArgoCD vigila de verdad. Qué vive en manifests/ y en applications/, el recurso Application línea a línea, y cómo añadir un segundo servicio." />
-<meta property="og:url" content="https://juanfranciscofernandezherreros.github.io/argo-real-world-microservices/part-2/es/" />
-<meta property="og:locale" content="es_ES" />
+<meta property="og:title" content="The Config Repo — Argo Real World Microservices" />
+<meta property="og:description" content="A tour of gitops-config: the repo ArgoCD actually watches. What lives in manifests/ vs applications/, reading the Application resource line by line, and how to add a second service." />
+<meta property="og:url" content="https://juanfranciscofernandezherreros.github.io/argo-real-world-microservices/part-2/gitops-config/" />
 <meta name="twitter:card" content="summary" />
-<meta name="twitter:title" content="El repo de configuración — Argo Real World Microservices" />
-<meta name="twitter:description" content="Un recorrido por gitops-config: que vigila ArgoCD de verdad, y como anadir un segundo servicio." />
+<meta name="twitter:title" content="The Config Repo — Argo Real World Microservices" />
+<meta name="twitter:description" content="A tour of gitops-config: what ArgoCD actually watches, and how to add a second service." />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -158,36 +157,36 @@
 <div class="sheet">
 
   <div class="titleblock">
-    <p class="back-link"><a href="../../part-1/es/">← Parte 1 — Hello World con ArgoCD</a></p>
-    <p class="lang-switch"><a href="../">EN · English</a></p>
-    <p class="eyebrow">Argo Real World Microservices — Parte 2 de la serie</p>
-    <h1>El repo de configuración: gitops-config</h1>
-    <p class="lede">La Parte 1 construyó el microservicio y dijo "los manifiestos viven en un repo aparte". Esta parte es ese repo: qué hay dentro de verdad, por qué tiene esa forma, y cómo añadir un segundo servicio sin adivinar.</p>
+    <p class="back-link"><a href="../../part-1/hello-world-argocd/">← Part 1 — Hello World with ArgoCD</a></p>
+    <p class="lang-switch"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Argo Real World Microservices — Part 2 of the series</p>
+    <h1>The Config Repo: gitops-config</h1>
+    <p class="lede">Part 1 built the microservice and said "the manifests live in a separate repo." This part is that repo: what's actually inside it, why it's shaped the way it is, and how to add a second service without guessing.</p>
   </div>
 
   <section id="recap">
-    <div class="section-head"><span class="num">00</span><h2>Dónde encaja esto</h2></div>
-    <p class="muted">Dos repos, dos trabajos — <a href="../../part-1/es/">Parte 1, sección 02</a> lo cubre entero. Versión corta: <span class="inline-file">hello-world-argocd</span> es código, Java, Docker. <span class="inline-file">gitops-config</span> es el "recetario" — lo que debería existir en el clúster, y es el único repo al que apunta el <code class="mono">Application</code> de ArgoCD.</p>
+    <div class="section-head"><span class="num">00</span><h2>Where this fits</h2></div>
+    <p class="muted">Two repos, two jobs — <a href="../../part-1/hello-world-argocd/">Part 1, section 02</a> covers this in full. Short version: <span class="inline-file">hello-world-argocd</span> is code, Java, Docker. <span class="inline-file">gitops-config</span> is the "recipe book" — what should exist in the cluster, and it's the only repo ArgoCD's <code class="mono">Application</code> ever points at.</p>
   </section>
 
   <section id="folders">
-    <div class="section-head"><span class="num">01</span><h2>Dos carpetas, dos trabajos</h2></div>
-    <p class="muted">Todo lo que hay en este repo es una de estas dos cosas.</p>
+    <div class="section-head"><span class="num">01</span><h2>Two folders, two jobs</h2></div>
+    <p class="muted">Everything in this repo is one of these two things.</p>
     <dl class="glossary-grid" style="margin-top:20px;">
       <div class="term-card">
         <dt>applications/</dt>
-        <dd>Un YAML por microservicio — el recurso <code class="mono">Application</code> que le dice a Argo "vigila esta carpeta, despliégala aquí". Se aplica una vez con <code class="mono">kubectl apply</code>; a partir de ahí Argo lo relee del propio clúster, no de este repo.</dd>
+        <dd>One YAML file per microservice — the <code class="mono">Application</code> resource that tells Argo "watch this folder, deploy it here." Applied once with <code class="mono">kubectl apply</code>; after that Argo re-reads it from the live cluster, not from this repo.</dd>
       </div>
       <div class="term-card">
-        <dt>manifests/&lt;servicio&gt;/</dt>
-        <dd>Los objetos reales de Kubernetes para ese servicio — <code class="mono">Namespace</code>, <code class="mono">Deployment</code>, <code class="mono">Service</code>. Es a esto a lo que apunta el <code class="mono">Application</code>, y lo que Argo mantiene sincronizado para siempre, cada vez que cambia.</dd>
+        <dt>manifests/&lt;service&gt;/</dt>
+        <dd>The actual Kubernetes objects for that service — <code class="mono">Namespace</code>, <code class="mono">Deployment</code>, <code class="mono">Service</code>. This is what the <code class="mono">Application</code> points at, and what Argo keeps in sync forever, every time it changes.</dd>
       </div>
     </dl>
   </section>
 
   <section id="application">
-    <div class="section-head"><span class="num">02</span><h2>applications/hello-world.yaml, línea a línea</h2></div>
-    <p class="muted">El fichero entero — 21 líneas, nada oculto.</p>
+    <div class="section-head"><span class="num">02</span><h2>applications/hello-world.yaml, line by line</h2></div>
+    <p class="muted">The whole file — 21 lines, nothing hidden.</p>
     <pre style="margin-top:16px;"><span class="k">apiVersion</span>: argoproj.io/v1alpha1
 <span class="k">kind</span>: Application
 <span class="k">metadata</span>:
@@ -209,81 +208,81 @@
     <span class="k">syncOptions</span>:
       - CreateNamespace=true</pre>
     <dl class="keylist" style="margin-top:20px;">
-      <div class="term"><dt>metadata.namespace</dt><dd><code class="mono">argocd</code> — este objeto en sí vive donde vive Argo, no donde corre la app. Eso es un <code class="mono">namespace</code> distinto, tres líneas más abajo.</dd></div>
-      <div class="term"><dt>source.repoURL + path</dt><dd>Este mismo repo, carpeta <span class="inline-file">manifests/hello-world</span> — las dos carpetas de la sección 01, apuntándose entre sí.</dd></div>
-      <div class="term"><dt>destination.namespace</dt><dd><code class="mono">hello-world</code> — donde corren de verdad los pods de la <em>app</em>. Se crea solo gracias a <code class="mono">CreateNamespace=true</code> de abajo.</dd></div>
-      <div class="term"><dt>syncPolicy.automated</dt><dd><code class="mono">prune</code> y <code class="mono">selfHeal</code> — explicados a fondo en la <a href="../../part-1/es/#bucle">Parte 1, sección 03</a>. Sin este bloque, sincronizar necesitaría un <code class="mono">argocd app sync</code> manual cada vez.</dd></div>
+      <div class="term"><dt>metadata.namespace</dt><dd><code class="mono">argocd</code> — this object itself lives where Argo lives, not where the app runs. That's a different <code class="mono">namespace</code>, three lines down.</dd></div>
+      <div class="term"><dt>source.repoURL + path</dt><dd>This repo, folder <span class="inline-file">manifests/hello-world</span> — the two folders from section 01, pointing at each other.</dd></div>
+      <div class="term"><dt>destination.namespace</dt><dd><code class="mono">hello-world</code> — where the <em>app's</em> pods actually run. Created automatically because of <code class="mono">CreateNamespace=true</code> below.</dd></div>
+      <div class="term"><dt>syncPolicy.automated</dt><dd><code class="mono">prune</code> and <code class="mono">selfHeal</code> — explained in full in <a href="../../part-1/hello-world-argocd/#bucle">Part 1, section 03</a>. Without this block, syncing would need a manual <code class="mono">argocd app sync</code> every time.</dd></div>
     </dl>
   </section>
 
   <section id="manifests">
     <div class="section-head"><span class="num">03</span><h2>manifests/hello-world/</h2></div>
-    <p class="muted">Tres ficheros de Kubernetes normales — nada específico de Argo en ninguno. Funcionarían igual con un simple <code class="mono">kubectl apply -f</code>.</p>
+    <p class="muted">Three plain Kubernetes files — nothing Argo-specific in any of them. They'd work the same with a bare <code class="mono">kubectl apply -f</code>.</p>
     <div class="arch" style="margin-top:20px;">
       <div class="arch-box">
         <span class="tag">namespace.yaml</span>
         <h3>Namespace</h3>
-        <p>Un objeto, una línea que importa: <code class="mono">name: hello-world</code>. Todo lo demás de esta carpeta vive dentro de él.</p>
+        <p>One object, one line that matters: <code class="mono">name: hello-world</code>. Everything else in this folder lives inside it.</p>
       </div>
       <div class="arch-box">
         <span class="tag">service.yaml</span>
         <h3>Service</h3>
-        <p>ClusterIP en el puerto 8080 — la dirección estable que usa cualquier otra cosa dentro del clúster para llegar a la app, sin importar qué pod esté corriendo ahora mismo.</p>
+        <p>ClusterIP on port 8080 — the stable address other things inside the cluster use to reach the app, regardless of which pod is currently running.</p>
       </div>
       <div class="arch-box arch-full">
         <span class="tag">deployment.yaml</span>
         <h3>Deployment</h3>
-        <p>El que merece leerse con calma: <code class="mono">image: hello-world:local</code> con <code class="mono">imagePullPolicy: Never</code> — no hay registry en esta base (ver Parte 1, sección 08), así que la imagen tiene que estar ya en el nodo vía <code class="mono">kind load</code>, y Kubernetes nunca debe intentar descargarla. También lleva el <code class="mono">readinessProbe</code>/<code class="mono">livenessProbe</code> apuntando a <span class="inline-file">/actuator/health/*</span> — lo que hace que la UI de ArgoCD muestre <strong>Healthy</strong> y no solo <strong>Synced</strong>.</p>
+        <p>The one worth reading closely: <code class="mono">image: hello-world:local</code> with <code class="mono">imagePullPolicy: Never</code> — there's no registry in this base (see Part 1, section 08), so the image has to already be sitting on the node via <code class="mono">kind load</code>, and Kubernetes must never try to pull it. It also carries the <code class="mono">readinessProbe</code>/<code class="mono">livenessProbe</code> hitting <span class="inline-file">/actuator/health/*</span> — the thing that makes the ArgoCD UI show <strong>Healthy</strong> instead of just <strong>Synced</strong>.</p>
       </div>
     </div>
   </section>
 
   <section id="add-service">
-    <div class="section-head"><span class="num">04</span><h2>Añadir un segundo servicio</h2></div>
-    <p class="muted">Ningún concepto nuevo — solo repetir el patrón con un nombre distinto.</p>
+    <div class="section-head"><span class="num">04</span><h2>Adding a second service</h2></div>
+    <p class="muted">No new concepts — just repeat the pattern with a new name.</p>
     <div class="flow" style="margin-top:16px;">
       <div class="flow-step">
         <span class="idx">1</span>
-        <span class="actor you">Tú</span>
-        <span class="msg">Copia <span class="inline-file">manifests/hello-world/</span> a <span class="inline-file">manifests/&lt;servicio-nuevo&gt;/</span> y cambia cada aparición de <code class="mono">hello-world</code> por el nombre nuevo — namespace, labels, imagen, nombre del service.</span>
+        <span class="actor you">You</span>
+        <span class="msg">Copy <span class="inline-file">manifests/hello-world/</span> to <span class="inline-file">manifests/&lt;new-service&gt;/</span> and change every <code class="mono">hello-world</code> string to the new name — namespace, labels, image, service name.</span>
       </div>
       <div class="flow-step">
         <span class="idx">2</span>
-        <span class="actor you">Tú</span>
-        <span class="msg">Copia <span class="inline-file">applications/hello-world.yaml</span> a <span class="inline-file">applications/&lt;servicio-nuevo&gt;.yaml</span>. Cambia tres campos: <code class="mono">metadata.name</code>, <code class="mono">source.path</code>, <code class="mono">destination.namespace</code>.</span>
+        <span class="actor you">You</span>
+        <span class="msg">Copy <span class="inline-file">applications/hello-world.yaml</span> to <span class="inline-file">applications/&lt;new-service&gt;.yaml</span>. Change three fields: <code class="mono">metadata.name</code>, <code class="mono">source.path</code>, <code class="mono">destination.namespace</code>.</span>
       </div>
       <div class="flow-step">
         <span class="idx">3</span>
-        <span class="actor you">Tú</span>
+        <span class="actor you">You</span>
         <span class="msg"><code class="mono">git add . &amp;&amp; git commit &amp;&amp; git push</code>.</span>
       </div>
       <div class="flow-step">
         <span class="idx">4</span>
-        <span class="actor you">Tú</span>
-        <span class="msg">Regístralo: <code class="mono">kubectl apply -f applications/&lt;servicio-nuevo&gt;.yaml</code>.</span>
+        <span class="actor you">You</span>
+        <span class="msg">Register it: <code class="mono">kubectl apply -f applications/&lt;new-service&gt;.yaml</code>.</span>
       </div>
       <div class="flow-step">
         <span class="idx">5</span>
         <span class="actor argo">ArgoCD</span>
-        <span class="msg">Lo detecta, crea el namespace, lo despliega — el mismo bucle de reconciliación que <span class="inline-file">hello-world</span>, corriendo como un segundo <code class="mono">Application</code> completamente independiente.</span>
+        <span class="msg">Picks it up, creates the namespace, deploys it — same reconciliation loop as <span class="inline-file">hello-world</span>, running as a second, completely independent <code class="mono">Application</code>.</span>
       </div>
     </div>
-    <p class="muted" style="margin-top:16px;">A partir de 2-3 servicios, copiar y pegar un fichero entero por servicio cansa — para eso existe un <code class="mono">ApplicationSet</code> (genera un <code class="mono">Application</code> por carpeta automáticamente). No hace falta todavía con n=1.</p>
+    <p class="muted" style="margin-top:16px;">Past 2-3 services, copy-pasting a whole file per service gets old — that's what an <code class="mono">ApplicationSet</code> is for (generates one <code class="mono">Application</code> per folder automatically). Not needed yet at n=1.</p>
   </section>
 
   <section id="commands">
-    <div class="section-head"><span class="num">05</span><h2>Comandos de referencia</h2></div>
+    <div class="section-head"><span class="num">05</span><h2>Reference commands</h2></div>
     <div class="cmd-group" style="margin-top:20px;">
-      <h4>Registrar un servicio</h4>
+      <h4>Register a service</h4>
       <pre><span class="c">kubectl</span> apply -f applications/hello-world.yaml</pre>
     </div>
     <div class="cmd-group">
-      <h4>Ver qué cree Argo que es verdad ahora mismo</h4>
+      <h4>See what Argo thinks is true right now</h4>
       <pre><span class="c">kubectl</span> get application hello-world -n argocd
 <span class="c">kubectl</span> get application hello-world -n argocd -o jsonpath='{.status.sync.status} {.status.health.status}'</pre>
     </div>
     <div class="cmd-group">
-      <h4>Forzar una relectura en vez de esperar ~3 min</h4>
+      <h4>Force a re-read instead of waiting ~3 min</h4>
       <pre><span class="c">kubectl</span> -n argocd annotate application hello-world argocd.argoproj.io/refresh=hard --overwrite</pre>
     </div>
   </section>
@@ -293,8 +292,8 @@
       <div class="next-item">
         <span class="mark">→</span>
         <div>
-          <h4><a href="../../part-3/es/">Parte 3 — Generar un microservicio nuevo</a></h4>
-          <p>Usando crud-automation para generar un segundo servicio desde cero e integrarlo en este mismo repo — salida real de terminal en cada paso.</p>
+          <h4><a href="../../part-3/crud-automation/">Part 3 — Generating a New Microservice</a></h4>
+          <p>Using crud-automation to generate a second service from scratch and onboard it into this same repo — real terminal output for every step.</p>
         </div>
       </div>
     </div>
@@ -302,7 +301,7 @@
 
   <footer>
     <span>gitops-config</span>
-    <span>Parte 2 de la serie</span>
+    <span>Part 2 of the series</span>
   </footer>
 
 </div>
