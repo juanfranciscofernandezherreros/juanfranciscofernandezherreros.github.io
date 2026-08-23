@@ -48,7 +48,7 @@ permalink: /
   a{ color:var(--accent); }
   a:focus-visible, button:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
-  .wrap{ width:100%; max-width:720px; margin:0 auto; padding:48px 24px 96px; }
+  .wrap{ width:100%; max-width:1080px; margin:0 auto; padding:48px 24px 96px; }
 
   h1{
     font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
@@ -68,18 +68,111 @@ permalink: /
     letter-spacing:.1em;
     text-transform:uppercase;
     color:var(--ink-soft);
-    margin:0 0 40px;
+    margin:0 0 32px;
   }
 
-  /* ---------- filter bar ---------- */
+  /* ---------- slider ---------- */
+  .slider{
+    position:relative;
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    box-shadow:var(--shadow);
+    margin-bottom:28px;
+    overflow:hidden;
+  }
+  .slides{ position:relative; min-height:200px; }
+  .slide{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    gap:8px;
+    padding:28px 32px 44px;
+    text-decoration:none;
+    opacity:0;
+    visibility:hidden;
+    transition:opacity .6s ease;
+    pointer-events:none;
+  }
+  .slide.active{ opacity:1; visibility:visible; pointer-events:auto; }
+  .slide .slide-eyebrow{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.7rem;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  .slide h2{
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+    font-size:1.7rem;
+    color:var(--ink);
+    margin:0;
+  }
+  .slide p{
+    margin:0;
+    max-width:56ch;
+    font-size:.92rem;
+    line-height:1.55;
+    color:var(--ink-soft);
+  }
+  .slide .go{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.8rem;
+    font-weight:500;
+    color:var(--accent);
+  }
+  .slide-dots{
+    position:absolute;
+    right:16px;
+    bottom:14px;
+    display:flex;
+    gap:6px;
+    z-index:2;
+  }
+  .dot{
+    width:8px; height:8px;
+    padding:0;
+    border-radius:999px;
+    border:1px solid var(--line-strong);
+    background:var(--bg);
+    cursor:pointer;
+  }
+  .dot.active{ background:var(--accent); border-color:var(--accent); }
+  @media (max-width:640px){
+    .slide{ padding:24px 24px 44px; }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .slide{ transition:none; }
+  }
+
+  /* ---------- layout: sidebar + main ---------- */
+  .layout{
+    display:grid;
+    grid-template-columns:240px 1fr;
+    gap:28px;
+    align-items:start;
+  }
+  @media (max-width:800px){
+    .layout{ grid-template-columns:1fr; }
+  }
+
+  /* ---------- filter sidebar ---------- */
   .filters{
     background:var(--surface);
     border:1px solid var(--line-strong);
     box-shadow:var(--shadow);
-    padding:18px 20px;
-    margin-bottom:28px;
+    padding:18px 18px 20px;
+    position:sticky;
+    top:24px;
   }
-  .filters .search-row{ margin-bottom:14px; }
+  @media (max-width:800px){
+    .filters{ position:static; }
+  }
+  .filters .search-row{ margin-bottom:16px; }
   #search-input{
     width:100%;
     font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
@@ -102,9 +195,9 @@ permalink: /
     display:flex;
     flex-wrap:wrap;
     gap:6px;
-    margin-bottom:14px;
+    margin-bottom:16px;
   }
-  .filter-group:last-child{ margin-bottom:0; }
+  .filter-group:last-of-type{ margin-bottom:0; }
   .pill{
     font-family:"IBM Plex Mono", monospace;
     font-size:.72rem;
@@ -125,10 +218,12 @@ permalink: /
   }
   .filters-footer{
     display:flex;
-    justify-content:space-between;
-    align-items:center;
-    gap:12px;
-    margin-top:4px;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:8px;
+    margin-top:16px;
+    padding-top:14px;
+    border-top:1px solid var(--line);
   }
   #result-count{
     font-family:"IBM Plex Mono", monospace;
@@ -197,7 +292,6 @@ permalink: /
   @media (prefers-reduced-motion: reduce){ .card{ transition:none; } }
 
   .series-label{
-    text-align:center;
     font-family:"IBM Plex Mono", monospace;
     font-size:.72rem;
     letter-spacing:.14em;
@@ -224,56 +318,81 @@ permalink: /
   {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
   {% assign all_tags = posts | map: "tags" | flatten | uniq | sort %}
 
-  <div class="filters">
-    <div class="search-row">
-      <input type="search" id="search-input" placeholder="Search articles…" aria-label="Search articles" />
+  <section class="slider" aria-label="Featured articles" aria-roledescription="carousel">
+    <div class="slides" id="slides">
+      {% for post in posts %}
+      {% assign category = post.categories | first %}
+      <a class="slide{% if forloop.first %} active{% endif %}"
+         href="{{ post.url | relative_url }}"
+         aria-roledescription="slide"
+         aria-label="{{ forloop.index }} of {{ forloop.length }}">
+        <span class="slide-eyebrow">Part {{ post.part }} · {{ category }}</span>
+        <h2>{{ post.title }}</h2>
+        <p>{{ post.description | truncatewords: 26 }}</p>
+        <span class="go">Read the guide →</span>
+      </a>
+      {% endfor %}
     </div>
+    <div class="slide-dots" id="slide-dots" role="tablist" aria-label="Choose slide">
+      {% for post in posts %}<button type="button" class="dot{% if forloop.first %} active{% endif %}" data-slide-index="{{ forloop.index0 }}" role="tab" aria-label="Show {{ post.title }}"></button>{% endfor %}
+    </div>
+  </section>
 
-    <p class="filter-label">Series</p>
-    <div class="filter-group" id="series-filters">
-      <button type="button" class="pill active" data-filter-series="all">All</button>
-      {% for s in all_series %}<button type="button" class="pill" data-filter-series="{{ s }}">{{ s }}</button>{% endfor %}
-    </div>
+  <div class="layout">
+    <aside class="filters">
+      <div class="search-row">
+        <input type="search" id="search-input" placeholder="Search articles…" aria-label="Search articles" />
+      </div>
 
-    <p class="filter-label">Category</p>
-    <div class="filter-group" id="category-filters">
-      <button type="button" class="pill active" data-filter-category="all">All</button>
-      {% for c in all_categories %}<button type="button" class="pill" data-filter-category="{{ c }}">{{ c }}</button>{% endfor %}
-    </div>
+      <p class="filter-label">Series</p>
+      <div class="filter-group" id="series-filters">
+        <button type="button" class="pill active" data-filter-series="all">All</button>
+        {% for s in all_series %}<button type="button" class="pill" data-filter-series="{{ s }}">{{ s }}</button>{% endfor %}
+      </div>
 
-    <p class="filter-label">Tags</p>
-    <div class="filter-group" id="tag-filters">
-      {% for t in all_tags %}<button type="button" class="pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
-    </div>
+      <p class="filter-label">Category</p>
+      <div class="filter-group" id="category-filters">
+        <button type="button" class="pill active" data-filter-category="all">All</button>
+        {% for c in all_categories %}<button type="button" class="pill" data-filter-category="{{ c }}">{{ c }}</button>{% endfor %}
+      </div>
 
-    <div class="filters-footer">
-      <span id="result-count"></span>
-      <button type="button" id="clear-filters">Clear filters</button>
-    </div>
+      <p class="filter-label">Tags</p>
+      <div class="filter-group" id="tag-filters">
+        {% for t in all_tags %}<button type="button" class="pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
+      </div>
+
+      <div class="filters-footer">
+        <span id="result-count"></span>
+        <button type="button" id="clear-filters">Clear filters</button>
+      </div>
+    </aside>
+
+    <main>
+      <p class="series-label">Argo Real World Microservices</p>
+      <div class="cards" id="cards">
+        {% for post in posts %}
+        {% assign category = post.categories | first %}
+        <a class="card"
+           href="{{ post.url | relative_url }}"
+           data-series="{{ post.series | escape }}"
+           data-category="{{ category | escape }}"
+           data-tags="{{ post.tags | join: ',' | escape }}"
+           data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}">
+          <p class="eyebrow">Part {{ post.part }}</p>
+          <h2>{{ post.title }}</h2>
+          <p class="desc">{{ post.description }}</p>
+          <p class="card-tags">
+            <span class="badge badge-cat">{{ category }}</span>
+            {% for t in post.tags %}<span class="badge badge-tag">#{{ t }}</span>{% endfor %}
+          </p>
+          <span class="go">Read the guide →</span>
+        </a>
+        {% endfor %}
+      </div>
+      <p id="empty-state" class="hidden">No articles match these filters.</p>
+    </main>
   </div>
-
-  <p class="series-label">Argo Real World Microservices</p>
-  <div class="cards" id="cards">
-    {% for post in posts %}
-    {% assign category = post.categories | first %}
-    <a class="card"
-       href="{{ post.url | relative_url }}"
-       data-series="{{ post.series | escape }}"
-       data-category="{{ category | escape }}"
-       data-tags="{{ post.tags | join: ',' | escape }}"
-       data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}">
-      <p class="eyebrow">Part {{ post.part }}</p>
-      <h2>{{ post.title }}</h2>
-      <p class="desc">{{ post.description }}</p>
-      <p class="card-tags">
-        <span class="badge badge-cat">{{ category }}</span>
-        {% for t in post.tags %}<span class="badge badge-tag">#{{ t }}</span>{% endfor %}
-      </p>
-      <span class="go">Read the guide →</span>
-    </a>
-    {% endfor %}
-  </div>
-  <p id="empty-state" class="hidden">No articles match these filters.</p>
 </div>
 
 <script src="{{ '/assets/js/filter.js' | relative_url }}"></script>
+<script src="{{ '/assets/js/slider.js' | relative_url }}"></script>
