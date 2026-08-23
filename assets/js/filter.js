@@ -1,9 +1,11 @@
 (function () {
+  var cardsContainer = document.getElementById('cards');
   var cards = Array.prototype.slice.call(document.querySelectorAll('#cards .card'));
   var seriesButtons = Array.prototype.slice.call(document.querySelectorAll('#series-filters .pill'));
   var categoryButtons = Array.prototype.slice.call(document.querySelectorAll('#category-filters .pill'));
   var tagButtons = Array.prototype.slice.call(document.querySelectorAll('#tag-filters .pill'));
   var searchInput = document.getElementById('search-input');
+  var sortSelect = document.getElementById('sort-select');
   var emptyState = document.getElementById('empty-state');
   var resultCount = document.getElementById('result-count');
   var clearButton = document.getElementById('clear-filters');
@@ -23,6 +25,21 @@
   function setActiveSingle(buttons, value, datasetKey) {
     buttons.forEach(function (btn) {
       btn.classList.toggle('active', btn.dataset[datasetKey] === value);
+    });
+  }
+
+  var SORT_COMPARATORS = {
+    'part': function (a, b) { return Number(a.dataset.part) - Number(b.dataset.part); },
+    'date-desc': function (a, b) { return b.dataset.date.localeCompare(a.dataset.date); },
+    'date-asc': function (a, b) { return a.dataset.date.localeCompare(b.dataset.date); },
+    'title-asc': function (a, b) { return a.dataset.title.localeCompare(b.dataset.title); },
+    'title-desc': function (a, b) { return b.dataset.title.localeCompare(a.dataset.title); }
+  };
+
+  function sortCards(criterion) {
+    var comparator = SORT_COMPARATORS[criterion] || SORT_COMPARATORS.part;
+    cards.slice().sort(comparator).forEach(function (card) {
+      cardsContainer.appendChild(card);
     });
   }
 
@@ -79,6 +96,12 @@
     });
   }
 
+  if (sortSelect) {
+    sortSelect.addEventListener('change', function () {
+      sortCards(sortSelect.value);
+    });
+  }
+
   if (clearButton) {
     clearButton.addEventListener('click', function () {
       activeSeries = 'all';
@@ -86,17 +109,20 @@
       activeTags.clear();
       query = '';
       if (searchInput) searchInput.value = '';
+      if (sortSelect) sortSelect.value = 'part';
       setActiveSingle(seriesButtons, 'all', 'filterSeries');
       setActiveSingle(categoryButtons, 'all', 'filterCategory');
       tagButtons.forEach(function (btn) { btn.classList.remove('active'); });
+      sortCards('part');
       apply();
     });
   }
 
-  // Pre-select from ?category=slug or ?tag=slug, e.g. links from an article's badge bar.
+  // Pre-select from ?category=slug, ?tag=slug or ?sort=criterion, e.g. links from an article's badge bar.
   var params = new URLSearchParams(window.location.search);
   var wantedCategory = params.get('category');
   var wantedTag = params.get('tag');
+  var wantedSort = params.get('sort');
 
   if (wantedCategory) {
     var catMatch = categoryButtons.find(function (btn) {
@@ -113,6 +139,10 @@
       activeTags.add(tagMatch.dataset.filterTag);
       tagMatch.classList.add('active');
     }
+  }
+  if (wantedSort && SORT_COMPARATORS[wantedSort]) {
+    if (sortSelect) sortSelect.value = wantedSort;
+    sortCards(wantedSort);
   }
 
   apply();

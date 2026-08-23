@@ -198,6 +198,17 @@ permalink: /
     margin-bottom:16px;
   }
   .filter-group:last-of-type{ margin-bottom:0; }
+  .sort-row{ margin-bottom:16px; }
+  #sort-select{
+    width:100%;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.78rem;
+    padding:8px 10px;
+    background:var(--bg);
+    color:var(--ink);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+  }
   .pill{
     font-family:"IBM Plex Mono", monospace;
     font-size:.72rem;
@@ -361,6 +372,17 @@ permalink: /
         {% for t in all_tags %}<button type="button" class="pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
       </div>
 
+      <p class="filter-label">Sort by</p>
+      <div class="sort-row">
+        <select id="sort-select" aria-label="Sort articles">
+          <option value="part">Reading order</option>
+          <option value="date-desc">Newest first</option>
+          <option value="date-asc">Oldest first</option>
+          <option value="title-asc">Title A–Z</option>
+          <option value="title-desc">Title Z–A</option>
+        </select>
+      </div>
+
       <div class="filters-footer">
         <span id="result-count"></span>
         <button type="button" id="clear-filters">Clear filters</button>
@@ -377,7 +399,10 @@ permalink: /
            data-series="{{ post.series | escape }}"
            data-category="{{ category | escape }}"
            data-tags="{{ post.tags | join: ',' | escape }}"
-           data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}">
+           data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}"
+           data-part="{{ post.part }}"
+           data-date="{{ post.date | date: '%Y-%m-%d' }}"
+           data-title="{{ post.title | escape }}">
           <p class="eyebrow">Part {{ post.part }}</p>
           <h2>{{ post.title }}</h2>
           <p class="desc">{{ post.description }}</p>
