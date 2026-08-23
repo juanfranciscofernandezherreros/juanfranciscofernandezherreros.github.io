@@ -1,11 +1,12 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<title>Juan Francisco Fernández Herreros</title>
+---
+layout: default
+title: Juan Francisco Fernández Herreros
+description: >-
+  Software engineer notes on GitOps, Kubernetes, and shipping real microservices —
+  written as a hands-on series with real terminal output and screenshots.
+permalink: /
+---
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <style>
   :root{
@@ -16,26 +17,26 @@
     --line:#c7d0ce;
     --line-strong:#9fb0ac;
     --accent:#1d5c8a;
+    --accent-ink:#ffffff;
     --accent-soft:#e2edf4;
     --shadow:0 1px 2px rgba(20,32,43,.06), 0 8px 24px -12px rgba(20,32,43,.18);
   }
   @media (prefers-color-scheme: dark){
     :root:not([data-theme="light"]){
       --bg:#0e1c2a; --surface:#132639; --ink:#e7eef3; --ink-soft:#9fb4c4;
-      --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-soft:#17324a;
+      --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
       --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
     }
   }
   :root[data-theme="dark"]{
     --bg:#0e1c2a; --surface:#132639; --ink:#e7eef3; --ink-soft:#9fb4c4;
-    --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-soft:#17324a;
+    --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
     --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
   }
 
   *{ box-sizing:border-box; }
-  html,body{ height:100%; margin:0; }
+  html,body{ min-height:100%; margin:0; }
   body{
-    display:flex; align-items:center; justify-content:center;
     background:
       repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
       repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
@@ -45,9 +46,9 @@
     -webkit-font-smoothing:antialiased;
   }
   a{ color:var(--accent); }
-  a:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+  a:focus-visible, button:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
 
-  .wrap{ width:100%; max-width:480px; padding:24px; }
+  .wrap{ width:100%; max-width:720px; margin:0 auto; padding:48px 24px 96px; }
 
   h1{
     font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
@@ -70,6 +71,85 @@
     margin:0 0 40px;
   }
 
+  /* ---------- filter bar ---------- */
+  .filters{
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    box-shadow:var(--shadow);
+    padding:18px 20px;
+    margin-bottom:28px;
+  }
+  .filters .search-row{ margin-bottom:14px; }
+  #search-input{
+    width:100%;
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    font-size:.92rem;
+    padding:10px 12px;
+    background:var(--bg);
+    color:var(--ink);
+    border:1px solid var(--line-strong);
+    border-radius:3px;
+  }
+  .filter-label{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.66rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin:0 0 8px;
+  }
+  .filter-group{
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px;
+    margin-bottom:14px;
+  }
+  .filter-group:last-child{ margin-bottom:0; }
+  .pill{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.72rem;
+    letter-spacing:.04em;
+    padding:5px 12px;
+    background:var(--bg);
+    color:var(--ink-soft);
+    border:1px solid var(--line-strong);
+    border-radius:999px;
+    cursor:pointer;
+    transition:background-color .15s ease, color .15s ease, border-color .15s ease;
+  }
+  .pill:hover{ border-color:var(--accent); color:var(--accent); }
+  .pill.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:var(--accent-ink);
+  }
+  .filters-footer{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    gap:12px;
+    margin-top:4px;
+  }
+  #result-count{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.72rem;
+    color:var(--ink-soft);
+  }
+  #clear-filters{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.72rem;
+    letter-spacing:.04em;
+    color:var(--accent);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:0;
+    text-decoration:underline;
+  }
+  @media (prefers-reduced-motion: reduce){ .pill{ transition:none; } }
+
+  /* ---------- cards ---------- */
+  .cards{ display:flex; flex-direction:column; gap:14px; }
   .card{
     display:block;
     background:var(--surface);
@@ -80,6 +160,7 @@
     transition:border-color .15s ease;
   }
   .card:hover, .card:focus-visible{ border-color:var(--accent); }
+  .card.hidden{ display:none; }
   .card .eyebrow{
     font-family:"IBM Plex Mono", monospace;
     font-size:.68rem;
@@ -97,11 +178,15 @@
     color:var(--ink);
     margin:0 0 8px;
   }
-  .card p{
+  .card p.desc{
     margin:0 0 14px;
     font-size:.92rem;
     line-height:1.55;
     color:var(--ink-soft);
+  }
+  .card .card-tags{
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin:0 0 14px;
   }
   .card .go{
     font-family:"IBM Plex Mono", monospace;
@@ -111,7 +196,7 @@
   }
   @media (prefers-reduced-motion: reduce){ .card{ transition:none; } }
 
-  .series{
+  .series-label{
     text-align:center;
     font-family:"IBM Plex Mono", monospace;
     font-size:.72rem;
@@ -120,41 +205,75 @@
     color:var(--ink-soft);
     margin:0 0 14px;
   }
-  .cards{ display:flex; flex-direction:column; gap:14px; }
+
+  #empty-state{
+    text-align:center;
+    padding:32px 20px;
+    color:var(--ink-soft);
+    font-size:.92rem;
+  }
+  #empty-state.hidden{ display:none; }
 </style>
-</head>
-<body>
+
 <div class="wrap">
   <h1>Juan Francisco Fernández Herreros</h1>
   <p class="role">Software Engineer</p>
 
-  <p class="series">Argo Real World Microservices</p>
-  <div class="cards">
-    <a class="card" href="https://juanfranciscofernandezherreros.github.io/argo-real-world-microservices/part-0/before-you-begin/">
-      <p class="eyebrow">Part 0</p>
-      <h2>Before You Begin</h2>
-      <p>What to install before Part 1 — Git, Docker Desktop, kind, kubectl, Java, Maven, the ArgoCD CLI — with the exact commands and how to verify each one.</p>
-      <span class="go">Get set up →</span>
-    </a>
-    <a class="card" href="https://juanfranciscofernandezherreros.github.io/argo-real-world-microservices/part-1/hello-world-argocd/">
-      <p class="eyebrow">Part 1</p>
-      <h2>Hello World with ArgoCD</h2>
-      <p>A beginner's guide to deploying a microservice with ArgoCD over a local Kubernetes cluster — glossary, architecture, and real screenshots of the whole thing working.</p>
-      <span class="go">Read the guide →</span>
-    </a>
-    <a class="card" href="https://juanfranciscofernandezherreros.github.io/argo-real-world-microservices/part-2/gitops-config/">
-      <p class="eyebrow">Part 2</p>
-      <h2>The Config Repo: gitops-config</h2>
-      <p>The Application resource and the manifests it points at, line by line — plus how to add a second service to the same pattern.</p>
-      <span class="go">Read the guide →</span>
-    </a>
-    <a class="card" href="https://juanfranciscofernandezherreros.github.io/argo-real-world-microservices/part-3/crud-automation/">
-      <p class="eyebrow">Part 3</p>
-      <h2>Generating a New Microservice</h2>
-      <p>Using crud-automation to generate a second, independent service and onboard it into the same GitOps pattern — real terminal output for every step.</p>
-      <span class="go">Read the guide →</span>
-    </a>
+  {% assign posts = site.posts | where_exp: "p", "p.lang == 'en'" | sort: "part" %}
+  {% assign all_series = posts | map: "series" | uniq | sort %}
+  {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
+  {% assign all_tags = posts | map: "tags" | flatten | uniq | sort %}
+
+  <div class="filters">
+    <div class="search-row">
+      <input type="search" id="search-input" placeholder="Search articles…" aria-label="Search articles" />
+    </div>
+
+    <p class="filter-label">Series</p>
+    <div class="filter-group" id="series-filters">
+      <button type="button" class="pill active" data-filter-series="all">All</button>
+      {% for s in all_series %}<button type="button" class="pill" data-filter-series="{{ s }}">{{ s }}</button>{% endfor %}
+    </div>
+
+    <p class="filter-label">Category</p>
+    <div class="filter-group" id="category-filters">
+      <button type="button" class="pill active" data-filter-category="all">All</button>
+      {% for c in all_categories %}<button type="button" class="pill" data-filter-category="{{ c }}">{{ c }}</button>{% endfor %}
+    </div>
+
+    <p class="filter-label">Tags</p>
+    <div class="filter-group" id="tag-filters">
+      {% for t in all_tags %}<button type="button" class="pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
+    </div>
+
+    <div class="filters-footer">
+      <span id="result-count"></span>
+      <button type="button" id="clear-filters">Clear filters</button>
+    </div>
   </div>
+
+  <p class="series-label">Argo Real World Microservices</p>
+  <div class="cards" id="cards">
+    {% for post in posts %}
+    {% assign category = post.categories | first %}
+    <a class="card"
+       href="{{ post.url | relative_url }}"
+       data-series="{{ post.series | escape }}"
+       data-category="{{ category | escape }}"
+       data-tags="{{ post.tags | join: ',' | escape }}"
+       data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}">
+      <p class="eyebrow">Part {{ post.part }}</p>
+      <h2>{{ post.title }}</h2>
+      <p class="desc">{{ post.description }}</p>
+      <p class="card-tags">
+        <span class="badge badge-cat">{{ category }}</span>
+        {% for t in post.tags %}<span class="badge badge-tag">#{{ t }}</span>{% endfor %}
+      </p>
+      <span class="go">Read the guide →</span>
+    </a>
+    {% endfor %}
+  </div>
+  <p id="empty-state" class="hidden">No articles match these filters.</p>
 </div>
-</body>
-</html>
+
+<script src="{{ '/assets/js/filter.js' | relative_url }}"></script>

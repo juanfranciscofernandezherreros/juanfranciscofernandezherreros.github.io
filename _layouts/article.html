@@ -1,0 +1,9 @@
+---
+layout: default
+---
+<div class="meta-bar-wrap">
+  {% assign category = page.categories | first %}
+  <a class="badge badge-cat" href="{{ '/' | relative_url }}?category={{ category | slugify }}">{{ category }}</a>
+  {% for tag in page.tags %}<a class="badge badge-tag" href="{{ '/' | relative_url }}?tag={{ tag | slugify }}">#{{ tag }}</a>{% endfor %}
+</div>
+{{ content }}

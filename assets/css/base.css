@@ -1,0 +1,39 @@
+/* Shared across every page (home + articles). Each page also ships its own
+   full <style> block for its own tokens/layout — this file only holds the
+   bits introduced by the blog redesign (category/tag chrome) so they look
+   identical everywhere instead of being redefined per page. */
+
+.meta-bar-wrap{
+  max-width:920px;
+  margin:20px auto 0;
+  padding:0 24px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:8px;
+}
+.badge{
+  display:inline-block;
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.68rem;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  padding:4px 10px;
+  border-radius:3px;
+  text-decoration:none;
+  line-height:1.4;
+  white-space:nowrap;
+}
+.badge-cat{
+  background:var(--accent);
+  color:var(--accent-ink, #fff);
+  font-weight:600;
+}
+.badge-tag{
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+a.badge-tag:hover, a.badge-tag:focus-visible,
+a.badge-cat:hover, a.badge-cat:focus-visible{
+  text-decoration:underline;
+}

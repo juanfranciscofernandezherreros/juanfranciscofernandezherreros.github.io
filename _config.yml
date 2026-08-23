@@ -1,0 +1,30 @@
+title: Juan Francisco Fernández Herreros
+description: >-
+  Software engineer notes on GitOps, Kubernetes, and shipping real microservices —
+  written as a hands-on series with real terminal output and screenshots.
+url: "https://juanfranciscofernandezherreros.github.io"
+baseurl: ""
+lang: en
+author: Juan Francisco Fernández Herreros
+
+markdown: kramdown
+permalink: /:categories/:year/:month/:day/:title/
+
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: article
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - README.md
+  - CLAUDE.md
+  - vendor
+  - node_modules
