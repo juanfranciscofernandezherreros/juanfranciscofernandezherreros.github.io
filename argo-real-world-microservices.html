@@ -1,0 +1,305 @@
+---
+layout: "article"
+title: "Course"
+description: "A four-part, hands-on course on deploying real microservices with ArgoCD and GitOps: what you'll be able to do by the end, what to install first, and the full syllabus in reading order."
+og_title: "Course — Argo Real World Microservices"
+og_description: "A four-part, hands-on course on deploying real microservices with ArgoCD and GitOps: what you'll be able to do by the end, what to install first, and the full syllabus in reading order."
+twitter_title: "Course — Argo Real World Microservices"
+twitter_description: "The full syllabus, in reading order, with prerequisites and what each part gets you."
+permalink: "/argo-real-world-microservices/"
+lang: "en"
+lang_url: "/argo-real-world-microservices/es/"
+series: "Argo Real World Microservices"
+categories: ["Concepts & Theory"]
+tags: ["argocd","gitops","kubernetes","course","syllabus"]
+date: "2026-08-24"
+---
+
+<style>
+  /* ---------- tokens ---------- */
+  :root{
+    --bg:#eef1f0;
+    --surface:#ffffff;
+    --surface-2:#e6ebe9;
+    --ink:#14202b;
+    --ink-soft:#4a5a66;
+    --line:#c7d0ce;
+    --line-strong:#9fb0ac;
+    --accent:#1d5c8a;
+    --accent-ink:#ffffff;
+    --accent-soft:#e2edf4;
+    --good:#1f7a4d;
+    --good-soft:#e2f2e8;
+    --warn:#a15d10;
+    --warn-soft:#f6e8d6;
+    --shadow:0 1px 2px rgba(20,32,43,.06), 0 8px 24px -12px rgba(20,32,43,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+      --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+      --good:#5fd394; --good-soft:#12301f; --warn:#e3a855; --warn-soft:#332209;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+    --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+    --good:#5fd394; --good-soft:#12301f; --warn:#e3a855; --warn-soft:#332209;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
+      repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
+      var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:var(--accent); }
+  a:focus-visible, button:focus-visible, input:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  h1,h2,h3{
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    text-wrap:balance; color:var(--ink); margin:0;
+  }
+
+  .sheet{ max-width:920px; margin:48px auto 96px; padding:0 24px; }
+
+  .titleblock{
+    background:var(--surface); border:1px solid var(--line-strong); box-shadow:var(--shadow);
+    padding:28px 32px 24px; position:relative;
+  }
+  .lang-switch{
+    position:absolute; top:20px; right:24px;
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; letter-spacing:.06em;
+  }
+  .lang-switch a{ color:var(--ink-soft); text-decoration:none; }
+  .lang-switch a:hover{ color:var(--accent); text-decoration:underline; }
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace; font-size:.72rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+  }
+  .titleblock h1{ font-size:clamp(2.1rem, 5vw, 3rem); line-height:1.02; max-width:20ch; }
+  .titleblock p.lede{
+    margin:14px 0 0; max-width:64ch; color:var(--ink-soft); font-size:1.02rem; line-height:1.55;
+  }
+
+  .hero-actions{ display:flex; flex-wrap:wrap; gap:12px; margin-top:22px; }
+  .btn{
+    display:inline-flex; align-items:center; gap:8px;
+    font-family:"IBM Plex Mono", monospace; font-size:.82rem; font-weight:500;
+    padding:10px 18px; text-decoration:none; border:1px solid var(--line-strong);
+  }
+  .btn-primary{ background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+  .btn-primary:hover{ opacity:.9; }
+  .btn-secondary{ color:var(--accent); background:var(--surface); }
+  .btn-secondary:hover{ border-color:var(--accent); }
+
+  section{ margin-top:56px; }
+  .section-head{
+    display:flex; align-items:baseline; gap:12px;
+    border-bottom:1px solid var(--line-strong); padding-bottom:10px; margin-bottom:22px;
+  }
+  .section-head .num{ font-family:"IBM Plex Mono", monospace; color:var(--accent); font-size:.85rem; }
+  .section-head h2{ font-size:1.5rem; }
+  p{ line-height:1.6; color:var(--ink); max-width:70ch; text-align:justify; hyphens:auto; -webkit-hyphens:auto; }
+  p.muted{ color:var(--ink-soft); }
+  section > p + p{ margin-top:14px; }
+
+  code, .mono{ font-family:"IBM Plex Mono", monospace; }
+
+  .note{
+    background:var(--accent-soft); border-left:3px solid var(--accent);
+    padding:16px 20px; margin-bottom:24px;
+  }
+  .note h4{
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-weight:600; font-size:.92rem;
+    text-transform:none; letter-spacing:0; color:var(--accent); margin:0 0 8px;
+  }
+  .note p{ font-size:.9rem; margin:0 0 8px; }
+  .note p:last-child{ margin-bottom:0; }
+
+  /* ---------- outcomes / prerequisites lists ---------- */
+  .check-list{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
+  .check-list li{
+    display:grid; grid-template-columns:20px 1fr; gap:12px;
+    font-size:.95rem; line-height:1.55; color:var(--ink);
+    text-align:justify; hyphens:auto; -webkit-hyphens:auto;
+  }
+  .check-list li::before{
+    content:"✓"; color:var(--good); font-weight:700; font-family:"IBM Plex Mono", monospace;
+  }
+  .prereq-list{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
+  .prereq-list li{
+    display:grid; grid-template-columns:20px 1fr; gap:12px;
+    font-size:.92rem; line-height:1.55; color:var(--ink-soft);
+    text-align:justify; hyphens:auto; -webkit-hyphens:auto;
+  }
+  .prereq-list li::before{
+    content:"—"; color:var(--accent); font-family:"IBM Plex Mono", monospace;
+  }
+  .prereq-list strong{ color:var(--ink); }
+
+  /* ---------- syllabus ---------- */
+  .progress-summary{
+    display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap;
+    gap:10px 16px; margin-bottom:16px;
+  }
+  #progress-count{
+    font-family:"IBM Plex Mono", monospace; font-size:.82rem; color:var(--ink-soft);
+  }
+  #reset-progress{
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; letter-spacing:.04em;
+    color:var(--accent); background:none; border:none; cursor:pointer; padding:0;
+    text-decoration:underline;
+  }
+  .progress-bar{
+    height:6px; background:var(--surface-2); border:1px solid var(--line);
+    margin-bottom:24px; overflow:hidden;
+  }
+  #progress-bar-fill{
+    height:100%; width:0%; background:var(--good);
+    transition:width .2s ease;
+  }
+  @media (prefers-reduced-motion: reduce){ #progress-bar-fill{ transition:none; } }
+
+  .syllabus{ display:grid; gap:12px; }
+  .module-row{
+    display:grid; grid-template-columns:28px 1fr auto; gap:16px; align-items:start;
+    background:var(--surface); border:1px solid var(--line-strong); box-shadow:var(--shadow);
+    padding:18px 20px; transition:border-color .15s ease;
+  }
+  .module-row.is-done{ border-color:var(--good); }
+  .module-check-wrap{ padding-top:3px; }
+  .module-check{
+    width:18px; height:18px; accent-color:var(--good); cursor:pointer;
+  }
+  .module-eyebrow{
+    font-family:"IBM Plex Mono", monospace; font-size:.68rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 6px;
+  }
+  .module-row.is-done .module-eyebrow{ color:var(--good); }
+  .module-row h3{
+    font-size:1.15rem; margin:0 0 6px; text-transform:none; letter-spacing:0;
+  }
+  .module-row h3 a{ color:var(--ink); text-decoration:none; }
+  .module-row h3 a:hover{ color:var(--accent); text-decoration:underline; }
+  .module-row p.desc{
+    margin:0; font-size:.86rem; color:var(--ink-soft); text-align:justify;
+    hyphens:auto; -webkit-hyphens:auto;
+  }
+  .module-meta{
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; color:var(--ink-soft);
+    white-space:nowrap; text-align:right; padding-top:2px;
+  }
+  @media (max-width:640px){
+    .module-row{ grid-template-columns:24px 1fr; }
+    .module-meta{ grid-column:2 / -1; text-align:left; padding-top:0; }
+  }
+
+  .next{ display:grid; gap:12px; }
+  .next-item{
+    display:grid; grid-template-columns:22px 1fr; gap:12px; padding:14px 16px;
+    background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow);
+  }
+  .next-item .mark{ color:var(--accent); font-family:"IBM Plex Mono", monospace; }
+  .next-item h4{
+    margin:0 0 4px; font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-weight:600;
+    font-size:.98rem; text-transform:none; letter-spacing:0;
+  }
+  .next-item p{ margin:0; font-size:.9rem; color:var(--ink-soft); }
+</style>
+
+<div class="sheet">
+
+  {% assign numbered_posts = site.posts | where_exp: "p", "p.lang == 'en'" | sort: "part" %}
+  {% assign intro_pages = site.pages | where: "permalink", "/argo-real-world-microservices/introduction/" %}
+  {% assign modules = intro_pages | concat: numbered_posts %}
+
+  <div class="titleblock">
+    <p class="lang-switch"><a href="{{ '/argo-real-world-microservices/es/' | relative_url }}">ES · Español</a></p>
+    <p class="eyebrow">Course</p>
+    <h1>Argo Real World Microservices</h1>
+    <p class="lede">A four-part, hands-on course on shipping microservices to Kubernetes with ArgoCD and GitOps — real terminal output and screenshots at every step, no slides. Install the tools, deploy a working service end to end, understand exactly why it worked, then generate and onboard a brand new service into the same pattern.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="{{ '/argo-real-world-microservices/part-0/before-you-begin/' | relative_url }}">Start with Part 0 →</a>
+      <a class="btn btn-secondary" href="{{ '/argo-real-world-microservices/introduction/' | relative_url }}">Read the theory first</a>
+    </div>
+  </div>
+
+  <section id="outcomes">
+    <div class="section-head"><span class="num">00</span><h2>What you'll be able to do</h2></div>
+    <ul class="check-list">
+      <li>Deploy a Spring Boot microservice to a local Kubernetes cluster through ArgoCD, end to end — from a <code class="mono">git push</code> to a Synced, Healthy Application.</li>
+      <li>Read a GitOps config repo and an ArgoCD <code class="mono">Application</code> resource line by line, and explain what <code class="mono">manifests/</code> and <code class="mono">applications/</code> are each for.</li>
+      <li>Explain push-based CD vs. pull-based GitOps, and why ArgoCD's reconciliation loop self-heals manual drift instead of just reacting to it.</li>
+      <li>Onboard a brand new microservice into an existing GitOps setup — both by hand, and by generating one from scratch and registering it the same way.</li>
+    </ul>
+  </section>
+
+  <section id="prerequisites">
+    <div class="section-head"><span class="num">01</span><h2>Before you start</h2></div>
+    <p class="muted">No prior Kubernetes or ArgoCD experience is assumed — Part 1 is written for someone who's never touched either.</p>
+    <ul class="prereq-list" style="margin-top:16px;">
+      <li><strong>Windows 10/11.</strong> Part 0's install commands use <code class="mono">winget</code> and PowerShell.</li>
+      <li><strong>Comfortable with a terminal and Git</strong> — commits, push, basic commands. Nothing more advanced than that.</li>
+      <li><strong>Enough Java/Spring Boot to read code</strong> — the course doesn't teach Spring Boot itself, it uses a small existing service to demonstrate the deployment pipeline.</li>
+      <li><strong>~20-30 minutes and a Docker Desktop install</strong> for Part 0's one-time setup, most of it downloads.</li>
+    </ul>
+    <div class="note" style="margin-top:20px;">
+      <h4>New to containers, Kubernetes, or GitOps as concepts?</h4>
+      <p>The <a href="{{ '/argo-real-world-microservices/introduction/' | relative_url }}">Introduction</a> covers the theory — no installs, no commands — before Part 0 has you touching a terminal. If you already know what a container, a cluster, and GitOps are, skip straight to Part 0.</p>
+    </div>
+  </section>
+
+  <section id="syllabus">
+    <div class="section-head"><span class="num">02</span><h2>Syllabus</h2></div>
+    <p class="muted">In reading order. Check off a module as you finish it — progress is saved in this browser only.</p>
+    <div class="progress-summary" style="margin-top:20px;">
+      <span id="progress-count">0 / {{ modules.size }} completed</span>
+      <button type="button" id="reset-progress">Reset progress</button>
+    </div>
+    <div class="progress-bar"><div id="progress-bar-fill"></div></div>
+    <div class="syllabus" id="syllabus-list">
+      {% for m in modules %}
+      <div class="module-row" data-module-id="{{ m.url }}">
+        <div class="module-check-wrap">
+          <input type="checkbox" class="module-check" id="module-{{ forloop.index0 }}" aria-label="Mark '{{ m.title }}' as complete" />
+        </div>
+        <div>
+          <p class="module-eyebrow">{% if m.part %}Part {{ m.part }}{% else %}Introduction{% endif %}</p>
+          <h3><a href="{{ m.url | relative_url }}">{{ m.title }}</a></h3>
+          <p class="desc">{{ m.description | truncatewords: 30 }}</p>
+        </div>
+        <span class="module-meta">{% if m.reading_minutes %}~{{ m.reading_minutes }} min read{% endif %}</span>
+      </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="section-head"><span class="num">03</span><h2>Ready?</h2></div>
+    <div class="next">
+      <div class="next-item">
+        <span class="mark">→</span>
+        <div>
+          <h4>Start with Part 0</h4>
+          <p><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/' | relative_url }}">Before You Begin</a> — install Git, Docker Desktop, kind, kubectl, Java, Maven, and the ArgoCD CLI, and confirm each one works.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script src="{{ '/assets/js/course-progress.js' | relative_url }}"></script>

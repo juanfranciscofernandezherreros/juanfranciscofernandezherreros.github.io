@@ -296,6 +296,8 @@ permalink: /
     color:var(--ink-soft);
     margin:0 0 14px;
   }
+  .series-label a{ color:var(--ink-soft); text-decoration:none; }
+  .series-label a:hover, .series-label a:focus-visible{ color:var(--accent); text-decoration:underline; }
 
   #empty-state{
     text-align:center;
@@ -383,7 +385,7 @@ permalink: /
     </aside>
 
     <main>
-      <p class="series-label">Argo Real World Microservices</p>
+      <p class="series-label"><a href="{{ '/argo-real-world-microservices/' | relative_url }}">Argo Real World Microservices — full syllabus →</a></p>
       <div class="cards" id="cards">
         {% for post in posts %}
         {% assign category = post.categories | first %}

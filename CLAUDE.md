@@ -57,6 +57,9 @@ part: N
 categories: ["Nombre de categoría"]   # una sola, se usa como badge + filtro
 tags: ["tag1", "tag2", ...]           # filtro múltiple en la portada
 date: "YYYY-MM-DD"
+reading_minutes: N          # minutos de lectura reales (~200 palabras/min,
+                             # redondeado arriba, mínimo 3) — alimenta el
+                             # temario del curso, ver más abajo
 ```
 
 El cuerpo del fichero es: un `<style>` completo (cada artículo trae el
@@ -135,12 +138,42 @@ y `.../es/`), con `layout: "article"` pero sin campo `part` — no viven en
 `_posts/` ni aparecen en el slider/listado de `site.posts` de la portada
 (ese bucle asume `part` numérico). Son el equivalente teórico de la serie:
 qué es un microservicio, un contenedor, Kubernetes, CI/CD, GitOps y ArgoCD,
-sin comandos ni pasos prácticos. Enlazadas desde `index.html`
-(`.top-links`, junto a `/commands/`) y desde la Parte 0 (nota al inicio de
-la sección `#what`, en ambos idiomas). Al editarlas, mantener el
-`lang_url` cruzado y los enlaces relativos según su profundidad real
-(`/argo-real-world-microservices/introduction/` = 2 niveles bajo la raíz;
-`.../es/` = 3).
+sin comandos ni pasos prácticos. Enlazadas desde `_layouts/default.html`
+(`.site-nav`, junto a `/commands/` y `/argo-real-world-microservices/`) y
+desde la Parte 0 (nota al inicio de la sección `#what`, en ambos idiomas).
+Al editarlas, mantener el `lang_url` cruzado y los enlaces relativos según
+su profundidad real (`/argo-real-world-microservices/introduction/` = 2
+niveles bajo la raíz; `.../es/` = 3).
+
+## `argo-real-world-microservices.html` / `-es.html` — landing/temario del curso
+
+Páginas estáticas en la raíz (`/argo-real-world-microservices/` y `.../es/`),
+`layout: "article"`, sin `part`. Es la portada del curso: objetivos de
+aprendizaje, prerrequisitos, y el temario completo con checkboxes de
+progreso guardados en `localStorage` (`assets/js/course-progress.js`, clave
+`argo-course-progress`, keyed por `post.url` — por eso el progreso no se
+pierde si cambia el orden de los módulos, solo si cambia un permalink).
+
+El temario **no** está escrito a mano — se genera con Liquid a partir de
+`site.posts` (filtrado por `lang`, ordenado por `part`) más la página de
+Introduction correspondiente, igual que hace `index.html` con el slider.
+Cada módulo tira de `post.title`, `post.description` y `post.reading_minutes`
+— no dupliques ese texto a mano aquí; si cambia la descripción de un
+artículo, el temario se actualiza solo en el próximo build.
+
+- `reading_minutes` es un campo de front matter nuevo (además de los ya
+  documentados arriba) en `introduction*.html` y en cada `_posts/part-N-*`:
+  minutos de lectura estimados a partir del recuento real de palabras del
+  cuerpo (excluyendo el `<style>` y las etiquetas), no un número inventado.
+  Al añadir una parte nueva, calcula el suyo con el mismo criterio
+  (~200 palabras/minuto, redondeado hacia arriba, mínimo 3) en vez de
+  copiar el de otra parte.
+- Enlazada desde `_layouts/default.html` (`.site-nav`, como "Course") y
+  desde `index.html` (el `.series-label` sobre la lista de tarjetas).
+- El progreso marcado en esta página es independiente por idioma (EN y ES
+  tienen cada uno su propio `data-module-id` por URL) — no hay sincronía
+  cruzada EN/ES a propósito, ya que son dos recorridos de lectura
+  distintos aunque cubran el mismo contenido.
 
 ## `commands.html` — glosario de comandos
 
