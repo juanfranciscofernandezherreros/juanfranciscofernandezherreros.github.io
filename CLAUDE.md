@@ -93,10 +93,14 @@ comportamiento por defecto de `p`, `li`, `dd` en el CSS de cada artículo
 (no llevan `text-align`); no añadir `text-align:center` ni
 `text-align:justify` a bloques de texto nuevos.
 
-Esto aplica al contenido de cada artículo (`_posts/*.html`,
-`introduction*.html`) y a `commands.html`. La única excepción ya existente
-es `index.html` (la portada), donde el `h1`/`.role` del encabezado sí
-está centrado a propósito — no extender ese centrado a texto de artículo.
+Esto aplica a **todo** el contenido de cada artículo (`_posts/*.html`,
+`introduction*.html`) y a `commands.html`, incluidas las etiquetas de
+conexión de los diagramas `.arch` (`.arch-arrow-row`) — también van
+alineadas a la izquierda (`justify-content:flex-start; text-align:left;`),
+no centradas, aunque conecten dos cajas a ancho completo. La única
+excepción sigue siendo `index.html` (la portada), donde el `h1`/`.role`
+del encabezado sí está centrado a propósito — no extender ese centrado a
+texto de artículo ni a diagramas.
 
 Mantener también el mismo ancho de columna de lectura en todos los
 artículos: `p{ max-width:70ch; line-height:1.6; }` y `.sheet{ max-width:920px; }`,
