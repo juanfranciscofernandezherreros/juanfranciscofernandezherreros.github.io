@@ -3,6 +3,70 @@
    bits introduced by the blog redesign (category/tag chrome) so they look
    identical everywhere instead of being redefined per page. */
 
+/* ---------- site header / footer (from _layouts/default.html) ---------- */
+.site-header{
+  background:var(--surface, #fff);
+  border-bottom:1px solid var(--line-strong, #9fb0ac);
+}
+.site-header-inner{
+  max-width:920px;
+  margin:0 auto;
+  padding:14px 24px;
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:10px 20px;
+}
+.site-brand{
+  font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+  font-weight:700;
+  text-transform:uppercase;
+  letter-spacing:.02em;
+  font-size:1rem;
+  color:var(--ink, #14202b);
+  text-decoration:none;
+  margin-right:auto;
+}
+.site-brand:hover{ color:var(--accent, #1d5c8a); }
+.site-nav{
+  display:flex;
+  flex-wrap:wrap;
+  gap:16px;
+}
+.site-nav a{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.76rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--ink-soft, #4a5a66);
+  text-decoration:none;
+}
+.site-nav a:hover, .site-nav a:focus-visible{ color:var(--accent, #1d5c8a); }
+.site-lang{
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.76rem;
+  letter-spacing:.06em;
+  color:var(--accent, #1d5c8a);
+  text-decoration:none;
+  border:1px solid var(--line-strong, #9fb0ac);
+  border-radius:3px;
+  padding:2px 8px;
+}
+.site-lang:hover, .site-lang:focus-visible{ background:var(--accent-soft, #e2edf4); }
+
+.site-footer{
+  background:var(--surface-2, #e6ebe9);
+  border-top:1px solid var(--line-strong, #9fb0ac);
+}
+.site-footer-inner{
+  max-width:920px;
+  margin:0 auto;
+  padding:20px 24px;
+  font-family:"IBM Plex Mono", monospace;
+  font-size:.74rem;
+  color:var(--ink-soft, #4a5a66);
+}
+
 .meta-bar-wrap{
   max-width:920px;
   margin:20px auto 0;

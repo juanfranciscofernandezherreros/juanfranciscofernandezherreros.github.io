@@ -21,6 +21,24 @@
 {% feed_meta %}
 </head>
 <body>
+<header class="site-header">
+  <div class="site-header-inner">
+    <a class="site-brand" href="{{ '/' | relative_url }}">Argo Real World Microservices</a>
+    <nav class="site-nav" aria-label="Site">
+      <a href="{{ '/' | relative_url }}">Home</a>
+      <a href="{{ '/argo-real-world-microservices/introduction/' | relative_url }}">Introduction</a>
+      <a href="{{ '/commands/' | relative_url }}">Commands</a>
+    </nav>
+    {% if page.lang_url %}
+    <a class="site-lang" href="{{ page.lang_url | relative_url }}">{% if page.lang == 'en' %}ES{% else %}EN{% endif %}</a>
+    {% endif %}
+  </div>
+</header>
 {{ content }}
+<footer class="site-footer">
+  <div class="site-footer-inner">
+    <span>© {{ site.time | date: '%Y' }} Juan Francisco Fernández Herreros</span>
+  </div>
+</footer>
 </body>
 </html>
