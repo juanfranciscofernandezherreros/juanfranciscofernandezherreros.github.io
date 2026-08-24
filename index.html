@@ -48,39 +48,6 @@ permalink: /
 
   .wrap{ width:100%; max-width:1080px; margin:0 auto; padding:48px 24px 96px; }
 
-  h1{
-    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
-    font-weight:700;
-    text-transform:uppercase;
-    letter-spacing:.02em;
-    text-wrap:balance;
-    font-size:clamp(1.7rem, 6vw, 2.5rem);
-    line-height:1.05;
-    margin:0 0 8px;
-    text-align:center;
-  }
-  .role{
-    text-align:center;
-    font-family:"IBM Plex Mono", monospace;
-    font-size:.78rem;
-    letter-spacing:.1em;
-    text-transform:uppercase;
-    color:var(--ink-soft);
-    margin:0 0 12px;
-  }
-  .top-links{
-    text-align:center;
-    margin:0 0 32px;
-  }
-  .top-links a{
-    font-family:"IBM Plex Mono", monospace;
-    font-size:.76rem;
-    letter-spacing:.04em;
-    text-decoration:none;
-    color:var(--accent);
-  }
-  .top-links a:hover{ text-decoration:underline; }
-
   /* ---------- slider ---------- */
   .slider{
     position:relative;
@@ -348,10 +315,6 @@ permalink: /
 </style>
 
 <div class="wrap">
-  <h1>Juan Francisco Fernández Herreros</h1>
-  <p class="role">Software Engineer</p>
-  <p class="top-links"><a href="{{ '/argo-real-world-microservices/introduction/' | relative_url }}">Introduction — the theory behind this series →</a> · <a href="{{ '/commands/' | relative_url }}">Command reference — every command from the series, in one place →</a></p>
-
   {% assign numbered_posts = site.posts | where_exp: "p", "p.lang == 'en'" | sort: "part" %}
   {% assign intro_pages = site.pages | where: "permalink", "/argo-real-world-microservices/introduction/" %}
   {% assign posts = intro_pages | concat: numbered_posts %}
