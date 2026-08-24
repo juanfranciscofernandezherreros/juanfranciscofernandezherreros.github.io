@@ -28,10 +28,8 @@
       <a href="{{ '/' | relative_url }}">Home</a>
       <a href="{{ '/argo-real-world-microservices/introduction/' | relative_url }}">Introduction</a>
       <a href="{{ '/commands/' | relative_url }}">Commands</a>
+      {% if page.lang_url %}<a class="site-lang" href="{{ page.lang_url | relative_url }}">{% if page.lang == 'en' %}ES{% else %}EN{% endif %}</a>{% endif %}
     </nav>
-    {% if page.lang_url %}
-    <a class="site-lang" href="{{ page.lang_url | relative_url }}">{% if page.lang == 'en' %}ES{% else %}EN{% endif %}</a>
-    {% endif %}
   </div>
 </header>
 {{ content }}

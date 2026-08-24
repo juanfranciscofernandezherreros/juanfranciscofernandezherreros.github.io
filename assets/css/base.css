@@ -5,43 +5,51 @@
 
 /* ---------- site header / footer (from _layouts/default.html) ---------- */
 .site-header{
+  width:100%;
   background:var(--surface, #fff);
   border-bottom:1px solid var(--line-strong, #9fb0ac);
 }
 .site-header-inner{
-  max-width:920px;
-  margin:0 auto;
-  padding:14px 24px;
+  width:100%;
+  box-sizing:border-box;
+  padding:16px clamp(20px, 5vw, 56px);
   display:flex;
   flex-wrap:wrap;
   align-items:center;
-  gap:10px 20px;
+  justify-content:space-between;
+  gap:12px 24px;
 }
 .site-brand{
   font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
   font-weight:700;
   text-transform:uppercase;
   letter-spacing:.02em;
-  font-size:1rem;
+  font-size:1.15rem;
   color:var(--ink, #14202b);
   text-decoration:none;
-  margin-right:auto;
 }
 .site-brand:hover{ color:var(--accent, #1d5c8a); }
 .site-nav{
   display:flex;
   flex-wrap:wrap;
-  gap:16px;
+  align-items:center;
+  gap:24px;
 }
-.site-nav a{
+.site-nav a:not(.site-lang){
   font-family:"IBM Plex Mono", monospace;
-  font-size:.76rem;
+  font-size:.8rem;
   letter-spacing:.06em;
   text-transform:uppercase;
   color:var(--ink-soft, #4a5a66);
   text-decoration:none;
+  padding-bottom:4px;
+  border-bottom:2px solid transparent;
+  transition:color .15s ease, border-color .15s ease;
 }
-.site-nav a:hover, .site-nav a:focus-visible{ color:var(--accent, #1d5c8a); }
+.site-nav a:not(.site-lang):hover, .site-nav a:not(.site-lang):focus-visible{
+  color:var(--accent, #1d5c8a);
+  border-bottom-color:var(--accent, #1d5c8a);
+}
 .site-lang{
   font-family:"IBM Plex Mono", monospace;
   font-size:.76rem;
@@ -53,15 +61,21 @@
   padding:2px 8px;
 }
 .site-lang:hover, .site-lang:focus-visible{ background:var(--accent-soft, #e2edf4); }
+@media (prefers-reduced-motion: reduce){ .site-nav a{ transition:none; } }
+@media (max-width:640px){
+  .site-header-inner{ justify-content:center; text-align:center; }
+}
 
 .site-footer{
+  width:100%;
   background:var(--surface-2, #e6ebe9);
   border-top:1px solid var(--line-strong, #9fb0ac);
 }
 .site-footer-inner{
-  max-width:920px;
-  margin:0 auto;
-  padding:20px 24px;
+  width:100%;
+  box-sizing:border-box;
+  padding:20px clamp(20px, 5vw, 56px);
+  text-align:center;
   font-family:"IBM Plex Mono", monospace;
   font-size:.74rem;
   color:var(--ink-soft, #4a5a66);
