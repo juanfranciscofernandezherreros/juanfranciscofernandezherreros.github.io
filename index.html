@@ -337,7 +337,9 @@ permalink: /
   <p class="role">Software Engineer</p>
   <p class="top-links"><a href="{{ '/argo-real-world-microservices/introduction/' | relative_url }}">Introduction — the theory behind this series →</a> · <a href="{{ '/commands/' | relative_url }}">Command reference — every command from the series, in one place →</a></p>
 
-  {% assign posts = site.posts | where_exp: "p", "p.lang == 'en'" | sort: "part" %}
+  {% assign numbered_posts = site.posts | where_exp: "p", "p.lang == 'en'" | sort: "part" %}
+  {% assign intro_pages = site.pages | where: "permalink", "/argo-real-world-microservices/introduction/" %}
+  {% assign posts = intro_pages | concat: numbered_posts %}
   {% assign all_series = posts | map: "series" | uniq | sort %}
   {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
   {% assign all_tags = posts | map: "tags" | flatten | uniq | sort %}
@@ -350,7 +352,7 @@ permalink: /
          href="{{ post.url | relative_url }}"
          aria-roledescription="slide"
          aria-label="{{ forloop.index }} of {{ forloop.length }}">
-        <span class="slide-eyebrow">Part {{ post.part }} · {{ category }}</span>
+        <span class="slide-eyebrow">{% if post.part %}Part {{ post.part }}{% else %}Introduction{% endif %} · {{ category }}</span>
         <h2>{{ post.title }}</h2>
         <p>{{ post.description | truncatewords: 26 }}</p>
         <span class="go">Read the guide →</span>
@@ -413,10 +415,10 @@ permalink: /
            data-category="{{ category | escape }}"
            data-tags="{{ post.tags | join: ',' | escape }}"
            data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}"
-           data-part="{{ post.part }}"
+           data-part="{% if post.part %}{{ post.part }}{% else %}-1{% endif %}"
            data-date="{{ post.date | date: '%Y-%m-%d' }}"
            data-title="{{ post.title | escape }}">
-          <p class="eyebrow">Part {{ post.part }}</p>
+          <p class="eyebrow">{% if post.part %}Part {{ post.part }}{% else %}Introduction{% endif %}</p>
           <h2>{{ post.title }}</h2>
           <p class="desc">{{ post.description }}</p>
           <p class="card-tags">

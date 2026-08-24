@@ -76,6 +76,26 @@ repetirla a mano dentro del post.
   Un enlace `?category=<slug>` o `?tag=<slug>` a la portada preselecciona
   ese filtro (usado por las badges de cada artículo).
 
+## Alineación de texto — igual en todos los artículos
+
+Todo el texto de cuerpo de cualquier artículo (párrafos, `<li>`,
+definiciones de `.term-card`, `.note`, celdas de `.compare-col`, etc.)
+va **alineado a la izquierda** — nunca centrado ni justificado. Es el
+comportamiento por defecto de `p`, `li`, `dd` en el CSS de cada artículo
+(no llevan `text-align`); no añadir `text-align:center` ni
+`text-align:justify` a bloques de texto nuevos.
+
+Esto aplica al contenido de cada artículo (`_posts/*.html`,
+`introduction*.html`) y a `commands.html`. La única excepción ya existente
+es `index.html` (la portada), donde el `h1`/`.role` del encabezado sí
+está centrado a propósito — no extender ese centrado a texto de artículo.
+
+Mantener también el mismo ancho de columna de lectura en todos los
+artículos: `p{ max-width:70ch; line-height:1.6; }` y `.sheet{ max-width:920px; }`,
+copiados tal cual del resto de posts. Si un artículo nuevo cambia estos
+valores, el texto deja de alinearse visualmente con el resto de la serie
+al navegar de uno a otro.
+
 ## Al añadir una parte nueva
 
 1. Crear `_posts/<date>-part-N-<slug>[-es].html` con el front matter de
