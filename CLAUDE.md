@@ -86,21 +86,24 @@ repetirla a mano dentro del post.
 
 ## Alineación de texto — igual en todos los artículos
 
-Todo el texto de cuerpo de cualquier artículo (párrafos, `<li>`,
-definiciones de `.term-card`, `.note`, celdas de `.compare-col`, etc.)
-va **alineado a la izquierda** — nunca centrado ni justificado. Es el
-comportamiento por defecto de `p`, `li`, `dd` en el CSS de cada artículo
-(no llevan `text-align`); no añadir `text-align:center` ni
-`text-align:justify` a bloques de texto nuevos.
+El texto de prosa (párrafos `p`, definiciones `.term-card dd`, `.note p`,
+`<li>` de `.compare-col`) va **justificado** (`text-align:justify;`),
+con `hyphens:auto; -webkit-hyphens:auto;` para que la partición de
+palabras evite ríos de espacio en blanco — ambos bordes, izquierdo y
+derecho, quedan rectos. Es lo que ya lleva el selector `p{...}` global de
+cada artículo; cualquier bloque de prosa nuevo debe llevarlo también.
+Nunca centrado.
+
+Las etiquetas cortas de una sola línea (eyebrows, badges, captions de
+diagrama como `.arch-arrow-row`) van **alineadas a la izquierda**
+(`text-align:left;`) — justificar una sola línea no tiene efecto visual,
+así que no hace falta añadirlo ahí, pero tampoco deben ir centradas.
 
 Esto aplica a **todo** el contenido de cada artículo (`_posts/*.html`,
-`introduction*.html`) y a `commands.html`, incluidas las etiquetas de
-conexión de los diagramas `.arch` (`.arch-arrow-row`) — también van
-alineadas a la izquierda (`justify-content:flex-start; text-align:left;`),
-no centradas, aunque conecten dos cajas a ancho completo. La única
-excepción sigue siendo `index.html` (la portada), donde el `h1`/`.role`
-del encabezado sí está centrado a propósito — no extender ese centrado a
-texto de artículo ni a diagramas.
+`introduction*.html`) y a `commands.html`. La única excepción sigue
+siendo `index.html` (la portada), donde el `h1`/`.role` del encabezado sí
+está centrado a propósito — no extender ese centrado a texto de artículo
+ni a diagramas.
 
 Mantener también el mismo ancho de columna de lectura en todos los
 artículos: `p{ max-width:70ch; line-height:1.6; }` y `.sheet{ max-width:920px; }`,
