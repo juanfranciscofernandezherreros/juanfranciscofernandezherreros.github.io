@@ -137,21 +137,30 @@ permalink: /
   }
   .slide-dots{
     position:absolute;
-    right:16px;
-    bottom:14px;
+    right:8px;
+    bottom:6px;
     display:flex;
-    gap:6px;
+    gap:0;
     z-index:2;
   }
   .dot{
-    width:8px; height:8px;
+    width:24px; height:24px;
     padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    border:none;
+    background:transparent;
+    cursor:pointer;
+  }
+  .dot::after{
+    content:"";
+    width:8px; height:8px;
     border-radius:999px;
     border:1px solid var(--line-strong);
     background:var(--bg);
-    cursor:pointer;
   }
-  .dot.active{ background:var(--accent); border-color:var(--accent); }
+  .dot.active::after{ background:var(--accent); border-color:var(--accent); }
   @media (max-width:640px){
     .slide{ padding:24px 24px 44px; }
   }
@@ -358,7 +367,7 @@ permalink: /
       {% endfor %}
     </div>
     <div class="slide-dots" id="slide-dots" role="tablist" aria-label="Choose slide">
-      {% for post in posts %}<button type="button" class="dot{% if forloop.first %} active{% endif %}" data-slide-index="{{ forloop.index0 }}" role="tab" aria-label="Show {{ post.title }}"></button>{% endfor %}
+      {% for post in posts %}<button type="button" class="dot{% if forloop.first %} active{% endif %}" data-slide-index="{{ forloop.index0 }}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="Show {{ post.title }}"></button>{% endfor %}
     </div>
   </section>
 

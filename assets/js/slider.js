@@ -13,10 +13,16 @@
     var next = (index + slides.length) % slides.length;
     if (next === current) return;
     slides[current].classList.remove('active');
-    if (dots[current]) dots[current].classList.remove('active');
+    if (dots[current]) {
+      dots[current].classList.remove('active');
+      dots[current].setAttribute('aria-selected', 'false');
+    }
     current = next;
     slides[current].classList.add('active');
-    if (dots[current]) dots[current].classList.add('active');
+    if (dots[current]) {
+      dots[current].classList.add('active');
+      dots[current].setAttribute('aria-selected', 'true');
+    }
   }
 
   function advance() { show(current + 1); }
