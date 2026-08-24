@@ -67,7 +67,15 @@ real (titleblock, secciones, footer). El layout `_layouts/article.html`
 añade automáticamente la barra de categoría/tags encima; **no** hay que
 repetirla a mano dentro del post.
 
-- `_layouts/default.html`: `<head>` común (meta tags, fuentes, `base.css`).
+- `_layouts/default.html`: `<head>` común (meta tags, viewport, la hoja de
+  Google Fonts, `base.css`). **No** repetir el meta viewport ni el
+  `<link>` de fonts.googleapis.com dentro del contenido de ningún post o
+  página raíz (`index.html`, `commands.html`, `introduction*.html`) —
+  `default.html` ya los pone en `<head>` para todo el sitio; duplicarlos
+  en `{{ content }}` los mete además en el `<body>` (posición inválida) y
+  duplica la petición de red, lo cual penaliza LCP/render-blocking en
+  Lighthouse/PageSpeed. Ya pasó en `index.html` y `commands.html` — se
+  corrigió quitando la copia repetida.
 - `_layouts/article.html`: envuelve `default` y añade la barra de badges
   de categoría/tags antes de `{{ content }}`.
 - La portada (`index.html`, raíz) lista `site.posts` con `lang == "en"`,
