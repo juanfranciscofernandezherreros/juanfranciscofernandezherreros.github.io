@@ -337,6 +337,14 @@ permalink: /
     font-size:.92rem;
   }
   #empty-state.hidden{ display:none; }
+
+  .pagination{
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin-top:20px;
+  }
+  .pagination.hidden{ display:none; }
+  .page-btn:disabled{ opacity:.4; cursor:default; }
+  .page-btn:disabled:hover{ border-color:var(--line-strong); color:var(--ink-soft); }
 </style>
 
 <div class="wrap">
@@ -437,6 +445,7 @@ permalink: /
         {% endfor %}
       </div>
       <p id="empty-state" class="hidden">No articles match these filters.</p>
+      <nav class="pagination hidden" id="pagination" aria-label="Article pages"></nav>
     </main>
   </div>
 </div>
