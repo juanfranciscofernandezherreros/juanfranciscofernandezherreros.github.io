@@ -93,6 +93,20 @@ repetirla a mano dentro del post.
    única build real ocurre en GitHub Actions al hacer push a `main`.
    Revisar el log del workflow tras publicar.
 
+## `introduction.html` / `introduction-es.html` — teoría, fuera de la numeración
+
+Páginas estáticas en la raíz (`/argo-real-world-microservices/introduction/`
+y `.../es/`), con `layout: "article"` pero sin campo `part` — no viven en
+`_posts/` ni aparecen en el slider/listado de `site.posts` de la portada
+(ese bucle asume `part` numérico). Son el equivalente teórico de la serie:
+qué es un microservicio, un contenedor, Kubernetes, CI/CD, GitOps y ArgoCD,
+sin comandos ni pasos prácticos. Enlazadas desde `index.html`
+(`.top-links`, junto a `/commands/`) y desde la Parte 0 (nota al inicio de
+la sección `#what`, en ambos idiomas). Al editarlas, mantener el
+`lang_url` cruzado y los enlaces relativos según su profundidad real
+(`/argo-real-world-microservices/introduction/` = 2 niveles bajo la raíz;
+`.../es/` = 3).
+
 ## `commands.html` — glosario de comandos
 
 Página estática en la raíz (`/commands/`), enlazada desde la portada.

@@ -1,0 +1,362 @@
+---
+layout: "article"
+title: "Introduction — The Theory Behind This Series"
+description: "A theory-only primer on microservices, containers, Kubernetes, CI/CD, GitOps, and ArgoCD — what each concept means and how they fit together, with no installs and no commands."
+og_title: "Introduction — Argo Real World Microservices"
+og_description: "A theory-only primer on microservices, containers, Kubernetes, CI/CD, GitOps, and ArgoCD — what each concept means and how they fit together, with no installs and no commands."
+twitter_title: "Introduction — Argo Real World Microservices"
+twitter_description: "The theory behind the series, before any command touches a terminal."
+permalink: "/argo-real-world-microservices/introduction/"
+lang: "en"
+lang_url: "/argo-real-world-microservices/introduction/es/"
+series: "Argo Real World Microservices"
+categories: ["Concepts & Theory"]
+tags: ["kubernetes","docker","containers","gitops","argocd","ci-cd","microservices"]
+date: "2026-08-24"
+---
+
+<style>
+  /* ---------- tokens ---------- */
+  :root{
+    --bg:#eef1f0;
+    --surface:#ffffff;
+    --surface-2:#e6ebe9;
+    --ink:#14202b;
+    --ink-soft:#4a5a66;
+    --line:#c7d0ce;
+    --line-strong:#9fb0ac;
+    --accent:#1d5c8a;
+    --accent-ink:#ffffff;
+    --accent-soft:#e2edf4;
+    --good:#1f7a4d;
+    --good-soft:#e2f2e8;
+    --warn:#a15d10;
+    --warn-soft:#f6e8d6;
+    --shadow:0 1px 2px rgba(20,32,43,.06), 0 8px 24px -12px rgba(20,32,43,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+      --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+      --good:#5fd394; --good-soft:#12301f; --warn:#e3a855; --warn-soft:#332209;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+    --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+    --good:#5fd394; --good-soft:#12301f; --warn:#e3a855; --warn-soft:#332209;
+    --shadow:0 1px 2px rgba(0,0,0,.4), 0 12px 32px -14px rgba(0,0,0,.6);
+  }
+
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+
+  body{
+    margin:0;
+    background:
+      repeating-linear-gradient(0deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
+      repeating-linear-gradient(90deg, transparent 0 39px, color-mix(in srgb, var(--line) 40%, transparent) 39px 40px),
+      var(--bg);
+    color:var(--ink);
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  a{ color:var(--accent); }
+  a:focus-visible, button:focus-visible{ outline:2px solid var(--accent); outline-offset:2px; }
+
+  h1,h2,h3{
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-weight:700; text-transform:uppercase; letter-spacing:.02em;
+    text-wrap:balance; color:var(--ink); margin:0;
+  }
+
+  .sheet{ max-width:920px; margin:48px auto 96px; padding:0 24px; }
+
+  .titleblock{
+    background:var(--surface); border:1px solid var(--line-strong); box-shadow:var(--shadow);
+    padding:28px 32px 24px; position:relative;
+  }
+  .lang-switch{
+    position:absolute; top:20px; right:24px;
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; letter-spacing:.06em;
+  }
+  .lang-switch a{ color:var(--ink-soft); text-decoration:none; }
+  .lang-switch a:hover{ color:var(--accent); text-decoration:underline; }
+  .back-link{
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; letter-spacing:.06em;
+    margin:0 0 14px;
+  }
+  .back-link a{ color:var(--ink-soft); text-decoration:none; }
+  .back-link a:hover{ color:var(--accent); text-decoration:underline; }
+  .eyebrow{
+    font-family:"IBM Plex Mono", monospace; font-size:.72rem; letter-spacing:.16em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+  }
+  .titleblock h1{ font-size:clamp(2.1rem, 5vw, 3rem); line-height:1.02; max-width:20ch; }
+  .titleblock p.lede{
+    margin:14px 0 0; max-width:64ch; color:var(--ink-soft); font-size:1.02rem; line-height:1.55;
+  }
+
+  section{ margin-top:56px; }
+  .section-head{
+    display:flex; align-items:baseline; gap:12px;
+    border-bottom:1px solid var(--line-strong); padding-bottom:10px; margin-bottom:22px;
+  }
+  .section-head .num{ font-family:"IBM Plex Mono", monospace; color:var(--accent); font-size:.85rem; }
+  .section-head h2{ font-size:1.5rem; }
+  p{ line-height:1.6; color:var(--ink); max-width:70ch; }
+  p.muted{ color:var(--ink-soft); }
+  section > p + p{ margin-top:14px; }
+
+  code, .mono{ font-family:"IBM Plex Mono", monospace; }
+
+  .note{
+    background:var(--accent-soft); border-left:3px solid var(--accent);
+    padding:16px 20px; margin-bottom:24px;
+  }
+  .note h4{
+    font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-weight:600; font-size:.92rem;
+    text-transform:none; letter-spacing:0; color:var(--accent); margin:0 0 8px;
+  }
+  .note p{ font-size:.9rem; margin:0 0 8px; }
+  .note p:last-child{ margin-bottom:0; }
+
+  .glossary-grid{ display:grid; grid-template-columns:repeat(2, 1fr); gap:12px; }
+  .term-card{ background:var(--surface); border:1px solid var(--line); padding:12px 14px; }
+  .term-card dt{
+    font-family:"IBM Plex Mono", monospace; font-weight:500; font-size:.86rem; color:var(--ink); margin:0 0 4px;
+  }
+  .term-card dd{ margin:0; font-size:.85rem; color:var(--ink-soft); line-height:1.5; }
+  @media (max-width:640px){ .glossary-grid{ grid-template-columns:1fr; } }
+
+  /* ---------- concept diagram ---------- */
+  .arch{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px 24px;
+    align-items:stretch;
+  }
+  .arch-box{
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    box-shadow:var(--shadow);
+    padding:18px 20px;
+    position:relative;
+  }
+  .arch-box .tag{
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.68rem;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:var(--accent);
+    display:block;
+    margin-bottom:6px;
+  }
+  .arch-box h3{ font-size:1.15rem; margin-bottom:8px; }
+  .arch-box p{ font-size:.92rem; color:var(--ink-soft); margin:0; }
+  .arch-full{ grid-column:1 / -1; }
+  .arch-cluster{
+    background:var(--accent-soft);
+    border:1px dashed var(--accent);
+  }
+  .arch-cluster .tag{ color:var(--accent); }
+  .arch-arrow-row{
+    grid-column:1 / -1;
+    display:flex; justify-content:center; align-items:center;
+    gap:8px;
+    color:var(--ink-soft);
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.78rem;
+    text-align:center;
+  }
+  .arch-arrow-row .arrow{
+    width:64px; height:1px; background:var(--line-strong); position:relative; flex:none;
+  }
+  .arch-arrow-row .arrow::after{
+    content:""; position:absolute; right:-1px; top:-4px;
+    border:4px solid transparent; border-left-color:var(--line-strong);
+  }
+  @media (max-width:640px){
+    .arch{ grid-template-columns:1fr; }
+    .arch-arrow-row{ flex-direction:column; }
+    .arch-arrow-row .arrow{ width:1px; height:32px; }
+    .arch-arrow-row .arrow::after{ right:-4px; top:auto; bottom:-1px; border-left-color:transparent; border-top-color:var(--line-strong); }
+  }
+
+  /* ---------- compare table ---------- */
+  .compare{
+    display:grid; grid-template-columns:1fr 1fr; gap:16px;
+    margin-top:20px;
+  }
+  .compare-col{
+    background:var(--surface); border:1px solid var(--line); padding:16px 18px;
+  }
+  .compare-col h4{
+    font-family:"IBM Plex Mono", monospace; font-size:.76rem; letter-spacing:.08em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 10px;
+  }
+  .compare-col ul{ margin:0; padding-left:18px; }
+  .compare-col li{ font-size:.9rem; color:var(--ink-soft); line-height:1.55; margin-bottom:6px; }
+  .compare-col li:last-child{ margin-bottom:0; }
+  @media (max-width:640px){ .compare{ grid-template-columns:1fr; } }
+
+  .next{ display:grid; gap:12px; }
+  .next-item{
+    display:grid; grid-template-columns:22px 1fr; gap:12px; padding:14px 16px;
+    background:var(--surface); border:1px solid var(--line); box-shadow:var(--shadow);
+  }
+  .next-item .mark{ color:var(--accent); font-family:"IBM Plex Mono", monospace; }
+  .next-item h4{
+    margin:0 0 4px; font-family:"IBM Plex Sans", "Segoe UI", system-ui, sans-serif; font-weight:600;
+    font-size:.98rem; text-transform:none; letter-spacing:0;
+  }
+  .next-item p{ margin:0; font-size:.9rem; color:var(--ink-soft); }
+
+  footer{
+    margin-top:64px; padding-top:18px; border-top:1px solid var(--line-strong);
+    display:flex; justify-content:space-between; flex-wrap:wrap; gap:10px;
+    font-family:"IBM Plex Mono", monospace; font-size:.74rem; color:var(--ink-soft);
+  }
+</style>
+<div class="sheet">
+
+  <div class="titleblock">
+    <p class="back-link"><a href="../../">← Back to series</a></p>
+    <p class="lang-switch"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Argo Real World Microservices — Introduction</p>
+    <h1>The theory behind this series</h1>
+    <p class="lede">Before Part 0 has you installing anything, this article explains the ideas those tools implement: what a microservice is, what a container is, what Kubernetes is actually managing, and how CI/CD and GitOps differ as ways of getting code into production. No commands, no installs — just the mental model.</p>
+  </div>
+
+  <section id="what">
+    <div class="section-head"><span class="num">00</span><h2>What this article is — and isn't</h2></div>
+    <p class="muted">It's a concept map: the vocabulary and the reasoning behind it, so that when <a href="../part-0/before-you-begin/">Part 0</a> tells you to install <code class="mono">kind</code> or the ArgoCD CLI, you already know what job each one is doing and why it exists. It isn't a tutorial — there's no terminal, no YAML to write, and nothing to verify. If you already know what a container, a Kubernetes cluster, and GitOps are, skip straight to Part 0.</p>
+  </section>
+
+  <section id="microservices">
+    <div class="section-head"><span class="num">01</span><h2>Microservices</h2></div>
+    <p>A <strong>microservice</strong> is a small, independently deployable service that owns one piece of business capability — orders, payments, a product catalog — and talks to other services over the network, usually HTTP or messaging, instead of sharing code or a database. That's the opposite of a <strong>monolith</strong>, where every capability lives in one codebase and one deployable unit.</p>
+    <p class="muted">The appeal isn't the size of the codebase, it's independence: each service can be built, tested, deployed, scaled, and even rewritten on its own schedule, without coordinating a release with every other team. The cost is operational — you now have many small moving parts instead of one big one, each with its own deployment, its own failure modes, and its own version. Everything else in this article exists to manage that cost: containers make each service portable, Kubernetes makes many of them runnable together, and CI/CD or GitOps make deploying them repeatable instead of manual.</p>
+  </section>
+
+  <section id="containers">
+    <div class="section-head"><span class="num">02</span><h2>Containers and Docker</h2></div>
+    <p>A <strong>container</strong> packages an application together with everything it needs to run — the runtime, libraries, configuration — into one unit that behaves the same on a laptop, a test server, or a production cluster. It's not a virtual machine: containers share the host machine's operating system kernel and isolate processes, filesystems, and networking from each other, which makes them far lighter and faster to start than a VM.</p>
+    <p><strong>Docker</strong> is the tool most people mean when they say "containers" — it builds container <strong>images</strong> (a read-only snapshot: your app plus its dependencies, described by a <code class="mono">Dockerfile</code>) and runs <strong>containers</strong> from them (a running instance of an image). An image is versioned and pushed to a <strong>registry</strong> — a server that stores images by name and tag — so that any machine that can reach the registry can pull the exact same image and run an identical container from it.</p>
+    <p class="muted">This is the first piece of the microservices story: a container image is what makes "the same service, built once" runnable anywhere. Kubernetes is what runs many of those containers reliably, at scale, across many machines.</p>
+  </section>
+
+  <section id="kubernetes">
+    <div class="section-head"><span class="num">03</span><h2>Kubernetes</h2></div>
+    <p><strong>Kubernetes</strong> (often "k8s") is a system for running containers across a group of machines — a <strong>cluster</strong> — and keeping them running the way you asked. You don't tell Kubernetes "start this container on that machine"; you describe the outcome you want — "three copies of this image should always be running" — and Kubernetes continuously works to make reality match that description. If a container crashes, a machine dies, or a copy disappears, Kubernetes notices and starts a replacement without anyone intervening. That continuous "keep reality matching the request" behavior is called a <strong>control loop</strong>, and it's the same idea GitOps and ArgoCD build on later in this article — just applied one layer up, to entire applications instead of individual containers.</p>
+    <p class="muted">Kubernetes describes everything — what to run, how many copies, what network access it gets — as objects. The ones you'll meet constantly:</p>
+    <dl class="glossary-grid" style="margin-top:20px;">
+      <div class="term-card">
+        <dt>Cluster</dt>
+        <dd>The group of machines (nodes) Kubernetes manages as one unit — one or more control-plane nodes that make decisions, and worker nodes that actually run containers.</dd>
+      </div>
+      <div class="term-card">
+        <dt>Node</dt>
+        <dd>One machine, physical or virtual, that's part of the cluster and has containers scheduled onto it.</dd>
+      </div>
+      <div class="term-card">
+        <dt>Pod</dt>
+        <dd>The smallest deployable unit in Kubernetes — one or more tightly coupled containers that always run together on the same node, sharing network and storage.</dd>
+      </div>
+      <div class="term-card">
+        <dt>Deployment</dt>
+        <dd>A description of how many identical Pods of a given container image should be running, and how to roll out changes to them without downtime.</dd>
+      </div>
+      <div class="term-card">
+        <dt>Service</dt>
+        <dd>A stable network address for a group of Pods, so other things can reach them even as individual Pods are replaced.</dd>
+      </div>
+      <div class="term-card">
+        <dt>Namespace</dt>
+        <dd>A named partition inside a cluster used to separate groups of objects — different teams, environments, or applications — from each other.</dd>
+      </div>
+    </dl>
+  </section>
+
+  <section id="cicd">
+    <div class="section-head"><span class="num">04</span><h2>CI/CD</h2></div>
+    <p><strong>Continuous Integration (CI)</strong> is the practice of merging code changes frequently and having a machine automatically build and test every change, instead of discovering integration problems weeks later. <strong>Continuous Delivery/Deployment (CD)</strong> extends that pipeline to also package and ship the result — building the container image, and then deploying it somewhere.</p>
+    <p class="muted">The detail that matters for the rest of this article is <em>how</em> that deployment step usually works: a traditional CD pipeline runs outside the cluster and <strong>pushes</strong> changes into it — it authenticates to the cluster, runs a deploy command, and if that command fails partway or the pipeline's credentials are compromised, the cluster can end up in an unclear or exposed state. GitOps, next, is a different answer to that same "how do changes reach the cluster" question.</p>
+  </section>
+
+  <section id="gitops">
+    <div class="section-head"><span class="num">05</span><h2>GitOps</h2></div>
+    <p><strong>GitOps</strong> is the practice of keeping the desired state of a system — which applications, which versions, how many replicas, what configuration — declared entirely as files in a Git repository, and having an automated process inside the cluster continuously reconcile the live system to match what's in Git. Git becomes the single source of truth: to change what's running, you don't run a deploy command, you change a file and commit it.</p>
+    <p>The key structural difference from a traditional CD pipeline is <strong>pull vs. push</strong>: instead of an external pipeline pushing changes into the cluster with standing credentials, an agent running <em>inside</em> the cluster pulls the desired state from Git and applies it. That agent already has to be inside the cluster to do its job, so no external system needs deploy credentials to it — and because Git holds the desired state, every change is a commit: reviewed, versioned, and revertible with <code class="mono">git revert</code> instead of a manual rollback.</p>
+    <div class="compare">
+      <div class="compare-col">
+        <h4>Push-based CD</h4>
+        <ul>
+          <li>An external pipeline holds credentials to the cluster and runs deploy commands against it.</li>
+          <li>The pipeline's run log is the record of what happened — the cluster itself doesn't say what it should look like.</li>
+          <li>If a change is made by hand later (a hotfix), nothing notices the drift from what the pipeline last deployed.</li>
+        </ul>
+      </div>
+      <div class="compare-col">
+        <h4>Pull-based GitOps</h4>
+        <ul>
+          <li>An agent inside the cluster pulls desired state from Git — no external system needs cluster credentials.</li>
+          <li>Git is the record: the repository's current state <em>is</em> what should be running.</li>
+          <li>A manual change that drifts from Git is detected — and can be automatically reverted — on the next reconciliation.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section id="argocd">
+    <div class="section-head"><span class="num">06</span><h2>ArgoCD</h2></div>
+    <p><strong>ArgoCD</strong> is the agent that implements GitOps for Kubernetes: it runs inside the cluster, watches one or more Git repositories for the manifests that describe an application, and continuously compares that <strong>desired state</strong> (what's in Git) against the <strong>live state</strong> (what's actually running in the cluster). ArgoCD models each application it manages as its own object, so its status — in sync or out of sync, healthy or degraded — is something you can see per application, not just infer from logs.</p>
+    <p class="muted">When desired and live state differ, ArgoCD can report the difference and wait for a human to approve a <strong>sync</strong>, or apply it automatically — including reverting manual changes that weren't made through Git, which is what makes GitOps self-healing rather than just "deployment via commit." Everything ArgoCD does through its CLI or automation can also be done by clicking through its web UI, since both are just two interfaces onto the same reconciliation loop.</p>
+  </section>
+
+  <section id="together">
+    <div class="section-head"><span class="num">07</span><h2>How the pieces fit together</h2></div>
+    <p class="muted">One request flowing through the whole stack, end to end:</p>
+    <div class="arch" style="margin-top:20px;">
+      <div class="arch-box arch-full">
+        <span class="tag">Source</span>
+        <h3>A microservice's code</h3>
+        <p>Built and packaged as a container image by a CI pipeline, then pushed to a registry — this is where "the code" becomes "a runnable, versioned artifact."</p>
+      </div>
+      <div class="arch-arrow-row"><span>a manifest is updated in Git to reference the new image version — a commit, not a deploy command</span></div>
+      <div class="arch-box arch-full">
+        <span class="tag">Desired state</span>
+        <h3>A Git repository</h3>
+        <p>Holds the declarative description of what should be running: which image, how many replicas, what configuration — the single source of truth GitOps is built on.</p>
+      </div>
+      <div class="arch-arrow-row"><span>ArgoCD, running inside the cluster, continuously pulls and compares</span></div>
+      <div class="arch-box arch-full arch-cluster">
+        <span class="tag">Live state</span>
+        <h3>The Kubernetes cluster</h3>
+        <p>Pods, Deployments, and Services actually running the workload — kept in sync with Git by ArgoCD's reconciliation loop, and self-corrected if it drifts.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="next">
+    <div class="section-head"><span class="num">08</span><h2>Where to go next</h2></div>
+    <div class="next">
+      <div class="next-item">
+        <span class="mark">→</span>
+        <div>
+          <h4>Continue to Part 0</h4>
+          <p><a href="../part-0/before-you-begin/">Before You Begin</a> — install the tools this article talked about: Docker, kind, kubectl, and the ArgoCD CLI, plus how to confirm each one works.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span>Argo Real World Microservices</span>
+    <span>Introduction</span>
+  </footer>
+
+</div>

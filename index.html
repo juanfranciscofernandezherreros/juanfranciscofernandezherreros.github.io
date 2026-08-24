@@ -335,7 +335,7 @@ permalink: /
 <div class="wrap">
   <h1>Juan Francisco Fernández Herreros</h1>
   <p class="role">Software Engineer</p>
-  <p class="top-links"><a href="{{ '/commands/' | relative_url }}">Command reference — every command from the series, in one place →</a></p>
+  <p class="top-links"><a href="{{ '/argo-real-world-microservices/introduction/' | relative_url }}">Introduction — the theory behind this series →</a> · <a href="{{ '/commands/' | relative_url }}">Command reference — every command from the series, in one place →</a></p>
 
   {% assign posts = site.posts | where_exp: "p", "p.lang == 'en'" | sort: "part" %}
   {% assign all_series = posts | map: "series" | uniq | sort %}
