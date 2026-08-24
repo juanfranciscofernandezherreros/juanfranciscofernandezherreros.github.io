@@ -132,21 +132,23 @@ date: "2026-08-24"
   /* ---------- outcomes / prerequisites lists ---------- */
   .check-list{ list-style:none; margin:0; padding:0; display:grid; gap:12px; }
   .check-list li{
-    display:grid; grid-template-columns:20px 1fr; gap:12px;
+    position:relative; padding-left:28px;
     font-size:.95rem; line-height:1.55; color:var(--ink);
     text-align:justify; hyphens:auto; -webkit-hyphens:auto;
   }
   .check-list li::before{
-    content:"✓"; color:var(--good); font-weight:700; font-family:"IBM Plex Mono", monospace;
+    content:"✓"; position:absolute; left:0; top:0;
+    color:var(--good); font-weight:700; font-family:"IBM Plex Mono", monospace;
   }
   .prereq-list{ list-style:none; margin:0; padding:0; display:grid; gap:10px; }
   .prereq-list li{
-    display:grid; grid-template-columns:20px 1fr; gap:12px;
+    position:relative; padding-left:28px;
     font-size:.92rem; line-height:1.55; color:var(--ink-soft);
     text-align:justify; hyphens:auto; -webkit-hyphens:auto;
   }
   .prereq-list li::before{
-    content:"—"; color:var(--accent); font-family:"IBM Plex Mono", monospace;
+    content:"—"; position:absolute; left:0; top:0;
+    color:var(--accent); font-family:"IBM Plex Mono", monospace;
   }
   .prereq-list strong{ color:var(--ink); }
 
