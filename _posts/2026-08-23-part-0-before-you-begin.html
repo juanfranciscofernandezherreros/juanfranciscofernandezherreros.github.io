@@ -308,6 +308,11 @@ reading_minutes: 4
     <div class="section-head"><span class="num">02</span><h2>Install them (Windows)</h2></div>
     <p class="muted">One command per tool, using <code class="mono">winget</code> (built into Windows 10/11 — no separate install needed) — except Maven, which needs a short manual install. Run these in PowerShell.</p>
 
+    <div class="note" style="margin-top:20px;">
+      <h4>Prefer to run it as one script?</h4>
+      <p>Download <a href="{{ '/assets/downloads/part-0/install-tools.zip' | relative_url }}">install-tools.zip</a> — a PowerShell script that runs every command below in order, with a short pause between each so you can catch a UAC prompt if one shows up. Same commands as this page, nothing hidden.</p>
+    </div>
+
     <div class="cmd-group" style="margin-top:20px;">
       <h4>Git</h4>
       <pre><span class="c">winget</span> install Git.Git</pre>
