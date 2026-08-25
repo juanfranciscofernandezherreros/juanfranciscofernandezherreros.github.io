@@ -1,0 +1,9 @@
+﻿Found kind [Kubernetes.kind] Version 0.32.0
+This application is licensed to you by its owner.
+Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Downloading https://github.com/kubernetes-sigs/kind/releases/download/v0.32.0/kind-windows-amd64
+Successfully verified installer hash
+Starting package install...
+Path environment variable modified; restart your shell to use the new value.
+Command line alias added: "kind"
+Successfully installed

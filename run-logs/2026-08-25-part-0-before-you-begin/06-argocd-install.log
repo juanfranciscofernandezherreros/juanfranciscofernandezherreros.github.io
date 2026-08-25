@@ -1,0 +1,9 @@
+﻿Found ArgoCD [argoproj.argocd] Version 3.5.1
+This application is licensed to you by its owner.
+Microsoft is not responsible for, nor does it grant any licenses to, third-party packages.
+Downloading https://github.com/argoproj/argo-cd/releases/download/v3.5.1/argocd-windows-amd64.exe
+Successfully verified installer hash
+Starting package install...
+Path environment variable modified; restart your shell to use the new value.
+Command line alias added: "argocd"
+Successfully installed
