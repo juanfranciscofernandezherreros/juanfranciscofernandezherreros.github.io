@@ -176,6 +176,7 @@ permalink: /commands/
     <input type="search" id="cmd-search" placeholder="Filter commands… (e.g. kubectl, port-forward, docker)" aria-label="Filter commands" />
     <ul class="toc">
       <li><a href="#winget">winget</a></li>
+      <li><a href="#powershell">powershell</a></li>
       <li><a href="#git">git</a></li>
       <li><a href="#docker">docker</a></li>
       <li><a href="#kind">kind</a></li>
@@ -188,7 +189,7 @@ permalink: /commands/
   </div>
 
   <section class="tool-section" id="winget">
-    <div class="section-head"><h2>winget</h2><span class="count">6</span></div>
+    <div class="section-head"><h2>winget</h2><span class="count">5</span></div>
 
     <div class="cmd-entry">
       <h3>Install Git</h3>
@@ -219,16 +220,24 @@ permalink: /commands/
     </div>
 
     <div class="cmd-entry">
-      <h3>Install Maven</h3>
-      <pre><span class="c">winget</span> install Apache.Maven</pre>
-      <p>Builds and packages the demo microservice into a jar.</p>
-      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
-    </div>
-
-    <div class="cmd-entry">
       <h3>Install the ArgoCD CLI</h3>
       <pre><span class="c">winget</span> install argoproj.argocd</pre>
       <p>The <code class="mono">argocd</code> command — lets you trigger a sync from the terminal instead of the web UI.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
+    </div>
+  </section>
+
+  <section class="tool-section" id="powershell">
+    <div class="section-head"><h2>powershell</h2><span class="count">1</span></div>
+
+    <div class="cmd-entry">
+      <h3>Install Maven manually</h3>
+      <pre><span class="c">Invoke-WebRequest</span> -Uri "https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.zip" -OutFile "$env:TEMP\apache-maven-3.9.16-bin.zip"
+<span class="c">Get-FileHash</span> "$env:TEMP\apache-maven-3.9.16-bin.zip" -Algorithm SHA512
+<span class="c">Expand-Archive</span> -Path "$env:TEMP\apache-maven-3.9.16-bin.zip" -DestinationPath "$env:LOCALAPPDATA\Programs" -Force
+<span class="c">[Environment]::SetEnvironmentVariable</span>("MAVEN_HOME", "$env:LOCALAPPDATA\Programs\apache-maven-3.9.16", "User")
+<span class="c">[Environment]::SetEnvironmentVariable</span>("Path", [Environment]::GetEnvironmentVariable("Path","User") + ";$env:LOCALAPPDATA\Programs\apache-maven-3.9.16\bin", "User")</pre>
+      <p>Apache Maven has no winget package — <code class="mono">winget install Apache.Maven</code> fails with "No package found matching input criteria". Download the official binary, verify its checksum, unzip it, and put it on the user <code class="mono">PATH</code> instead.</p>
       <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
     </div>
   </section>

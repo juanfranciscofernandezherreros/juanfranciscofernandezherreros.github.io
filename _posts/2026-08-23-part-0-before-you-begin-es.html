@@ -306,7 +306,7 @@ reading_minutes: 4
 
   <section id="install">
     <div class="section-head"><span class="num">02</span><h2>Instálalas (Windows)</h2></div>
-    <p class="muted">Un comando por herramienta, con <code class="mono">winget</code> (viene integrado en Windows 10/11 — no hace falta instalarlo aparte). Ejecuta esto en PowerShell.</p>
+    <p class="muted">Un comando por herramienta, con <code class="mono">winget</code> (viene integrado en Windows 10/11 — no hace falta instalarlo aparte) — excepto Maven, que necesita una instalación manual corta. Ejecuta esto en PowerShell.</p>
 
     <div class="cmd-group" style="margin-top:20px;">
       <h4>Git</h4>
@@ -331,7 +331,13 @@ reading_minutes: 4
     </div>
     <div class="cmd-group">
       <h4>Maven</h4>
-      <pre><span class="c">winget</span> install Apache.Maven</pre>
+      <p class="why">No existe un paquete winget oficial para Apache Maven — <code class="mono">winget install Apache.Maven</code> falla con "No package found matching input criteria". Instálalo manualmente: descarga el binario oficial, verifica su checksum, descomprímelo y añádelo al <code class="mono">PATH</code> de tu usuario.</p>
+      <pre><span class="c">Invoke-WebRequest</span> -Uri "https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.zip" -OutFile "$env:TEMP\apache-maven-3.9.16-bin.zip"
+<span class="c">Get-FileHash</span> "$env:TEMP\apache-maven-3.9.16-bin.zip" -Algorithm SHA512   <span style="color:var(--ink-soft)"># compara con el .sha512 de la página de descarga</span>
+<span class="c">Expand-Archive</span> -Path "$env:TEMP\apache-maven-3.9.16-bin.zip" -DestinationPath "$env:LOCALAPPDATA\Programs" -Force
+<span class="c">[Environment]::SetEnvironmentVariable</span>("MAVEN_HOME", "$env:LOCALAPPDATA\Programs\apache-maven-3.9.16", "User")
+<span class="c">[Environment]::SetEnvironmentVariable</span>("Path", [Environment]::GetEnvironmentVariable("Path","User") + ";$env:LOCALAPPDATA\Programs\apache-maven-3.9.16\bin", "User")</pre>
+      <p class="why">3.9.16 es la última versión estable en el momento de escribir esto — consulta <a href="https://maven.apache.org/download.cgi">la página oficial de descargas</a> por si ya ha salido una versión más nueva, y ajusta la URL y el checksum en consecuencia.</p>
     </div>
     <div class="cmd-group">
       <h4>CLI de ArgoCD</h4>

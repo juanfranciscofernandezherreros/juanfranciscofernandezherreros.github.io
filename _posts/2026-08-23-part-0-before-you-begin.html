@@ -306,7 +306,7 @@ reading_minutes: 4
 
   <section id="install">
     <div class="section-head"><span class="num">02</span><h2>Install them (Windows)</h2></div>
-    <p class="muted">One command per tool, using <code class="mono">winget</code> (built into Windows 10/11 — no separate install needed). Run these in PowerShell.</p>
+    <p class="muted">One command per tool, using <code class="mono">winget</code> (built into Windows 10/11 — no separate install needed) — except Maven, which needs a short manual install. Run these in PowerShell.</p>
 
     <div class="cmd-group" style="margin-top:20px;">
       <h4>Git</h4>
@@ -331,7 +331,13 @@ reading_minutes: 4
     </div>
     <div class="cmd-group">
       <h4>Maven</h4>
-      <pre><span class="c">winget</span> install Apache.Maven</pre>
+      <p class="why">There's no official winget package for Apache Maven — <code class="mono">winget install Apache.Maven</code> fails with "No package found matching input criteria". Install it manually instead: download the official binary, verify its checksum, unzip it, and add it to your user <code class="mono">PATH</code>.</p>
+      <pre><span class="c">Invoke-WebRequest</span> -Uri "https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.zip" -OutFile "$env:TEMP\apache-maven-3.9.16-bin.zip"
+<span class="c">Get-FileHash</span> "$env:TEMP\apache-maven-3.9.16-bin.zip" -Algorithm SHA512   <span style="color:var(--ink-soft)"># compare against the .sha512 on the download page</span>
+<span class="c">Expand-Archive</span> -Path "$env:TEMP\apache-maven-3.9.16-bin.zip" -DestinationPath "$env:LOCALAPPDATA\Programs" -Force
+<span class="c">[Environment]::SetEnvironmentVariable</span>("MAVEN_HOME", "$env:LOCALAPPDATA\Programs\apache-maven-3.9.16", "User")
+<span class="c">[Environment]::SetEnvironmentVariable</span>("Path", [Environment]::GetEnvironmentVariable("Path","User") + ";$env:LOCALAPPDATA\Programs\apache-maven-3.9.16\bin", "User")</pre>
+      <p class="why">3.9.16 is the current latest stable release — check <a href="https://maven.apache.org/download.cgi">the official download page</a> for the current version and matching checksum/signature links if it has moved on.</p>
     </div>
     <div class="cmd-group">
       <h4>ArgoCD CLI</h4>
