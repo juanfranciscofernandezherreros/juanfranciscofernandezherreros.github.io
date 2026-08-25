@@ -308,6 +308,11 @@ reading_minutes: 4
     <div class="section-head"><span class="num">02</span><h2>Instálalas (Windows)</h2></div>
     <p class="muted">Un comando por herramienta, con <code class="mono">winget</code> (viene integrado en Windows 10/11 — no hace falta instalarlo aparte) — excepto Maven, que necesita una instalación manual corta. Ejecuta esto en PowerShell.</p>
 
+    <div class="note" style="margin-top:20px;">
+      <h4>¿Prefieres ejecutarlo como un único script?</h4>
+      <p>Descarga <a href="{{ '/assets/downloads/part-0/install-tools.zip' | relative_url }}">install-tools.zip</a> — un script de PowerShell que ejecuta todos los comandos de abajo en orden, con una pequeña pausa entre cada uno para que puedas atender un posible diálogo de UAC. Los mismos comandos que esta página, sin nada oculto.</p>
+    </div>
+
     <div class="cmd-group" style="margin-top:20px;">
       <h4>Git</h4>
       <pre><span class="c">winget</span> install Git.Git</pre>
