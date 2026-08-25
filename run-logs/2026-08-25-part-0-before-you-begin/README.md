@@ -18,13 +18,13 @@ en un equipo Windows 11 real.
 
 ## Nota sobre las capturas de pantalla
 
-Las imágenes `.png` de esta carpeta son capturas reales de pantalla tomadas justo
-después de cada comando, pero **no muestran la consola con la salida del comando**:
-se tomaron mediante un proceso automatizado que no abre una ventana de terminal
-visible en el escritorio, por lo que solo capturan lo que estaba visible en pantalla
-(en este caso, VS Code) en ese instante. La evidencia real del resultado de cada
-comando está en los archivos `.log` de texto, que contienen la salida completa de
-`winget install`.
+Las imágenes `.png` de esta carpeta son capturas reales de pantalla de una ventana
+de PowerShell visible ejecutando cada comando (`winget install ...`) con su salida
+real. Se abrió una ventana de PowerShell nueva para cada comando, se esperó a que
+terminase y se capturó la pantalla completa con esa ventana en primer plano; por
+eso se ve parte del escritorio/VS Code detrás de la consola. Los archivos `.log`
+contienen la salida completa sin recortar, por si la ventana capturada no muestra
+todo el texto.
 
 ## Incidencia detectada
 
