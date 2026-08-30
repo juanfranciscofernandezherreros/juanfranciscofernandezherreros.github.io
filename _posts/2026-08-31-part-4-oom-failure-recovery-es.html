@@ -1,0 +1,113 @@
+---
+layout: "article"
+title: "De OOMKilled a un despliegue saludable en Argo CD"
+description: "Un ejercicio práctico de fallo: superar el límite Kubernetes de 100Mi con Spring Boot, entender sincronización frente a salud en Argo CD, hacer fallar la operación y recuperar un único pod saludable."
+og_title: "De OOMKilled a un despliegue saludable en Argo CD — Argo Real World Microservices"
+og_description: "Provocar, diagnosticar, exponer y recuperar una OOM real de arranque en Kubernetes y Argo CD."
+twitter_title: "De OOMKilled a Healthy — Argo Real World Microservices"
+twitter_description: "Una OOM real en Kubernetes, la semántica de Argo CD y una recuperación verificada."
+permalink: "/argo-real-world-microservices/part-4/oom-failure-recovery/es/"
+lang: "es"
+lang_url: "/argo-real-world-microservices/part-4/oom-failure-recovery/"
+series: "Argo Real World Microservices"
+part: 4
+categories: ["GitOps & Kubernetes"]
+tags: ["argocd","kubernetes","oomkilled","spring-boot","gitops","incident-recovery"]
+date: "2026-08-31"
+reading_minutes: 5
+---
+
+<style>
+  :root{--bg:#edf1ef;--surface:#fff;--surface-2:#e4eae7;--ink:#14202b;--ink-soft:#4b5a64;--line:#c5cfcb;--line-strong:#96aaa3;--accent:#185f7d;--accent-soft:#dfeef2;--good:#187548;--good-soft:#dff1e6;--bad:#a43832;--bad-soft:#f5e3e1;--warn:#985d12;--warn-soft:#f4ead9;--code-bg:#122536;--code-ink:#e2eef4;--code-accent:#79c7df;--shadow:0 1px 2px rgba(20,32,43,.06),0 8px 24px -12px rgba(20,32,43,.18)}
+  @media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1b26;--surface:#132633;--surface-2:#0d1d28;--ink:#e6eef1;--ink-soft:#a6b7be;--line:#29434d;--line-strong:#46636c;--accent:#78c6df;--accent-soft:#173442;--good:#64d596;--good-soft:#123322;--bad:#ef8f87;--bad-soft:#3b1d1b;--warn:#e3b468;--warn-soft:#35270f;--code-bg:#071722;--code-ink:#e2eef4;--code-accent:#79c7df}}
+  :root[data-theme="dark"]{--bg:#0d1b26;--surface:#132633;--surface-2:#0d1d28;--ink:#e6eef1;--ink-soft:#a6b7be;--line:#29434d;--line-strong:#46636c;--accent:#78c6df;--accent-soft:#173442;--good:#64d596;--good-soft:#123322;--bad:#ef8f87;--bad-soft:#3b1d1b;--warn:#e3b468;--warn-soft:#35270f;--code-bg:#071722;--code-ink:#e2eef4;--code-accent:#79c7df}
+  *{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:0;margin:0}.titleblock{position:relative;background:var(--surface);border:1px solid var(--line-strong);box-shadow:var(--shadow);padding:28px 32px}.back-link,.lang-switch,.eyebrow,.num,.stamp dt{font-family:"IBM Plex Mono",monospace}.back-link,.lang-switch{font-size:.74rem}.back-link{margin:0 0 14px}.lang-switch{position:absolute;right:24px;top:20px}.eyebrow{color:var(--accent);font-size:.72rem;letter-spacing:0;text-transform:uppercase;margin:0 0 10px}.titleblock h1{font-size:3rem;line-height:1.02;max-width:18ch}.lede{font-size:1.03rem;color:var(--ink-soft);margin:14px 0 0}.stamp{display:grid;grid-template-columns:repeat(4,minmax(110px,1fr));gap:16px;border-top:1px solid var(--line);padding-top:16px;margin:24px 0 0}.stamp dt{font-size:.67rem;text-transform:uppercase;color:var(--ink-soft)}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:54px}.section-head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-strong);padding-bottom:10px;margin-bottom:20px}.section-head h2{font-size:1.5rem}.num{color:var(--accent);font-size:.82rem}p{max-width:70ch;line-height:1.6;text-align:justify;hyphens:auto;-webkit-hyphens:auto}.muted{color:var(--ink-soft)}code,.mono,pre{font-family:"IBM Plex Mono",monospace}.inline-file{background:var(--accent-soft);color:var(--accent);padding:.05em .35em;border-radius:3px}pre{background:var(--code-bg);color:var(--code-ink);padding:15px 16px;border-radius:4px;overflow:auto;line-height:1.55;font-size:.83rem}.c{color:var(--code-accent)}.note{border-left:3px solid var(--accent);background:var(--accent-soft);padding:14px 18px;margin:20px 0}.note.warn{border-color:var(--warn);background:var(--warn-soft)}.note p{margin:0}.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:22px 0}.status{border:1px solid var(--line);background:var(--surface);padding:16px}.status strong{display:block;font-family:"IBM Plex Mono",monospace;margin-bottom:6px}.status.bad{border-top:4px solid var(--bad)}.status.warn{border-top:4px solid var(--warn)}.status.good{border-top:4px solid var(--good)}.status p{font-size:.88rem;margin:0;color:var(--ink-soft)}.timeline{border-left:2px solid var(--line-strong);margin:24px 0 0 12px}.event{position:relative;padding:0 0 24px 28px}.event:before{content:"";position:absolute;left:-7px;top:3px;width:12px;height:12px;border-radius:50%;background:var(--surface);border:2px solid var(--accent)}.event h3{font-size:1.05rem}.event p{margin:6px 0 0}.file{border:1px solid var(--line);background:var(--surface);margin:18px 0}.file-head{padding:9px 14px;border-bottom:1px solid var(--line);font-family:"IBM Plex Mono",monospace;font-size:.78rem;color:var(--ink-soft)}.file pre{border-radius:0;margin:0;border:0}.result{display:grid;grid-template-columns:auto 1fr;gap:10px 14px;border:1px solid var(--line);background:var(--surface);padding:16px}.result dt{font-family:"IBM Plex Mono",monospace;color:var(--ink-soft)}.result dd{margin:0;font-weight:600}.links{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.links a{display:block;background:var(--surface);border:1px solid var(--line);padding:14px;text-decoration:none}.links strong{display:block;margin-bottom:4px}.links span{color:var(--ink-soft);font-size:.88rem}@media(max-width:650px){.stamp,.status-grid,.links{grid-template-columns:1fr 1fr}.titleblock{padding:24px 20px}.titleblock h1{font-size:2.1rem}.lang-switch{position:static;margin:0 0 12px}.sheet{padding:0 16px}}@media(max-width:430px){.stamp,.status-grid,.links{grid-template-columns:1fr}}
+</style>
+
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back-link"><a href="../../../part-3/crud-automation/es/">← Parte 3 — Generar un microservicio nuevo</a></p>
+    <p class="lang-switch"><a href="../">EN · English</a></p>
+    <p class="eyebrow">Argo Real World Microservices — Parte 4</p>
+    <h1>De OOMKilled a Healthy</h1>
+    <p class="lede">Rompemos deliberadamente <span class="inline-file">godbyemicroservices</span> bajo un límite de 100Mi, hacemos visible el fallo en Argo CD y recuperamos un único pod estable sin relajar ese límite de Kubernetes.</p>
+    <dl class="stamp"><div><dt>Workload</dt><dd>Spring Boot 3</dd></div><div><dt>Límite</dt><dd>100Mi</dd></div><div><dt>Fallo</dt><dd>OOMKilled · 137</dd></div><div><dt>Estado final</dt><dd>Synced · Healthy</dd></div></dl>
+  </div>
+
+  <section id="goal"><div class="section-head"><span class="num">00</span><h2>El ejercicio</h2></div>
+    <p>Este es un ejercicio de fallo controlado, no un patrón de fuga de memoria que deba permanecer en producción. El servicio arranca con un componente que añade arrays de bytes de 1MiB a una lista retenida. Kubernetes limita el contenedor a <code>100Mi</code>, por lo que el pod termina muriendo y su controlador lo reinicia.</p>
+    <div class="file"><div class="file-head">MemoryOomProbe.java — código experimental</div><pre>List&lt;byte[]&gt; retainedMemory = new ArrayList&lt;&gt;();
+while (true) {
+    retainedMemory.add(new byte[1024 * 1024]);
+}</pre></div>
+    <div class="note warn"><p><strong>Ejecuta esto únicamente en un clúster local desechable.</strong> La lista retiene intencionadamente cada asignación. No expongas este interruptor en producción.</p></div>
+  </section>
+
+  <section id="memory"><div class="section-head"><span class="num">01</span><h2>El heap no es toda la memoria del contenedor</h2></div>
+    <p>La primera sorpresa fue que <code>-Xmx</code> no predecía completamente el resultado. Un proceso Java también consume metaspace, caché de código, stacks de hilos, buffers directos, estructuras del GC, librerías compartidas y memoria nativa de la JVM. Kubernetes aplica el límite al total del cgroup, no solo al heap de Java.</p>
+    <div class="status-grid"><div class="status bad"><strong>OOMKilled / 137</strong><p>El kernel mata el contenedor cuando la memoria total supera 100Mi. Java puede no llegar a imprimir una excepción.</p></div><div class="status warn"><strong>Java OOM / 1</strong><p>La JVM detecta el agotamiento dentro de un área gestionada y sale con una excepción.</p></div><div class="status good"><strong>Running / 0</strong><p>Los límites del heap y memoria nativa dejan margen suficiente bajo el límite del contenedor.</p></div></div>
+    <p>La distinción importa al diagnosticar. Un <code>kubectl logs</code> puede terminar abruptamente tras un OOM kill; la evidencia autoritativa está en <code>lastState.terminated.reason</code> y en el código de salida.</p>
+    <pre><span class="c">kubectl</span> get pod -n godbyemicroservices -l app=godbyemicroservices \
+  -o jsonpath="{.items[0].status.containerStatuses[0].lastState.terminated.reason} {.items[0].status.containerStatuses[0].lastState.terminated.exitCode}{'\n'}"
+
+# OOMKilled 137</pre>
+  </section>
+
+  <section id="argo"><div class="section-head"><span class="num">02</span><h2>Por qué Argo puede estar Synced con el pod roto</h2></div>
+    <p>Argo CD responde a dos preguntas distintas. <strong>Sync</strong> comprueba si los objetos vivos de Kubernetes coinciden con Git. <strong>Health</strong> comprueba si esos objetos funcionan. Un Deployment aplicado perfectamente cuyo pod no deja de fallar puede estar a la vez <code>Synced</code> y <code>Degraded</code>.</p>
+    <div class="status-grid"><div class="status good"><strong>Synced</strong><p>El Deployment del clúster coincide con el YAML almacenado en Git.</p></div><div class="status bad"><strong>Degraded</strong><p>El Deployment no consigue que su réplica solicitada esté disponible.</p></div><div class="status warn"><strong>Operation: Succeeded</strong><p>Aplicar YAML válido tuvo éxito aunque el workload resultante fallara después.</p></div></div>
+    <p>Añadir <code>progressDeadlineSeconds: 30</code> hizo que Kubernetes informara antes de <code>ProgressDeadlineExceeded</code>. Mejoró la señal de salud, pero no convirtió retroactivamente una aplicación correcta de manifiestos en una operación de sincronización fallida.</p>
+  </section>
+
+  <section id="hook"><div class="section-head"><span class="num">03</span><h2>Hacer fallar la operación intencionadamente</h2></div>
+    <p>Cuando el requisito concreto es “mostrar la operación de sincronización como Failed”, Argo necesita una tarea de sync que pueda devolver un fallo. Para el ejercicio, un Job <code>PreSync</code> ejecutó la misma imagen con el mismo límite de 100Mi y <code>backoffLimit: 0</code>.</p>
+    <div class="file"><div class="file-head">startup-check.yaml — puerta temporal de fallo</div><pre>apiVersion: batch/v1
+kind: Job
+metadata:
+  name: godbyemicroservices-startup-check
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: startup-check
+          image: godbyemicroservices:local
+          resources:
+            limits:
+              memory: 100Mi</pre></div>
+    <p>El pod del hook terminó como <code>OOMKilled</code> con código <code>137</code>. El Job alcanzó <code>BackoffLimitExceeded</code> y Argo registró <code>operation=Failed</code> con “one or more synchronization tasks completed unsuccessfully”. Esto demuestra la diferencia: la salud del workload afecta a Health; una tarea de sincronización fallida afecta a la fase de la operación.</p>
+  </section>
+
+  <section id="recovery"><div class="section-head"><span class="num">04</span><h2>Recuperación: retirar el fallo, no el límite</h2></div>
+    <div class="timeline"><div class="event"><h3>Eliminar la fuga deliberada</h3><p>El experimento local <code>MemoryOomProbe</code>, su prueba y la propiedad <code>OOM_ON_STARTUP</code> se borraron antes de publicar el servicio. La aplicación arranca únicamente Spring y su único <code>GodbyeMicroservicesController</code>.</p></div><div class="event"><h3>Eliminar la puerta experimental</h3><p>Se retiraron el Job <code>PreSync</code> y el deadline corto de <span class="inline-file">gitops-config</span>. El Deployment conserva <code>replicas: 1</code>.</p></div><div class="event"><h3>Mantener la frontera de 100Mi</h3><p>El límite del contenedor no cambió. Se definieron valores conservadores para heap, metaspace, caché de código, memoria directa, stacks, GC y compilación tiered para que Spring quepa dentro del cgroup.</p></div><div class="event"><h3>Reconstruir y reconciliar</h3><p>Se reconstruyó la imagen, se cargó en kind y se recreó el pod. Argo reconcilió el commit GitOps <code>4fc7726</code>.</p></div></div>
+    <div class="file"><div class="file-head">Dockerfile — comando JVM final</div><pre>ENTRYPOINT ["java", "-Xmx36m", "-XX:MaxMetaspaceSize=44m",
+  "-XX:ReservedCodeCacheSize=8m", "-XX:MaxDirectMemorySize=4m",
+  "-Xss256k", "-XX:+UseSerialGC", "-XX:TieredStopAtLevel=1",
+  "-jar", "app.jar"]</pre></div>
+    <div class="note"><p>Estos valores son específicos de este pequeño servicio de demostración. En un workload real hay que medir RSS máximo, tráfico, número de hilos, comportamiento del GC y margen de arranque antes de decidir límites de producción.</p></div>
+  </section>
+
+  <section id="verify"><div class="section-head"><span class="num">05</span><h2>Estado final verificado</h2></div>
+    <pre><span class="c">kubectl</span> rollout status deployment/godbyemicroservices -n godbyemicroservices
+deployment "godbyemicroservices" successfully rolled out
+
+<span class="c">kubectl</span> get pods -n godbyemicroservices -l app=godbyemicroservices
+NAME                                   READY   STATUS    RESTARTS
+godbyemicroservices-5d74bc6d94-r7rln   1/1     Running   0
+
+<span class="c">kubectl</span> get application godbyemicroservices -n argocd
+NAME                  SYNC STATUS   HEALTH STATUS
+godbyemicroservices   Synced        Healthy
+
+<span class="c">curl</span> http://localhost:18081/godbyemicroservices
+{"message":"Hello from GodbyeMicroservices"}</pre>
+    <dl class="result"><dt>Réplicas</dt><dd>Exactamente una</dd><dt>Pod</dt><dd>1/1 Running, 0 reinicios</dd><dt>Argo CD</dt><dd>Synced · Healthy</dd><dt>Límite Kubernetes</dt><dd>100Mi</dd></dl>
+  </section>
+
+  <section id="commits"><div class="section-head"><span class="num">06</span><h2>Los cambios reales</h2></div>
+    <div class="links"><a href="https://github.com/juanfranciscofernandezherreros/gitops-config/commit/1a836d7"><strong>1a836d7 · límite de 100Mi</strong><span>Introdujo el Deployment limitado utilizado en el ejercicio.</span></a><a href="https://github.com/juanfranciscofernandezherreros/gitops-config/commit/a731a49"><strong>a731a49 · puerta de fallo</strong><span>Hook PreSync que hizo fallar la operación por la OOM intencionada.</span></a><a href="https://github.com/juanfranciscofernandezherreros/gitops-config/commit/4fc7726"><strong>4fc7726 · recuperación</strong><span>Eliminó el hook y restauró el Deployment saludable de una réplica.</span></a><a href="https://github.com/juanfranciscofernandezherreros/crud-godbyemicroservices-minimal/commit/59a6bd1"><strong>59a6bd1 · límites JVM iniciales</strong><span>Añadió los primeros límites conservadores de memoria a la imagen.</span></a><a href="https://github.com/juanfranciscofernandezherreros/crud-godbyemicroservices-minimal/commit/244c42c"><strong>244c42c · ajuste final</strong><span>Redujo los máximos JVM hasta estabilizar el pod bajo 100Mi.</span></a></div>
+  </section>
+</div>

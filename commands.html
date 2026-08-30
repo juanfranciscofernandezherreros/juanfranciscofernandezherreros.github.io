@@ -278,6 +278,7 @@ permalink: /commands/
       <p class="refs">
         <a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a>
         <a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a>
+        <a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#recovery' | relative_url }}">Part 4</a>
       </p>
     </div>
   </section>
@@ -305,12 +306,13 @@ permalink: /commands/
       <p class="refs">
         <a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a>
         <a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a>
+        <a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#recovery' | relative_url }}">Part 4</a>
       </p>
     </div>
   </section>
 
   <section class="tool-section" id="kubectl">
-    <div class="section-head"><h2>kubectl</h2><span class="count">9</span></div>
+    <div class="section-head"><h2>kubectl</h2><span class="count">11</span></div>
 
     <div class="cmd-entry">
       <h3>Check the install</h3>
@@ -369,7 +371,7 @@ permalink: /commands/
       <pre><span class="c">kubectl</span> get application hello-world -n argocd
 <span class="c">kubectl</span> get application hello-world -n argocd -o jsonpath='{.status.sync.status} {.status.health.status}'</pre>
       <p>Reads Argo's own record of an <code class="mono">Application</code> instead of the workload it manages — the second form prints just the sync/health status, handy for scripting.</p>
-      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-2/gitops-config/#commands' | relative_url }}">Part 2</a></p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-2/gitops-config/#commands' | relative_url }}">Part 2</a> <a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#verify' | relative_url }}">Part 4</a></p>
     </div>
 
     <div class="cmd-entry">
@@ -386,6 +388,21 @@ permalink: /commands/
 <span class="c">kubectl</span> -n godbyemicroservices port-forward svc/godbyemicroservices 8082:8080</pre>
       <p>The same onboarding pattern from Part 1, applied to a second, independently generated service.</p>
       <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Inspect the previous container termination</h3>
+      <pre><span class="c">kubectl</span> get pod -n godbyemicroservices -l app=godbyemicroservices \
+  -o jsonpath="{.items[0].status.containerStatuses[0].lastState.terminated.reason} {.items[0].status.containerStatuses[0].lastState.terminated.exitCode}{'\n'}"</pre>
+      <p>Distinguishes a kernel-level <code class="mono">OOMKilled / 137</code> from a Java exception or a probe-driven restart.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#memory' | relative_url }}">Part 4</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Wait for the repaired Deployment</h3>
+      <pre><span class="c">kubectl</span> rollout status deployment/godbyemicroservices -n godbyemicroservices</pre>
+      <p>Waits until the repaired Deployment has its requested replica available, or returns a failure when the rollout deadline is reached.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#verify' | relative_url }}">Part 4</a></p>
     </div>
   </section>
 
@@ -423,6 +440,7 @@ permalink: /commands/
       <p class="refs">
         <a href="{{ '/argo-real-world-microservices/part-1/hello-world-argocd/#commands' | relative_url }}">Part 1</a>
         <a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a>
+        <a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#recovery' | relative_url }}">Part 4</a>
       </p>
     </div>
   </section>
@@ -434,7 +452,7 @@ permalink: /commands/
       <h3>Generate a new microservice</h3>
       <pre><span class="c">python</span> generate_crud.py GodbyeMicroservices "id:int" --architecture minimal</pre>
       <p>The <code class="mono">crud-automation</code> generator — entity name, fields, and the minimal architecture flag produce a full, independent Spring Boot service.</p>
-      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a></p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a> <a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#verify' | relative_url }}">Part 4</a></p>
     </div>
 
     <div class="cmd-entry">
@@ -459,7 +477,7 @@ permalink: /commands/
       <h3>Hit a generated service</h3>
       <pre><span class="c">curl</span> http://localhost:8082/godbyemicroservices</pre>
       <p>Same check as Part 1, against the second service's own port-forward.</p>
-      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a></p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a> <a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#verify' | relative_url }}">Part 4</a></p>
     </div>
   </section>
 
