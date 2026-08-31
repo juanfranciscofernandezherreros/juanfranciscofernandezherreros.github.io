@@ -1,0 +1,106 @@
+---
+layout: "article"
+title: "Local Kafka Platform Managed with Argo CD"
+description: "Architecture and operations guide for a local Kafka platform with ZooKeeper, Schema Registry, REST Proxy, Kafka UI, and Redpanda Console, reconciled through Argo CD."
+permalink: "/argo-real-world-microservices/part-8/devtools-kafka/"
+lang: "en"
+lang_url: "/argo-real-world-microservices/part-8/devtools-kafka/es/"
+series: "Argo Real World Microservices"
+part: 8
+categories: ["GitOps & Kubernetes"]
+tags: ["kafka","argocd","kubernetes","gitops","schema-registry","zookeeper"]
+date: "2026-08-31"
+reading_minutes: 6
+---
+<style>
+:root{color-scheme:light dark;--bg:#eef2f6;--panel:#fff;--text:#172033;--muted:#526079;--accent:#087e8b;--line:#c7d2df;--code:#102030;--code-text:#e8f3f5;--notice:#e3f2f3}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b1020;--panel:#151d33;--text:#e8edf7;--muted:#aab6cc;--accent:#67e8f9;--line:#2a3858;--code:#080d19;--code-text:#e8edf7;--notice:#152b39}}:root[data-theme="dark"]{--bg:#0b1020;--panel:#151d33;--text:#e8edf7;--muted:#aab6cc;--accent:#67e8f9;--line:#2a3858;--code:#080d19;--code-text:#e8edf7;--notice:#152b39}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.titleblock,.card{background:var(--panel);border:1px solid var(--line)}.titleblock{position:relative;padding:28px 32px}.back,.lang,.eyebrow,.num,.stamp dt,pre,code{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:clamp(2.2rem,6vw,3.5rem);line-height:1.02;max-width:20ch}.lede{font-size:1.03rem;color:var(--muted)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.55rem}h3{font-size:1.1rem}p,li{max-width:70ch;line-height:1.6;text-align:justify;hyphens:auto;-webkit-hyphens:auto}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}.card{padding:15px}.card h3{margin-bottom:6px}.card p{font-size:.9rem;color:var(--muted);margin:0}.flow{display:flex;flex-wrap:wrap;align-items:center;gap:.65rem;margin:20px 0}.flow span{background:var(--panel);border:1px solid var(--line);padding:.65rem .8rem}.flow b{color:var(--accent)}table{width:100%;border-collapse:collapse;display:block;overflow-x:auto;margin:18px 0}th,td{border:1px solid var(--line);padding:.65rem .8rem;text-align:left}th{background:var(--panel)}pre{overflow:auto;background:var(--code);color:var(--code-text);border:1px solid var(--line);padding:15px;line-height:1.55;font-size:.82rem}.c{color:#79d7e3}.notice{border-left:3px solid var(--accent);background:var(--notice);padding:14px 18px}.next{margin-top:54px;padding:20px;border-top:2px solid var(--accent);background:var(--panel)}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:48px;padding-top:20px}@media(max-width:650px){.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:24px 20px}.lang{position:static}.sheet{padding:0 16px}}
+</style>
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back"><a href="../../part-7/postgresql-argocd/">&larr; Part 7 — PostgreSQL in Argo CD</a></p>
+    <p class="lang"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Argo Real World Microservices — Part 8</p>
+    <h1>Local Kafka Platform</h1>
+    <p class="lede">Run Kafka, ZooKeeper, Schema Registry, REST Proxy, Kafka UI, and Redpanda Console in Kubernetes while Argo CD continuously reconciles the complete stack from Git.</p>
+    <dl class="stamp"><div><dt>Application</dt><dd>devtools-kafka</dd></div><div><dt>Namespace</dt><dd>devtools-kafka</dd></div><div><dt>Cluster</dt><dd>kind-hello-world</dd></div></dl>
+  </div>
+
+  <section id="purpose"><div class="head"><span class="num">01</span><h2>Purpose and components</h2></div>
+    <p>The platform runs in the <code>devtools-kafka</code> namespace of the local <code>kind-hello-world</code> cluster. It lets microservices produce and consume events, share versioned data contracts, and observe the system through two web interfaces.</p>
+    <div class="grid">
+      <article class="card"><h3>ZooKeeper</h3><p>Coordinates the Kafka generation in use. Service: <code>zookeeper:2181</code>.</p></article>
+      <article class="card"><h3>Kafka</h3><p>The broker stores and distributes events. Internal service: <code>kafka:29092</code>.</p></article>
+      <article class="card"><h3>Schema Registry</h3><p>Versions and validates contracts. API: <code>schema-registry:8081</code>.</p></article>
+      <article class="card"><h3>REST Proxy</h3><p>Translates HTTP into Kafka operations. API: <code>rest-proxy:8082</code>.</p></article>
+      <article class="card"><h3>Kafka UI</h3><p>Displays brokers, topics, messages, consumers, schemas, and ZooKeeper.</p></article>
+      <article class="card"><h3>Redpanda Console</h3><p>A second interface compatible with the Kafka and Schema Registry APIs.</p></article>
+    </div>
+    <p class="notice"><strong>Important:</strong> using Redpanda Console does not turn the broker into Redpanda. The broker remains Kafka from the Confluent distribution; Console is a stateless client.</p>
+  </section>
+
+  <section id="architecture"><div class="head"><span class="num">02</span><h2>Architecture and flow</h2></div>
+    <div class="flow" aria-label="Dependency flow"><span>Microservices / UIs</span><b>→</b><span>Kafka</span><b>→</b><span>ZooKeeper</span><span>UIs / REST Proxy</span><b>→</b><span>Schema Registry</span><b>→</b><span><code>_schemas</code> topic</span></div>
+    <p>Short Kubernetes DNS names work inside the namespace. From another namespace, a microservice can use <code>kafka.devtools-kafka.svc.cluster.local:29092</code> and <code>http://schema-registry.devtools-kafka.svc.cluster.local:8081</code>.</p>
+    <p>Kafka exposes two PLAINTEXT listeners. <code>kafka:29092</code> is advertised to pods, while <code>localhost:9092</code> serves local-machine clients through a port forward. The advertised address matters because, after bootstrap, the broker returns the endpoints the client must use for subsequent connections.</p>
+  </section>
+
+  <section id="broker"><div class="head"><span class="num">03</span><h2>ZooKeeper, Kafka, and the data</h2></div>
+    <p>The broker runs <code>confluentinc/cp-kafka:7.4.4</code> in ZooKeeper mode. <code>KAFKA_ZOOKEEPER_CONNECT=zookeeper:2181</code> links both components. Kafka UI also receives this endpoint; Redpanda Console does not query ZooKeeper directly because it manages the system through Kafka's standard API.</p>
+    <p>There is one broker, automatic topic creation, and replication factors of <code>1</code> for offsets and transactions. This is a lightweight development setup. A future KRaft migration could remove ZooKeeper, but it requires an operational and metadata migration—not simply deleting the ZooKeeper Deployment.</p>
+  </section>
+
+  <section id="contracts"><div class="head"><span class="num">04</span><h2>Contracts with Schema Registry</h2></div>
+    <p>Schema Registry stores its metadata in Kafka's internal <code>_schemas</code> topic. At the end of a synchronization, the <code>register-demo-schemas</code> PostSync hook waits for the API and registers:</p>
+    <ul><li><code>test-topic-key</code>: a string key.</li><li><code>test-topic-value</code>: the <code>DemoValue</code> record, with an integer <code>id</code> and string <code>message</code>.</li></ul>
+    <p>Schemas give producers and consumers a shared, versioned contract and allow both interfaces to deserialize messages correctly.</p>
+  </section>
+
+  <section id="interfaces"><div class="head"><span class="num">05</span><h2>Visual interfaces</h2></div>
+    <h3>Kafka UI</h3><p><code>provectuslabs/kafka-ui:v0.7.2</code> connects to Kafka, Schema Registry, and ZooKeeper. It displays brokers, topics, partitions, messages, headers, offsets, groups, consumer lag, and subjects. <code>DYNAMIC_CONFIG_ENABLED=false</code> keeps Git as the source of truth.</p>
+    <h3>Redpanda Console</h3><p><code>docker.redpanda.com/redpandadata/console:v3.11.0</code> uses <code>KAFKA_BROKERS=kafka:29092</code> and <code>SCHEMAREGISTRY_URLS=http://schema-registry:8081</code>. No Redpanda Admin API is configured because the actual broker is Kafka. Both UIs inspect the same cluster; they do not duplicate brokers or data.</p>
+  </section>
+
+  <section id="deploy"><div class="head"><span class="num">06</span><h2>GitOps deployment</h2></div>
+    <p>The <code>devtools-kafka</code> Application watches <code>manifests/devtools-kafka</code>. Automated synchronization applies new revisions, <code>selfHeal</code> corrects manual drift, and <code>prune</code> removes resources deleted from Git.</p>
+    <table><thead><tr><th>Wave</th><th>Resources</th><th>Purpose</th></tr></thead><tbody><tr><td>-1</td><td>Namespace</td><td>Creates the destination.</td></tr><tr><td>0</td><td>ZooKeeper</td><td>Starts coordination.</td></tr><tr><td>1</td><td>Kafka</td><td>Waits for ZooKeeper.</td></tr><tr><td>2</td><td>Schema Registry</td><td>Waits for the broker.</td></tr><tr><td>3</td><td>REST Proxy and both UIs</td><td>Waits for Kafka and Schema Registry.</td></tr><tr><td>4</td><td>Schema registration</td><td>Final PostSync hook.</td></tr></tbody></table>
+    <pre><span class="c">kubectl</span> get application devtools-kafka -n argocd
+<span class="c">kubectl</span> get pods,svc -n devtools-kafka</pre>
+    <p>The expected Application state is <code>Synced</code> and <code>Healthy</code>.</p>
+  </section>
+
+  <section id="local-access"><div class="head"><span class="num">07</span><h2>Local access</h2></div>
+    <p>The Services use <code>ClusterIP</code>. Run each tunnel in a separate terminal; it remains active until you press <code>Ctrl+C</code>.</p>
+    <pre><span class="c">kubectl</span> port-forward -n devtools-kafka svc/kafka-ui 18080:8080
+<span class="c">kubectl</span> port-forward -n devtools-kafka svc/redpanda-console 18083:8080
+<span class="c">kubectl</span> port-forward -n devtools-kafka svc/kafka 9092:9092
+<span class="c">kubectl</span> port-forward -n devtools-kafka svc/schema-registry 18081:8081
+<span class="c">kubectl</span> port-forward -n devtools-kafka svc/rest-proxy 18082:8082</pre>
+    <ul><li>Kafka UI: <a href="http://localhost:18080">http://localhost:18080</a></li><li>Redpanda Console: <a href="http://localhost:18083">http://localhost:18083</a></li></ul>
+  </section>
+
+  <section id="troubleshooting"><div class="head"><span class="num">08</span><h2>Validation and troubleshooting</h2></div>
+    <pre><span class="c">kubectl</span> get pods,deployments,svc -n devtools-kafka
+<span class="c">kubectl</span> logs -n devtools-kafka deployment/kafka
+<span class="c">kubectl</span> logs -n devtools-kafka deployment/schema-registry
+<span class="c">kubectl</span> logs -n devtools-kafka deployment/kafka-ui
+<span class="c">kubectl</span> logs -n devtools-kafka deployment/redpanda-console
+<span class="c">kubectl</span> get events -n devtools-kafka --sort-by=.lastTimestamp
+
+<span class="c">Invoke-RestMethod</span> http://localhost:18080/actuator/health
+<span class="c">Invoke-RestMethod</span> http://localhost:18083/admin/health
+<span class="c">Invoke-RestMethod</span> http://localhost:18081/subjects</pre>
+    <p>Kafka UI should return <code>UP</code>, Redpanda Console should report healthy HTTP, and Schema Registry should list both demo subjects. The registration Job should be <code>Completed</code>; it is not a continuously running service.</p>
+  </section>
+
+  <section id="security"><div class="head"><span class="num">09</span><h2>Security and limitations</h2></div>
+    <p>Containers run as non-root users with <code>RuntimeDefault</code> seccomp, no privilege escalation, and no Linux capabilities. The UIs pin UID/GID <code>100:101</code>. Probes govern availability and process health, while requests and limits constrain resource usage.</p>
+    <p class="notice">This is not a production topology: it has one broker, replication factor 1, non-persistent storage, PLAINTEXT without SASL/TLS, unauthenticated UIs, and no NetworkPolicy. Production requires persistence, multiple brokers, replication, encryption, authorization, backups, metrics, and alerting.</p>
+  </section>
+
+  <section id="manifests"><div class="head"><span class="num">10</span><h2>Manifests</h2></div>
+    <p>The definition is split between <code>applications/devtools-kafka.yaml</code> and the files under <code>manifests/devtools-kafka/</code>: ZooKeeper, Kafka, Schema Registry, REST Proxy, Kafka UI, Redpanda Console, and the PostSync registrar. Git describes the desired state and Argo CD keeps the cluster aligned with it.</p>
+  </section>
+
+  <div class="next"><strong>Kafka platform complete</strong><p>The local event platform is now declarative, observable, and ready for microservices to use through stable in-cluster endpoints.</p><a href="../../">Return to the complete course &rarr;</a></div>
+  <footer>Technical article from the <a href="https://github.com/juanfranciscofernandezherreros/gitops-config"><code>gitops-config</code> repository</a>.</footer>
+</div>

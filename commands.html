@@ -228,7 +228,7 @@ permalink: /commands/
   </section>
 
   <section class="tool-section" id="powershell">
-    <div class="section-head"><h2>powershell</h2><span class="count">2</span></div>
+    <div class="section-head"><h2>powershell</h2><span class="count">3</span></div>
 
     <div class="cmd-entry">
       <h3>Install Maven manually</h3>
@@ -246,6 +246,15 @@ permalink: /commands/
       <pre><span class="c">Test-NetConnection</span> localhost -Port 8082</pre>
       <p>Returns <code class="mono">False</code> before the tunnel, <code class="mono">True</code> while kubectl is forwarding, and <code class="mono">False</code> again after Ctrl+C.</p>
       <p class="refs"><a href="{{ '/argo-real-world-microservices/part-5/kubectl-port-forward/#proof' | relative_url }}">Part 5</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Check the Kafka platform HTTP endpoints</h3>
+      <pre><span class="c">Invoke-RestMethod</span> http://localhost:18080/actuator/health
+<span class="c">Invoke-RestMethod</span> http://localhost:18083/admin/health
+<span class="c">Invoke-RestMethod</span> http://localhost:18081/subjects</pre>
+      <p>Validates Kafka UI, Redpanda Console, and Schema Registry through their active local tunnels.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-8/devtools-kafka/#troubleshooting' | relative_url }}">Part 8</a></p>
     </div>
   </section>
 
@@ -319,7 +328,7 @@ permalink: /commands/
   </section>
 
   <section class="tool-section" id="kubectl">
-    <div class="section-head"><h2>kubectl</h2><span class="count">15</span></div>
+    <div class="section-head"><h2>kubectl</h2><span class="count">18</span></div>
 
     <div class="cmd-entry">
       <h3>Check the install</h3>
@@ -455,6 +464,37 @@ permalink: /commands/
 <span class="c">kubectl</span> wait --for=condition=Ready pod/godbyemicroservices-postgres-oom -n godbyemicroservices-postgres-oom --timeout=180s</pre>
       <p>Confirms <code class="mono">Synced / Degraded</code>, preserves the failed pod at zero restarts, and deletes it only when the controlled drill must be repeated.</p>
       <p class="refs"><a href="{{ '/argo-real-world-microservices/part-7/postgresql-argocd/' | relative_url }}">Part 7</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Check the Kafka Application and Services</h3>
+      <pre><span class="c">kubectl</span> get application devtools-kafka -n argocd
+<span class="c">kubectl</span> get pods,svc -n devtools-kafka</pre>
+      <p>Checks Argo CD sync and health, then lists the Kafka platform workloads and their internal endpoints.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-8/devtools-kafka/#deploy' | relative_url }}">Part 8</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Open the Kafka platform locally</h3>
+      <pre><span class="c">kubectl</span> port-forward -n devtools-kafka svc/kafka-ui 18080:8080
+<span class="c">kubectl</span> port-forward -n devtools-kafka svc/redpanda-console 18083:8080
+<span class="c">kubectl</span> port-forward -n devtools-kafka svc/kafka 9092:9092
+<span class="c">kubectl</span> port-forward -n devtools-kafka svc/schema-registry 18081:8081
+<span class="c">kubectl</span> port-forward -n devtools-kafka svc/rest-proxy 18082:8082</pre>
+      <p>Run each foreground tunnel in a separate terminal to reach both UIs, Kafka, Schema Registry, and REST Proxy from the workstation.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-8/devtools-kafka/#local-access' | relative_url }}">Part 8</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Diagnose the Kafka platform</h3>
+      <pre><span class="c">kubectl</span> get pods,deployments,svc -n devtools-kafka
+<span class="c">kubectl</span> logs -n devtools-kafka deployment/kafka
+<span class="c">kubectl</span> logs -n devtools-kafka deployment/schema-registry
+<span class="c">kubectl</span> logs -n devtools-kafka deployment/kafka-ui
+<span class="c">kubectl</span> logs -n devtools-kafka deployment/redpanda-console
+<span class="c">kubectl</span> get events -n devtools-kafka --sort-by=.lastTimestamp</pre>
+      <p>Inspects resource state, component logs, and namespace events in chronological order.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-8/devtools-kafka/#troubleshooting' | relative_url }}">Part 8</a></p>
     </div>
   </section>
 
