@@ -228,7 +228,7 @@ permalink: /commands/
   </section>
 
   <section class="tool-section" id="powershell">
-    <div class="section-head"><h2>powershell</h2><span class="count">1</span></div>
+    <div class="section-head"><h2>powershell</h2><span class="count">2</span></div>
 
     <div class="cmd-entry">
       <h3>Install Maven manually</h3>
@@ -239,6 +239,13 @@ permalink: /commands/
 <span class="c">[Environment]::SetEnvironmentVariable</span>("Path", [Environment]::GetEnvironmentVariable("Path","User") + ";$env:LOCALAPPDATA\Programs\apache-maven-3.9.16\bin", "User")</pre>
       <p>Apache Maven has no winget package — <code class="mono">winget install Apache.Maven</code> fails with "No package found matching input criteria". Download the official binary, verify its checksum, unzip it, and put it on the user <code class="mono">PATH</code> instead.</p>
       <p class="refs"><a href="{{ '/argo-real-world-microservices/part-0/before-you-begin/#install' | relative_url }}">Part 0</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Prove that port-forward created the local route</h3>
+      <pre><span class="c">Test-NetConnection</span> localhost -Port 8082</pre>
+      <p>Returns <code class="mono">False</code> before the tunnel, <code class="mono">True</code> while kubectl is forwarding, and <code class="mono">False</code> again after Ctrl+C.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-5/kubectl-port-forward/#proof' | relative_url }}">Part 5</a></p>
     </div>
   </section>
 
