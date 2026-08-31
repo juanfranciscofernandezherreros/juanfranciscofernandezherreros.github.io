@@ -1,0 +1,74 @@
+---
+layout: "article"
+title: "Cargar 100.000 filas en PostgreSQL para una prueba OOM repetible"
+description: "Crea primero la base de datos y la tabla, carga 100.000 filas deterministas con generate_series y verifica los datos antes de arrancar Spring Boot."
+permalink: "/argo-real-world-microservices/part-6/postgresql-bulk-load/es/"
+lang: "es"
+lang_url: "/argo-real-world-microservices/part-6/postgresql-bulk-load/"
+series: "Argo Real World Microservices"
+part: 6
+categories: ["Databases & Testing"]
+tags: ["postgresql","sql","kubernetes","bulk-load","oom"]
+date: "2026-08-31"
+reading_minutes: 5
+---
+<style>
+:root{--bg:#edf1ef;--s:#fff;--ink:#14202b;--soft:#4b5a64;--line:#aab9b4;--accent:#185f7d;--as:#dfeef2;--code:#102536;--ci:#e2eef4;--good:#187548;--gs:#dff1e6;--warn:#985d12;--ws:#f4ead9}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1b26;--s:#132633;--ink:#e6eef1;--soft:#a6b7be;--line:#46636c;--accent:#78c6df;--as:#173442;--code:#071722;--ci:#e2eef4;--good:#64d596;--gs:#123322;--warn:#e3b468;--ws:#35270f}}:root[data-theme="dark"]{--bg:#0d1b26;--s:#132633;--ink:#e6eef1;--soft:#a6b7be;--line:#46636c;--accent:#78c6df;--as:#173442;--code:#071722;--ci:#e2eef4;--good:#64d596;--gs:#123322;--warn:#e3b468;--ws:#35270f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:0;margin:0}.titleblock,.card,.result{background:var(--s);border:1px solid var(--line)}.titleblock{position:relative;padding:28px 32px}.back,.lang,.eyebrow,.num,.stamp dt,pre,code{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:3rem;line-height:1.02;max-width:20ch}.lede{font-size:1.03rem;color:var(--soft)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--soft);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.5rem}p,li{max-width:70ch;line-height:1.62;text-align:justify;hyphens:auto;-webkit-hyphens:auto}pre{background:var(--code);color:var(--ci);padding:15px;overflow:auto;border-radius:4px;line-height:1.55;font-size:.82rem}.note{border-left:3px solid var(--accent);background:var(--as);padding:14px 18px}.warn{border-color:var(--warn);background:var(--ws)}.steps,.grid{display:grid;gap:12px;margin:20px 0}.steps{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:repeat(2,1fr)}.card{padding:15px}.card strong{display:block;margin-bottom:5px}.card p{font-size:.88rem;color:var(--soft);margin:0}.result{border-left:4px solid var(--good);background:var(--gs);padding:16px}.next{margin-top:54px;padding:20px;border-top:2px solid var(--accent);background:var(--s)}@media(max-width:650px){.steps,.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:24px 20px}.titleblock h1{font-size:2.15rem}.lang{position:static}.sheet{padding:0 16px}}
+</style>
+<div class="sheet"><div class="titleblock"><p class="back"><a href="../../../part-5/kubectl-port-forward/es/">&larr; Parte 5 — kubectl port-forward</a></p><p class="lang"><a href="../">EN · English</a></p><p class="eyebrow">Argo Real World Microservices — Parte 6</p><h1>Cargar 100.000 filas en PostgreSQL</h1><p class="lede">Prepara almacenamiento persistente, crea el esquema, genera datos deterministas dentro de PostgreSQL y demuestra que están completos antes de arrancar el servicio limitado en memoria.</p><dl class="stamp"><div><dt>Motor</dt><dd>PostgreSQL 16</dd></div><div><dt>Filas</dt><dd>100.000</dd></div><div><dt>Almacenamiento</dt><dd>PVC de 2Gi</dd></div></dl></div>
+
+<section><div class="head"><span class="num">00</span><h2>Por qué la base de datos va primero</h2></div><p>La prueba solo es significativa si los datos existen independientemente del proceso Java. Generar un millón de objetos al iniciar la aplicación mezclaría la creación del fixture con el fallo que queremos estudiar y podría agotar el heap antes de que el endpoint HTTP estuviera disponible. Aquí PostgreSQL posee los datos; Spring Boot únicamente los consulta.</p><div class="steps"><div class="card"><strong>1 · Aprovisionar</strong><p>Crea PostgreSQL, su Service y el volumen persistente.</p></div><div class="card"><strong>2 · Cargar</strong><p>Crea la tabla y genera 100.000 filas en el servidor.</p></div><div class="card"><strong>3 · Verificar</strong><p>Comprueba cantidad y límites antes de desplegar la API.</p></div></div><p>Este orden también aclara el diagnóstico. Si la consulta de validación devuelve 100.000 filas y después la petición HTTP agota el heap, el fallo está al materializar el resultado, no al crear los datos.</p></section>
+
+<section><div class="head"><span class="num">01</span><h2>Recursos persistentes de PostgreSQL</h2></div><p>Un StatefulSet da identidad estable a la base de datos. Un Service <code>ClusterIP</code> ofrece el nombre DNS <code>postgresql</code> a los clientes del namespace, y un PersistentVolumeClaim conserva <code>PGDATA</code> si se recrea el pod.</p><pre>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+spec:
+  selector:
+    app: postgresql
+  ports:
+    - port: 5432
+      targetPort: 5432</pre><p>El StatefulSet usa <code>postgres:16-alpine</code> y define <code>POSTGRES_DB=goodbye</code>, <code>POSTGRES_USER=goodbye</code> y la contraseña del laboratorio. En un repositorio de producción, guarda las credenciales en un Secret o gestor externo, no en un ConfigMap ni en un artículo.</p><pre>kubectl get statefulset,pod,svc,pvc -n godbyemicroservices-postgres-oom
+kubectl wait --for=condition=Ready pod/postgresql-0 \
+  -n godbyemicroservices-postgres-oom --timeout=180s</pre></section>
+
+<section><div class="head"><span class="num">02</span><h2>Crea la tabla</h2></div><p>El esquema es pequeño de forma deliberada. La clave primaria numérica facilita comprobar los extremos, mientras que el payload obliga al driver JDBC y al heap Java a conservar un valor real por fila.</p><pre>CREATE TABLE IF NOT EXISTS goodbye_record (
+    id      BIGINT PRIMARY KEY,
+    payload VARCHAR(64) NOT NULL
+);</pre><p><code>IF NOT EXISTS</code> permite repetir la sentencia sin destruir datos. No sustituye a una estrategia de migraciones; usa Flyway o Liquibase cuando el ejemplo evolucione más allá de este laboratorio controlado.</p></section>
+
+<section><div class="head"><span class="num">03</span><h2>Genera 100.000 filas en el servidor</h2></div><p>La función <code>generate_series</code> de PostgreSQL crea todos los identificadores dentro del motor. Un único <code>INSERT ... SELECT</code> evita 100.000 viajes de red y no construye una lista en el cliente.</p><pre>INSERT INTO goodbye_record (id, payload)
+SELECT value, 'goodbye-' || value
+FROM generate_series(1, 100000) AS value
+ON CONFLICT (id) DO NOTHING;</pre><p>El dataset es determinista: el ID 1 siempre contiene <code>goodbye-1</code> y el ID 100000 contiene <code>goodbye-100000</code>. <code>ON CONFLICT DO NOTHING</code> hace segura la repetición cuando esas claves ya existen.</p><p>Ejecuta la operación completa dentro del pod PostgreSQL:</p><pre>kubectl exec -i -n godbyemicroservices-postgres-oom postgresql-0 -- \
+  psql -U goodbye -d goodbye -v ON_ERROR_STOP=1 -c \
+  "CREATE TABLE IF NOT EXISTS goodbye_record (id BIGINT PRIMARY KEY, payload VARCHAR(64) NOT NULL); INSERT INTO goodbye_record (id, payload) SELECT value, 'goodbye-' || value FROM generate_series(1, 100000) AS value ON CONFLICT (id) DO NOTHING;"</pre><div class="note"><p><code>-v ON_ERROR_STOP=1</code> obliga a <code>psql</code> a terminar con error en cuanto falle una sentencia. Es importante para scripts y controles de despliegue.</p></div></section>
+
+<section><div class="head"><span class="num">04</span><h2>Verifica sin descargar la tabla</h2></div><p>Agrega dentro de PostgreSQL y devuelve una sola fila compacta. Contar desde Java, DBeaver o una consola exigiría transferir antes todos los datos y podría reproducir el problema de memoria que queremos aislar.</p><pre>kubectl exec -n godbyemicroservices-postgres-oom postgresql-0 -- \
+  psql -U goodbye -d goodbye -c \
+  "SELECT COUNT(*) AS total, MIN(id) AS first_id, MAX(id) AS last_id FROM goodbye_record;"
+
+ total  | first_id | last_id
+--------+----------+---------
+ 100000 |        1 |  100000</pre><div class="result"><strong>Condición de aceptación:</strong> <code>total=100000</code>, <code>first_id=1</code> y <code>last_id=100000</code>. Solo después debe arrancar el pod de Spring Boot.</div><p>Para inspeccionar contenido, pide una página limitada:</p><pre>SELECT id, payload
+FROM goodbye_record
+ORDER BY id
+LIMIT 20;</pre></section>
+
+<section><div class="head"><span class="num">05</span><h2>Trampas de inicialización y persistencia</h2></div><div class="grid"><div class="card"><strong>Los scripts init se ejecutan una vez</strong><p><code>/docker-entrypoint-initdb.d</code> solo se procesa cuando PostgreSQL inicializa un directorio vacío.</p></div><div class="card"><strong>El PVC sobrevive al pod</strong><p>Eliminar el pod no vacía la base. Cambiar el ConfigMap init no recarga un volumen existente.</p></div><div class="card"><strong>Esquema antes que servicio</strong><p>Usa readiness y validación explícita para no arrancar silenciosamente contra una tabla vacía.</p></div><div class="card"><strong>Consultas de inspección acotadas</strong><p>Usa agregados o <code>LIMIT</code>. No representes todo el dataset en un cliente de administración.</p></div></div><p>Para un PVC existente, aplica migraciones o ejecuta explícitamente la carga idempotente. Elimina el PVC solo cuando quieras reiniciar este laboratorio desechable, ya que esa operación destruye los datos.</p></section>
+
+<section><div class="head"><span class="num">06</span><h2>De 100.000 al dataset OOM</h2></div><p>El ejercicio solicitado aquí termina en 100.000 filas. La variante OOM desplegada utiliza después el mismo SQL con un límite de <code>1000000</code>. Ese fixture mayor hace determinista el agotamiento con el heap de solo <code>-Xmx18m</code>.</p><pre>-- Escala del laboratorio OOM: mismo método, diez veces más filas
+SELECT value, 'goodbye-' || value
+FROM generate_series(1, 1000000) AS value;</pre><div class="note warn"><p>La cantidad de filas no es un umbral de memoria universal. El diseño de objetos, columnas, driver JDBC, versión de Java, límite de heap y estrategia de lectura cambian el resultado. Es un fixture reproducible para este servicio, no una fórmula general de OOM.</p></div></section>
+
+<div class="next"><strong>Siguiente: Parte 7</strong><p>Declara PostgreSQL y el servicio limitado en memoria en Git, y deja que Argo CD reconcilie y muestre el OOM deliberado como Degraded.</p><a href="../../../part-7/postgresql-argocd/es/">Integrar PostgreSQL con Argo CD &rarr;</a></div></div>

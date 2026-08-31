@@ -1,0 +1,74 @@
+---
+layout: "article"
+title: "Loading 100,000 Rows into PostgreSQL for a Repeatable OOM Test"
+description: "Create the PostgreSQL database and table first, bulk-load 100,000 deterministic rows with generate_series, and verify the dataset before starting Spring Boot."
+permalink: "/argo-real-world-microservices/part-6/postgresql-bulk-load/"
+lang: "en"
+lang_url: "/argo-real-world-microservices/part-6/postgresql-bulk-load/es/"
+series: "Argo Real World Microservices"
+part: 6
+categories: ["Databases & Testing"]
+tags: ["postgresql","sql","kubernetes","bulk-load","oom"]
+date: "2026-08-31"
+reading_minutes: 5
+---
+<style>
+:root{--bg:#edf1ef;--s:#fff;--ink:#14202b;--soft:#4b5a64;--line:#aab9b4;--accent:#185f7d;--as:#dfeef2;--code:#102536;--ci:#e2eef4;--good:#187548;--gs:#dff1e6;--warn:#985d12;--ws:#f4ead9}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1b26;--s:#132633;--ink:#e6eef1;--soft:#a6b7be;--line:#46636c;--accent:#78c6df;--as:#173442;--code:#071722;--ci:#e2eef4;--good:#64d596;--gs:#123322;--warn:#e3b468;--ws:#35270f}}:root[data-theme="dark"]{--bg:#0d1b26;--s:#132633;--ink:#e6eef1;--soft:#a6b7be;--line:#46636c;--accent:#78c6df;--as:#173442;--code:#071722;--ci:#e2eef4;--good:#64d596;--gs:#123322;--warn:#e3b468;--ws:#35270f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:0;margin:0}.titleblock,.card,.result{background:var(--s);border:1px solid var(--line)}.titleblock{position:relative;padding:28px 32px}.back,.lang,.eyebrow,.num,.stamp dt,pre,code{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:3rem;line-height:1.02;max-width:20ch}.lede{font-size:1.03rem;color:var(--soft)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--soft);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.5rem}p,li{max-width:70ch;line-height:1.62;text-align:justify;hyphens:auto;-webkit-hyphens:auto}pre{background:var(--code);color:var(--ci);padding:15px;overflow:auto;border-radius:4px;line-height:1.55;font-size:.82rem}.note{border-left:3px solid var(--accent);background:var(--as);padding:14px 18px}.warn{border-color:var(--warn);background:var(--ws)}.steps,.grid{display:grid;gap:12px;margin:20px 0}.steps{grid-template-columns:repeat(3,1fr)}.grid{grid-template-columns:repeat(2,1fr)}.card{padding:15px}.card strong{display:block;margin-bottom:5px}.card p{font-size:.88rem;color:var(--soft);margin:0}.result{border-left:4px solid var(--good);background:var(--gs);padding:16px}.next{margin-top:54px;padding:20px;border-top:2px solid var(--accent);background:var(--s)}@media(max-width:650px){.steps,.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:24px 20px}.titleblock h1{font-size:2.15rem}.lang{position:static}.sheet{padding:0 16px}}
+</style>
+<div class="sheet"><div class="titleblock"><p class="back"><a href="../../part-5/kubectl-port-forward/">&larr; Part 5 — kubectl port-forward</a></p><p class="lang"><a href="es/">ES · Español</a></p><p class="eyebrow">Argo Real World Microservices — Part 6</p><h1>Load 100,000 PostgreSQL rows</h1><p class="lede">Provision durable storage, create the schema, generate a deterministic dataset inside PostgreSQL, and prove it is complete before the memory-constrained service starts.</p><dl class="stamp"><div><dt>Engine</dt><dd>PostgreSQL 16</dd></div><div><dt>Rows</dt><dd>100,000</dd></div><div><dt>Storage</dt><dd>2Gi PVC</dd></div></dl></div>
+
+<section><div class="head"><span class="num">00</span><h2>Why the database comes first</h2></div><p>The test is meaningful only if the dataset exists independently of the Java process. Generating a million Java objects at application startup would mix fixture creation with the failure under test and could exhaust the heap before the HTTP endpoint is available. Here PostgreSQL owns the data; Spring Boot merely queries it.</p><div class="steps"><div class="card"><strong>1 · Provision</strong><p>Create PostgreSQL, its Service, and persistent volume.</p></div><div class="card"><strong>2 · Seed</strong><p>Create the table and generate 100,000 rows server-side.</p></div><div class="card"><strong>3 · Verify</strong><p>Check count and boundaries before deploying the API.</p></div></div><p>This ordering also makes failures legible. If the validation query returns 100,000 rows but the HTTP request later exhausts the heap, the fault is in materializing the query result, not in fixture creation.</p></section>
+
+<section><div class="head"><span class="num">01</span><h2>Persistent PostgreSQL resources</h2></div><p>A StatefulSet gives the database a stable workload identity. A <code>ClusterIP</code> Service provides the DNS name <code>postgresql</code> to clients in the namespace, and a PersistentVolumeClaim preserves <code>PGDATA</code> if the PostgreSQL pod is recreated.</p><pre>apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgresql-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgresql
+spec:
+  selector:
+    app: postgresql
+  ports:
+    - port: 5432
+      targetPort: 5432</pre><p>The StatefulSet uses <code>postgres:16-alpine</code> and defines <code>POSTGRES_DB=goodbye</code>, <code>POSTGRES_USER=goodbye</code>, and the lab password through an environment value. In a production repository, store credentials in a Secret or external secret manager, not in a ConfigMap or article.</p><pre>kubectl get statefulset,pod,svc,pvc -n godbyemicroservices-postgres-oom
+kubectl wait --for=condition=Ready pod/postgresql-0 \
+  -n godbyemicroservices-postgres-oom --timeout=180s</pre></section>
+
+<section><div class="head"><span class="num">02</span><h2>Create the table</h2></div><p>The schema deliberately stays small. The numeric primary key makes boundaries easy to verify, while the payload gives each row an actual value that the JDBC driver and Java heap must retain.</p><pre>CREATE TABLE IF NOT EXISTS goodbye_record (
+    id      BIGINT PRIMARY KEY,
+    payload VARCHAR(64) NOT NULL
+);</pre><p><code>IF NOT EXISTS</code> lets the statement run again without destroying existing data. It is not a migration strategy for evolving schemas; use Flyway or Liquibase once the example grows beyond a controlled lab.</p></section>
+
+<section><div class="head"><span class="num">03</span><h2>Generate 100,000 rows server-side</h2></div><p>PostgreSQL's set-returning <code>generate_series</code> creates all identifiers inside the database engine. One set-based <code>INSERT ... SELECT</code> avoids 100,000 network round trips and avoids building a client-side list.</p><pre>INSERT INTO goodbye_record (id, payload)
+SELECT value, 'goodbye-' || value
+FROM generate_series(1, 100000) AS value
+ON CONFLICT (id) DO NOTHING;</pre><p>The dataset is deterministic: ID 1 always has <code>goodbye-1</code>, and ID 100000 has <code>goodbye-100000</code>. <code>ON CONFLICT DO NOTHING</code> makes rerunning this seed safe when those primary keys already exist.</p><p>Execute the complete operation directly in the PostgreSQL pod:</p><pre>kubectl exec -i -n godbyemicroservices-postgres-oom postgresql-0 -- \
+  psql -U goodbye -d goodbye -v ON_ERROR_STOP=1 -c \
+  "CREATE TABLE IF NOT EXISTS goodbye_record (id BIGINT PRIMARY KEY, payload VARCHAR(64) NOT NULL); INSERT INTO goodbye_record (id, payload) SELECT value, 'goodbye-' || value FROM generate_series(1, 100000) AS value ON CONFLICT (id) DO NOTHING;"</pre><div class="note"><p><code>-v ON_ERROR_STOP=1</code> makes <code>psql</code> return failure immediately if either statement fails. That behavior is important in scripts and deployment checks.</p></div></section>
+
+<section><div class="head"><span class="num">04</span><h2>Verify without downloading the table</h2></div><p>Aggregate in PostgreSQL and return one compact row. Counting the result in Java, DBeaver, or a shell would first transfer the dataset and could reproduce the very memory problem we want to isolate.</p><pre>kubectl exec -n godbyemicroservices-postgres-oom postgresql-0 -- \
+  psql -U goodbye -d goodbye -c \
+  "SELECT COUNT(*) AS total, MIN(id) AS first_id, MAX(id) AS last_id FROM goodbye_record;"
+
+ total  | first_id | last_id
+--------+----------+---------
+ 100000 |        1 |  100000</pre><div class="result"><strong>Acceptance condition:</strong> <code>total=100000</code>, <code>first_id=1</code>, and <code>last_id=100000</code>. Only after that result should the Spring Boot pod be started.</div><p>Sample a bounded page when inspecting content:</p><pre>SELECT id, payload
+FROM goodbye_record
+ORDER BY id
+LIMIT 20;</pre></section>
+
+<section><div class="head"><span class="num">05</span><h2>Initialization and persistence traps</h2></div><div class="grid"><div class="card"><strong>Init scripts run once</strong><p>Files in <code>/docker-entrypoint-initdb.d</code> run only when PostgreSQL initializes an empty data directory.</p></div><div class="card"><strong>The PVC survives pods</strong><p>Deleting the pod does not empty the database. A changed init ConfigMap will not automatically reseed an existing volume.</p></div><div class="card"><strong>Schema before service</strong><p>Use readiness and explicit validation so the application never silently starts against an empty table.</p></div><div class="card"><strong>Bound inspection queries</strong><p>Use aggregates or <code>LIMIT</code>. Do not render the full failure dataset in an administration client.</p></div></div><p>For an existing PVC, apply migrations or run the idempotent seed explicitly. Delete the PVC only when intentionally resetting this disposable lab, because that operation destroys the stored dataset.</p></section>
+
+<section><div class="head"><span class="num">06</span><h2>From 100,000 to the OOM dataset</h2></div><p>The exercise requested here stops at 100,000 rows. The deployed OOM variant later uses the exact same SQL with an upper bound of <code>1000000</code>. That larger fixture makes exhaustion deterministic under the service's very small <code>-Xmx18m</code> heap.</p><pre>-- OOM lab scale; same method, ten times as many rows
+SELECT value, 'goodbye-' || value
+FROM generate_series(1, 1000000) AS value;</pre><div class="note warn"><p>Row count alone is not a portable memory threshold. Object layout, selected columns, JDBC driver, Java version, heap ceiling, and fetch strategy all affect the result. Treat the count as a reproducible fixture for this service, not as a universal OOM formula.</p></div></section>
+
+<div class="next"><strong>Next: Part 7</strong><p>Declare PostgreSQL and the memory-constrained service in Git, then let Argo CD reconcile and report the deliberate OOM as Degraded.</p><a href="../../part-7/postgresql-argocd/">Integrate PostgreSQL with Argo CD &rarr;</a></div></div>

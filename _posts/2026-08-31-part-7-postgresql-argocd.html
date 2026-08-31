@@ -1,0 +1,109 @@
+---
+layout: "article"
+title: "Integrating PostgreSQL with Argo CD and Surfacing a Java OOM"
+description: "Deploy PostgreSQL and a memory-constrained Spring Boot service through GitOps, preserve the dataset, and make a request-time Java OOM visible as Argo CD Degraded without restarting the pod."
+permalink: "/argo-real-world-microservices/part-7/postgresql-argocd/"
+lang: "en"
+lang_url: "/argo-real-world-microservices/part-7/postgresql-argocd/es/"
+series: "Argo Real World Microservices"
+part: 7
+categories: ["GitOps & Kubernetes"]
+tags: ["argocd","postgresql","spring-boot","gitops","oom","kubernetes"]
+date: "2026-08-31"
+reading_minutes: 6
+---
+<style>
+:root{--bg:#edf1ef;--s:#fff;--ink:#14202b;--soft:#4b5a64;--line:#aab9b4;--accent:#185f7d;--as:#dfeef2;--code:#102536;--ci:#e2eef4;--good:#187548;--gs:#dff1e6;--bad:#a43832;--bs:#f5e3e1;--warn:#985d12;--ws:#f4ead9}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0d1b26;--s:#132633;--ink:#e6eef1;--soft:#a6b7be;--line:#46636c;--accent:#78c6df;--as:#173442;--code:#071722;--ci:#e2eef4;--good:#64d596;--gs:#123322;--bad:#ef8f87;--bs:#3b1d1b;--warn:#e3b468;--ws:#35270f}}:root[data-theme="dark"]{--bg:#0d1b26;--s:#132633;--ink:#e6eef1;--soft:#a6b7be;--line:#46636c;--accent:#78c6df;--as:#173442;--code:#071722;--ci:#e2eef4;--good:#64d596;--gs:#123322;--bad:#ef8f87;--bs:#3b1d1b;--warn:#e3b468;--ws:#35270f}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:0;margin:0}.titleblock,.card{background:var(--s);border:1px solid var(--line)}.titleblock{position:relative;padding:28px 32px}.back,.lang,.eyebrow,.num,.stamp dt,pre,code{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:3rem;line-height:1.02;max-width:20ch}.lede{font-size:1.03rem;color:var(--soft)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--soft);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.5rem}p,li{max-width:70ch;line-height:1.62;text-align:justify;hyphens:auto;-webkit-hyphens:auto}pre{background:var(--code);color:var(--ci);padding:15px;overflow:auto;border-radius:4px;line-height:1.55;font-size:.82rem}.note{border-left:3px solid var(--accent);background:var(--as);padding:14px 18px}.warn{border-color:var(--warn);background:var(--ws)}.grid,.state{display:grid;gap:12px;margin:20px 0}.grid{grid-template-columns:repeat(2,1fr)}.state{grid-template-columns:repeat(3,1fr)}.card{padding:15px}.card strong{display:block;margin-bottom:5px}.card p{font-size:.88rem;color:var(--soft);margin:0}.ok{border-top:4px solid var(--good)}.bad{border-top:4px solid var(--bad)}.maybe{border-top:4px solid var(--warn)}.timeline{border-left:2px solid var(--line);margin:22px 0 0 12px}.event{padding:0 0 22px 26px;position:relative}.event:before{content:"";position:absolute;left:-7px;top:3px;width:11px;height:11px;border-radius:50%;background:var(--s);border:2px solid var(--accent)}.event p{margin:5px 0}.next{margin-top:54px;padding:20px;border-top:2px solid var(--accent);background:var(--s)}@media(max-width:650px){.grid,.state,.stamp{grid-template-columns:1fr}.titleblock{padding:24px 20px}.titleblock h1{font-size:2.15rem}.lang{position:static}.sheet{padding:0 16px}}
+</style>
+<div class="sheet"><div class="titleblock"><p class="back"><a href="../../part-6/postgresql-bulk-load/">&larr; Part 6 — PostgreSQL bulk load</a></p><p class="lang"><a href="es/">ES · Español</a></p><p class="eyebrow">Argo Real World Microservices — Part 7</p><h1>PostgreSQL in Argo CD</h1><p class="lede">Reconcile the database and Spring Boot service from Git, preserve one million records, and turn a request-time Java heap failure into a visible, non-restarting failed pod.</p><dl class="stamp"><div><dt>Application</dt><dd>godbyemicroservices-postgres-oom</dd></div><div><dt>Memory limit</dt><dd>100Mi</dd></div><div><dt>Expected health</dt><dd>Synced · Degraded</dd></div></dl></div>
+
+<section><div class="head"><span class="num">00</span><h2>Two repositories, two responsibilities</h2></div><p>The source repository builds and tests the Spring Boot image. The <code>gitops-config</code> repository declares what Kubernetes must run: namespace, PostgreSQL, storage, seed SQL, Service, pod, image reference, resources, and JVM flags. Argo CD watches the second repository and reconciles that desired state.</p><div class="grid"><div class="card"><strong>Application source</strong><p>Controller, JDBC repository, startup validation, Dockerfile, tests, and image build. The OOM variant lives on <code>feature/h2-million-row-oom</code>.</p></div><div class="card"><strong>GitOps configuration</strong><p>Manifests consumed by Argo CD. The deployed experiment is represented by commit <code>802a284</code>.</p></div></div><p>This boundary prevents a local <code>kubectl edit</code> from becoming the undocumented truth. Durable changes go to Git; Argo applies and audits them.</p></section>
+
+<section><div class="head"><span class="num">01</span><h2>The Argo CD Application</h2></div><p>The Application points to the directory that owns the complete experiment and creates its destination namespace. Automated pruning removes resources deleted from Git, while self-heal corrects drift.</p><pre>apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: godbyemicroservices-postgres-oom
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/juanfranciscofernandezherreros/gitops-config.git
+    targetRevision: main
+    path: godbyemicroservices-postgres-oom
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: godbyemicroservices-postgres-oom
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true</pre><div class="note"><p>Argo CD does not build the Java artifact and does not execute application business tests by itself. It applies the declared resources and evaluates their Kubernetes health.</p></div></section>
+
+<section><div class="head"><span class="num">02</span><h2>Database resource graph</h2></div><div class="timeline"><div class="event"><h3>ConfigMap</h3><p>Contains the idempotent schema and <code>generate_series(1, 1000000)</code> seed used by the final OOM drill.</p></div><div class="event"><h3>StatefulSet and PVC</h3><p>Run <code>postgres:16-alpine</code> and persist <code>PGDATA</code> in a 2Gi volume. The database has a 512Mi container limit, separate from Java's 100Mi limit.</p></div><div class="event"><h3>PostgreSQL Service</h3><p>Provides <code>postgresql:5432</code> inside the namespace. The application never uses the workstation's forwarded port.</p></div><div class="event"><h3>Spring Service and Pod</h3><p>Expose HTTP port 8080 internally and run exactly one intentionally non-restarting Java pod.</p></div></div><p>Docker's PostgreSQL entrypoint executes the mounted SQL only when the volume is empty. On every later reconciliation, the PVC remains authoritative. The application's production initializer is disabled and startup validation refuses to proceed when the expected database content is absent.</p><pre>kubectl get configmap,statefulset,pvc,svc,pod \
+  -n godbyemicroservices-postgres-oom
+
+kubectl exec -n godbyemicroservices-postgres-oom postgresql-0 -- \
+  psql -U goodbye -d goodbye -c \
+  "SELECT COUNT(*), MIN(id), MAX(id) FROM goodbye_record;"</pre></section>
+
+<section><div class="head"><span class="num">03</span><h2>Wire Spring Boot to PostgreSQL</h2></div><p>Kubernetes injects the datasource settings into the Java container. The hostname is the PostgreSQL Service name, not <code>localhost</code>: inside the application pod, localhost means the application pod itself.</p><pre>env:
+  - name: SPRING_DATASOURCE_URL
+    value: jdbc:postgresql://postgresql:5432/goodbye
+  - name: SPRING_DATASOURCE_USERNAME
+    value: goodbye
+  - name: SPRING_DATASOURCE_PASSWORD
+    value: goodbye
+  - name: APP_DATABASE_INITIALIZE
+    value: "false"
+  - name: APP_DATABASE_EXPECTED_RECORDS
+    value: "1000000"</pre><p>The repository reads rows with a JDBC fetch size of 1,000, but it still appends every mapped record to one <code>ArrayList</code>. Fetch size bounds batches transferred by the driver; it does not bound the final Java collection. That distinction is what makes the endpoint a realistic materialization failure.</p></section>
+
+<section><div class="head"><span class="num">04</span><h2>Constrain the JVM and exit on OOM</h2></div><p>Kubernetes limits total container memory to <code>100Mi</code>. Inside that boundary, the demo uses an 18Mi heap and explicit ceilings for other JVM areas. <code>ExitOnOutOfMemoryError</code> converts an OOM thrown by the HTTP worker into process termination instead of allowing Tomcat to return 500 while the JVM remains alive.</p><pre>resources:
+  requests:
+    memory: 64Mi
+  limits:
+    memory: 100Mi
+env:
+  - name: JAVA_TOOL_OPTIONS
+    value: >-
+      -Xmx18m
+      -XX:+ExitOnOutOfMemoryError
+      -XX:MaxMetaspaceSize=40m
+      -XX:ReservedCodeCacheSize=6m
+      -XX:MaxDirectMemorySize=1m
+      -Xss256k
+      -XX:+UseSerialGC
+      -XX:TieredStopAtLevel=1</pre><div class="note warn"><p>These extreme values are for a disposable failure drill. Production sizing must be based on measured RSS, concurrency, allocation rate, GC pauses, native memory, and startup headroom.</p></div></section>
+
+<section><div class="head"><span class="num">05</span><h2>Why this workload is a Pod, not a Deployment</h2></div><p>The stated requirement is precise: after the OOM, mark an error and do not restart the pod. A Deployment always creates pods with <code>restartPolicy: Always</code>; changing it to <code>Never</code> is invalid. A Job can also avoid retries with <code>backoffLimit: 0</code>, but an HTTP service is not naturally a batch job.</p><p>For this demonstration, Git therefore declares one standalone Pod with <code>restartPolicy: Never</code>. When Java exits, kubelet records the terminal failure and does not restart its container. Because no controller replaces the Pod, Argo can observe the failed resource.</p><div class="state"><div class="card ok"><strong>Sync: Synced</strong><p>The failed Pod still matches the object declared in Git.</p></div><div class="card bad"><strong>Health: Degraded</strong><p>The desired Pod exists but its process ended in Error.</p></div><div class="card maybe"><strong>Restarts: 0</strong><p><code>restartPolicy: Never</code> preserves the evidence.</p></div></div><p>This is excellent for the experiment and unsuitable as a production availability model. A real service normally uses a Deployment and accepts restarts, alerting on OOM events and restart rate instead of deliberately remaining down.</p></section>
+
+<section><div class="head"><span class="num">06</span><h2>Deploy and test the complete path</h2></div><p>After the image has been built and made available to the kind cluster, apply the Application. Wait for PostgreSQL, validate its data, wait for the Java pod to become Ready, and only then trigger the request.</p><pre>kubectl apply -f application-postgres-oom.yaml
+kubectl wait --for=condition=Ready pod/postgresql-0 \
+  -n godbyemicroservices-postgres-oom --timeout=180s
+kubectl wait --for=condition=Ready pod/godbyemicroservices-postgres-oom \
+  -n godbyemicroservices-postgres-oom --timeout=180s
+
+# Keep this command running in terminal 1
+kubectl port-forward -n godbyemicroservices-postgres-oom \
+  svc/godbyemicroservices-postgres-oom 8082:8080
+
+# Trigger the materialization failure from terminal 2
+curl.exe http://localhost:8082/godbyemicroservices</pre><p>The query streams batches from PostgreSQL, maps records, and retains them in <code>ArrayList</code>. When capacity growth requires more than the 18Mi heap, the trace ends around <code>ArrayList.grow</code> in <code>GoodbyeRecordRepository.findAll</code>. PostgreSQL and its PVC remain healthy.</p><pre>kubectl get pod -n godbyemicroservices-postgres-oom
+# godbyemicroservices-postgres-oom   0/1   Error   0
+# postgresql-0                       1/1   Running 0
+
+kubectl get application godbyemicroservices-postgres-oom -n argocd
+# SYNC STATUS: Synced   HEALTH STATUS: Degraded
+
+kubectl logs -n godbyemicroservices-postgres-oom \
+  godbyemicroservices-postgres-oom</pre></section>
+
+<section><div class="head"><span class="num">07</span><h2>Read the result correctly</h2></div><p><code>Synced</code> does not mean that the program is running. It means the live manifests equal Git. <code>Degraded</code> carries the operational failure. The earlier attempt returned HTTP 500 but left the JVM alive; adding <code>ExitOnOutOfMemoryError</code> made the process exit, and using a standalone Pod made the terminal error remain visible with zero restarts.</p><p>To repeat the disposable drill, delete the failed Pod and let automated self-heal recreate the object from Git. Then wait for Ready and invoke the endpoint again.</p><pre>kubectl delete pod godbyemicroservices-postgres-oom \
+  -n godbyemicroservices-postgres-oom
+kubectl wait --for=condition=Ready pod/godbyemicroservices-postgres-oom \
+  -n godbyemicroservices-postgres-oom --timeout=180s</pre><div class="note"><p>The database is not reloaded during this reset. The StatefulSet and PVC remain running, so the one million rows are reused and the next request exercises the same fixture.</p></div></section>
+
+<section><div class="head"><span class="num">08</span><h2>What to carry into production</h2></div><div class="grid"><div class="card"><strong>Keep data ownership separate</strong><p>Use migrations and persistent storage; do not generate a large fixture in the application heap.</p></div><div class="card"><strong>Alert on health, not sync alone</strong><p>Monitor pod termination reasons, restarts, readiness, Argo health, and application metrics.</p></div><div class="card"><strong>Page large results</strong><p>Expose bounded pages, streams, or exports instead of returning an unbounded table as one JSON response.</p></div><div class="card"><strong>Size from evidence</strong><p>Load-test representative queries and leave explicit native-memory headroom below the cgroup limit.</p></div></div></section>
+
+<div class="next"><strong>Course extension complete</strong><p>You now have the full path: local access, deterministic PostgreSQL data, GitOps integration, and a deliberate OOM represented accurately in Kubernetes and Argo CD.</p><a href="../../">Return to the complete course &rarr;</a></div></div>

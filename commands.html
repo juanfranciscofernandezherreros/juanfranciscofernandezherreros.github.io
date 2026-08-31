@@ -312,7 +312,7 @@ permalink: /commands/
   </section>
 
   <section class="tool-section" id="kubectl">
-    <div class="section-head"><h2>kubectl</h2><span class="count">11</span></div>
+    <div class="section-head"><h2>kubectl</h2><span class="count">15</span></div>
 
     <div class="cmd-entry">
       <h3>Check the install</h3>
@@ -404,6 +404,51 @@ permalink: /commands/
       <p>Waits until the repaired Deployment has its requested replica available, or returns a failure when the rollout deadline is reached.</p>
       <p class="refs"><a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#verify' | relative_url }}">Part 4</a></p>
     </div>
+
+    <div class="cmd-entry">
+      <h3>Open the complete OOM lab locally</h3>
+      <pre><span class="c">kubectl</span> port-forward -n argocd svc/argocd-server 8081:443
+<span class="c">kubectl</span> port-forward -n godbyemicroservices-postgres-oom svc/godbyemicroservices-postgres-oom 8082:8080
+<span class="c">kubectl</span> port-forward -n godbyemicroservices-postgres-oom svc/postgresql 5433:5432</pre>
+      <p>Run each foreground tunnel in a separate terminal. They expose Argo CD, Spring Boot, and PostgreSQL only on the local workstation.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-5/kubectl-port-forward/' | relative_url }}">Part 5</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Check the active cluster and OOM lab backends</h3>
+      <pre><span class="c">kubectl</span> config current-context
+<span class="c">kubectl</span> get svc,endpoints -n godbyemicroservices-postgres-oom
+<span class="c">kubectl</span> get pods -n godbyemicroservices-postgres-oom -o wide</pre>
+      <p>Confirms that kubectl targets the intended kind cluster and that each Service has a pod endpoint before opening a local tunnel.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-5/kubectl-port-forward/' | relative_url }}">Part 5</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Create and verify the PostgreSQL fixture</h3>
+      <pre><span class="c">kubectl</span> exec -i -n godbyemicroservices-postgres-oom postgresql-0 -- \
+  psql -U goodbye -d goodbye -v ON_ERROR_STOP=1 -c \
+  "CREATE TABLE IF NOT EXISTS goodbye_record (id BIGINT PRIMARY KEY, payload VARCHAR(64) NOT NULL); INSERT INTO goodbye_record (id, payload) SELECT value, 'goodbye-' || value FROM generate_series(1, 100000) AS value ON CONFLICT (id) DO NOTHING;"
+
+<span class="c">kubectl</span> exec -n godbyemicroservices-postgres-oom postgresql-0 -- \
+  psql -U goodbye -d goodbye -c \
+  "SELECT COUNT(*), MIN(id), MAX(id) FROM goodbye_record;"</pre>
+      <p>Generates the fixture inside PostgreSQL and verifies its count and ID boundaries without transferring the table to the client.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-6/postgresql-bulk-load/' | relative_url }}">Part 6</a></p>
+    </div>
+
+    <div class="cmd-entry">
+      <h3>Inspect and repeat the non-restarting OOM</h3>
+      <pre><span class="c">kubectl</span> apply -f application-postgres-oom.yaml
+<span class="c">kubectl</span> wait --for=condition=Ready pod/postgresql-0 -n godbyemicroservices-postgres-oom --timeout=180s
+<span class="c">kubectl</span> get configmap,statefulset,pvc,svc,pod -n godbyemicroservices-postgres-oom
+<span class="c">kubectl</span> get application godbyemicroservices-postgres-oom -n argocd
+<span class="c">kubectl</span> get pod -n godbyemicroservices-postgres-oom
+<span class="c">kubectl</span> logs -n godbyemicroservices-postgres-oom godbyemicroservices-postgres-oom
+<span class="c">kubectl</span> delete pod -n godbyemicroservices-postgres-oom godbyemicroservices-postgres-oom
+<span class="c">kubectl</span> wait --for=condition=Ready pod/godbyemicroservices-postgres-oom -n godbyemicroservices-postgres-oom --timeout=180s</pre>
+      <p>Confirms <code class="mono">Synced / Degraded</code>, preserves the failed pod at zero restarts, and deletes it only when the controlled drill must be repeated.</p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-7/postgresql-argocd/' | relative_url }}">Part 7</a></p>
+    </div>
   </section>
 
   <section class="tool-section" id="argocd">
@@ -452,7 +497,7 @@ permalink: /commands/
       <h3>Generate a new microservice</h3>
       <pre><span class="c">python</span> generate_crud.py GodbyeMicroservices "id:int" --architecture minimal</pre>
       <p>The <code class="mono">crud-automation</code> generator — entity name, fields, and the minimal architecture flag produce a full, independent Spring Boot service.</p>
-      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a> <a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#verify' | relative_url }}">Part 4</a></p>
+      <p class="refs"><a href="{{ '/argo-real-world-microservices/part-3/crud-automation/#commands' | relative_url }}">Part 3</a> <a href="{{ '/argo-real-world-microservices/part-4/oom-failure-recovery/#verify' | relative_url }}">Part 4</a> <a href="{{ '/argo-real-world-microservices/part-5/kubectl-port-forward/' | relative_url }}">Part 5</a> <a href="{{ '/argo-real-world-microservices/part-7/postgresql-argocd/' | relative_url }}">Part 7</a></p>
     </div>
 
     <div class="cmd-entry">
