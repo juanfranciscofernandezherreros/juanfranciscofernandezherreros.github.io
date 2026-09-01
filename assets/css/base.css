@@ -1,6 +1,6 @@
 /* Shared across every page (home + articles). Each page also ships its own
    full <style> block for its own tokens/layout — this file only holds the
-   bits introduced by the blog redesign (category/tag chrome) so they look
+   bits introduced by the blog redesign (category/subcategory/tag chrome) so they look
    identical everywhere instead of being redefined per page. */
 
 /* ---------- site header / footer (from _layouts/default.html) ---------- */
@@ -107,11 +107,18 @@
   color:var(--accent-ink, #fff);
   font-weight:600;
 }
+.badge-subcat{
+  background:transparent;
+  color:var(--accent);
+  border:1px solid var(--accent);
+  font-weight:500;
+}
 .badge-tag{
   background:var(--accent-soft);
   color:var(--accent);
 }
 a.badge-tag:hover, a.badge-tag:focus-visible,
+a.badge-subcat:hover, a.badge-subcat:focus-visible,
 a.badge-cat:hover, a.badge-cat:focus-visible{
   text-decoration:underline;
 }

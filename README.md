@@ -2,10 +2,10 @@
 
 Personal GitHub Pages site — a Jekyll blog built and deployed via GitHub
 Actions (`.github/workflows/pages.yml`). See `CLAUDE.md` for the
-authoring conventions (post front matter, permalink rules, categories/tags).
+authoring conventions (post front matter, permalink rules, categories/subcategories/tags).
 
 - `index.html` — home page: filterable list of articles (search, series,
-  category, tags).
+  category, subcategory, tags).
 - `_posts/` — one HTML file per article per language; `permalink` in its
   front matter controls the published URL.
 - `_layouts/`, `assets/` — shared layout and styles.

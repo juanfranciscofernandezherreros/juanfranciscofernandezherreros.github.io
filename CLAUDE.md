@@ -54,7 +54,8 @@ lang: "en"                  # o "es"
 lang_url: "..."             # URL absoluta de la versión en el otro idioma
 series: "Argo Real World Microservices"
 part: N
-categories: ["Nombre de categoría"]   # una sola, se usa como badge + filtro
+categories: ["Nombre de categoría"]   # una o varias, badge + filtro
+subcategories: ["Nombre de subcategoría"] # una o varias, badge + filtro
 tags: ["tag1", "tag2", ...]           # filtro múltiple en la portada
 date: "YYYY-MM-DD"
 reading_minutes: N          # minutos de lectura reales (~200 palabras/min,
@@ -65,9 +66,9 @@ reading_minutes: N          # minutos de lectura reales (~200 palabras/min,
 El cuerpo del fichero es: un `<style>` completo (cada artículo trae el
 suyo, con sus propios tokens — no hay hoja de estilos global compartida
 más allá de `assets/css/base.css`, que solo aporta las badges de
-categoría/tag) seguido del `<div class="sheet">…</div>` con el contenido
+categoría/subcategoría/tag) seguido del `<div class="sheet">…</div>` con el contenido
 real (titleblock, secciones, footer). El layout `_layouts/article.html`
-añade automáticamente la barra de categoría/tags encima; **no** hay que
+añade automáticamente la barra de categoría/subcategoría/tags encima; **no** hay que
 repetirla a mano dentro del post.
 
 - `_layouts/default.html`: `<head>` común (meta tags, viewport, la hoja de
@@ -80,11 +81,11 @@ repetirla a mano dentro del post.
   Lighthouse/PageSpeed. Ya pasó en `index.html` y `commands.html` — se
   corrigió quitando la copia repetida.
 - `_layouts/article.html`: envuelve `default` y añade la barra de badges
-  de categoría/tags antes de `{{ content }}`.
+  de categoría/subcategoría/tags antes de `{{ content }}`.
 - La portada (`index.html`, raíz) lista `site.posts` con `lang == "en"`,
-  ordenados por `part`, y monta los filtros (serie, categoría, tags,
+  ordenados por `part`, y monta los filtros (serie, categoría, subcategoría, tags,
   buscador) a partir de esos mismos campos — ver `assets/js/filter.js`.
-  Un enlace `?category=<slug>` o `?tag=<slug>` a la portada preselecciona
+  Un enlace `?category=<slug>`, `?subcategory=<slug>` o `?tag=<slug>` a la portada preselecciona
   ese filtro (usado por las badges de cada artículo).
 
 ## Alineación de texto — igual en todos los artículos
@@ -117,8 +118,8 @@ al navegar de uno a otro.
 ## Al añadir una parte nueva
 
 1. Crear `_posts/<date>-part-N-<slug>[-es].html` con el front matter de
-   arriba (permalink, lang_url, categories, tags, part, series, date).
-2. Elegir `categories`/`tags` coherentes con lo ya usado (revisar los
+   arriba (permalink, lang_url, categories, subcategories, tags, part, series, date).
+2. Elegir `categories`/`subcategories`/`tags` coherentes con lo ya usado (revisar los
    posts existentes antes de inventar una categoría nueva).
 3. Actualizar `lang_url` cruzado entre la versión en/es.
 4. Si el artículo anterior tiene un enlace "next" o el siguiente tiene

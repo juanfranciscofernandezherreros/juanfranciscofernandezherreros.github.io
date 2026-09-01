@@ -4,6 +4,7 @@
   var cards = Array.prototype.slice.call(document.querySelectorAll('#cards .card'));
   var seriesButtons = Array.prototype.slice.call(document.querySelectorAll('#series-filters .pill'));
   var categoryButtons = Array.prototype.slice.call(document.querySelectorAll('#category-filters .pill'));
+  var subcategoryButtons = Array.prototype.slice.call(document.querySelectorAll('#subcategory-filters .pill'));
   var tagButtons = Array.prototype.slice.call(document.querySelectorAll('#tag-filters .pill'));
   var searchInput = document.getElementById('search-input');
   var sortSelect = document.getElementById('sort-select');
@@ -14,6 +15,7 @@
 
   var activeSeries = 'all';
   var activeCategory = 'all';
+  var activeSubcategory = 'all';
   var activeTags = new Set();
   var query = '';
   var currentPage = 1;
@@ -48,11 +50,14 @@
 
   function matches(card) {
     var matchesSeries = activeSeries === 'all' || card.dataset.series === activeSeries;
-    var matchesCategory = activeCategory === 'all' || card.dataset.category === activeCategory;
+    var cardCategories = (card.dataset.categories || '').split(',').filter(Boolean);
+    var cardSubcategories = (card.dataset.subcategories || '').split(',').filter(Boolean);
+    var matchesCategory = activeCategory === 'all' || cardCategories.indexOf(activeCategory) !== -1;
+    var matchesSubcategory = activeSubcategory === 'all' || cardSubcategories.indexOf(activeSubcategory) !== -1;
     var cardTags = (card.dataset.tags || '').split(',').filter(Boolean);
     var matchesTags = activeTags.size === 0 || cardTags.some(function (t) { return activeTags.has(t); });
     var matchesQuery = !query || (card.dataset.search || '').indexOf(query) !== -1;
-    return matchesSeries && matchesCategory && matchesTags && matchesQuery;
+    return matchesSeries && matchesCategory && matchesSubcategory && matchesTags && matchesQuery;
   }
 
   function renderPagination(totalPages) {
@@ -127,6 +132,15 @@
     });
   });
 
+  subcategoryButtons.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      activeSubcategory = btn.dataset.filterSubcategory;
+      setActiveSingle(subcategoryButtons, activeSubcategory, 'filterSubcategory');
+      currentPage = 1;
+      apply();
+    });
+  });
+
   tagButtons.forEach(function (btn) {
     btn.addEventListener('click', function () {
       var tag = btn.dataset.filterTag;
@@ -162,12 +176,14 @@
     clearButton.addEventListener('click', function () {
       activeSeries = 'all';
       activeCategory = 'all';
+      activeSubcategory = 'all';
       activeTags.clear();
       query = '';
       if (searchInput) searchInput.value = '';
       if (sortSelect) sortSelect.value = 'part';
       setActiveSingle(seriesButtons, 'all', 'filterSeries');
       setActiveSingle(categoryButtons, 'all', 'filterCategory');
+      setActiveSingle(subcategoryButtons, 'all', 'filterSubcategory');
       tagButtons.forEach(function (btn) { btn.classList.remove('active'); });
       sortCards('part');
       currentPage = 1;
@@ -175,9 +191,10 @@
     });
   }
 
-  // Pre-select from ?category=slug, ?tag=slug or ?sort=criterion, e.g. links from an article's badge bar.
+  // Pre-select from taxonomy or sort query params, e.g. links from an article's badge bar.
   var params = new URLSearchParams(window.location.search);
   var wantedCategory = params.get('category');
+  var wantedSubcategory = params.get('subcategory');
   var wantedTag = params.get('tag');
   var wantedSort = params.get('sort');
 
@@ -195,6 +212,15 @@
     if (tagMatch) {
       activeTags.add(tagMatch.dataset.filterTag);
       tagMatch.classList.add('active');
+    }
+  }
+  if (wantedSubcategory) {
+    var subcatMatch = subcategoryButtons.find(function (btn) {
+      return btn.dataset.filterSubcategory !== 'all' && slugify(btn.dataset.filterSubcategory) === wantedSubcategory;
+    });
+    if (subcatMatch) {
+      activeSubcategory = subcatMatch.dataset.filterSubcategory;
+      setActiveSingle(subcategoryButtons, activeSubcategory, 'filterSubcategory');
     }
   }
   if (wantedSort && SORT_COMPARATORS[wantedSort]) {

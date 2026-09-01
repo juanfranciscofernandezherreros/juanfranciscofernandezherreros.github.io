@@ -322,6 +322,7 @@ permalink: /
   {% assign posts = intro_pages | concat: numbered_posts %}
   {% assign all_series = posts | map: "series" | uniq | sort %}
   {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
+  {% assign all_subcategories = posts | map: "subcategories" | flatten | uniq | sort %}
   {% assign all_tags = posts | map: "tags" | flatten | uniq | sort %}
 
   <section class="slider" aria-label="Featured articles" aria-roledescription="carousel">
@@ -362,6 +363,12 @@ permalink: /
         {% for c in all_categories %}<button type="button" class="pill" data-filter-category="{{ c }}">{{ c }}</button>{% endfor %}
       </div>
 
+      <p class="filter-label">Subcategory</p>
+      <div class="filter-group" id="subcategory-filters">
+        <button type="button" class="pill active" data-filter-subcategory="all">All</button>
+        {% for s in all_subcategories %}<button type="button" class="pill" data-filter-subcategory="{{ s }}">{{ s }}</button>{% endfor %}
+      </div>
+
       <p class="filter-label">Tags</p>
       <div class="filter-group" id="tag-filters">
         {% for t in all_tags %}<button type="button" class="pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
@@ -388,11 +395,11 @@ permalink: /
       <p class="series-label"><a href="{{ '/argo-real-world-microservices/' | relative_url }}">Argo Real World Microservices — full syllabus →</a></p>
       <div class="cards" id="cards">
         {% for post in posts %}
-        {% assign category = post.categories | first %}
         <a class="card"
            href="{{ post.url | relative_url }}"
            data-series="{{ post.series | escape }}"
-           data-category="{{ category | escape }}"
+           data-categories="{{ post.categories | join: ',' | escape }}"
+           data-subcategories="{{ post.subcategories | join: ',' | escape }}"
            data-tags="{{ post.tags | join: ',' | escape }}"
            data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}"
            data-part="{% if post.part %}{{ post.part }}{% else %}-1{% endif %}"
@@ -402,7 +409,8 @@ permalink: /
           <h2>{{ post.title }}</h2>
           <p class="desc">{{ post.description }}</p>
           <p class="card-tags">
-            <span class="badge badge-cat">{{ category }}</span>
+            {% for category in post.categories %}<span class="badge badge-cat">{{ category }}</span>{% endfor %}
+            {% for subcategory in post.subcategories %}<span class="badge badge-subcat">{{ subcategory }}</span>{% endfor %}
             {% for t in post.tags %}<span class="badge badge-tag">#{{ t }}</span>{% endfor %}
           </p>
           <span class="go">Read the guide →</span>
