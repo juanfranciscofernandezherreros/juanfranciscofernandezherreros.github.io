@@ -317,9 +317,11 @@ permalink: /
 </style>
 
 <div class="wrap">
-  {% assign numbered_posts = site.posts | where_exp: "p", "p.lang == 'en'" | sort: "part" %}
+  {% assign english_posts = site.posts | where_exp: "p", "p.lang == 'en'" %}
+  {% assign numbered_posts = english_posts | where: "series", "Argo Real World Microservices" | sort: "part" %}
+  {% assign standalone_posts = english_posts | where_exp: "p", "p.series != 'Argo Real World Microservices'" | sort: "date" | reverse %}
   {% assign intro_pages = site.pages | where: "permalink", "/argo-real-world-microservices/introduction/" %}
-  {% assign posts = intro_pages | concat: numbered_posts %}
+  {% assign posts = intro_pages | concat: numbered_posts | concat: standalone_posts %}
   {% assign all_series = posts | map: "series" | uniq | sort %}
   {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
   {% assign all_subcategories = posts | map: "subcategories" | flatten | uniq | sort %}
@@ -333,7 +335,7 @@ permalink: /
          href="{{ post.url | relative_url }}"
          aria-roledescription="slide"
          aria-label="{{ forloop.index }} of {{ forloop.length }}">
-        <span class="slide-eyebrow">{% if post.part %}Part {{ post.part }}{% else %}Introduction{% endif %} · {{ category }}</span>
+        <span class="slide-eyebrow">{% if post.part %}Part {{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}Introduction{% else %}{{ post.series }}{% endif %} · {{ category }}</span>
         <h2>{{ post.title }}</h2>
         <p>{{ post.description | truncatewords: 26 }}</p>
         <span class="go">Read the guide →</span>
@@ -402,10 +404,10 @@ permalink: /
            data-subcategories="{{ post.subcategories | join: ',' | escape }}"
            data-tags="{{ post.tags | join: ',' | escape }}"
            data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}"
-           data-part="{% if post.part %}{{ post.part }}{% else %}-1{% endif %}"
+           data-part="{% if post.part %}{{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}-1{% else %}9999{% endif %}"
            data-date="{{ post.date | date: '%Y-%m-%d' }}"
            data-title="{{ post.title | escape }}">
-          <p class="eyebrow">{% if post.part %}Part {{ post.part }}{% else %}Introduction{% endif %}</p>
+          <p class="eyebrow">{% if post.part %}Part {{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}Introduction{% else %}{{ post.series }}{% endif %}</p>
           <h2>{{ post.title }}</h2>
           <p class="desc">{{ post.description }}</p>
           <p class="card-tags">

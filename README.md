@@ -24,6 +24,12 @@ Related repos:
 - [gitops-config](https://github.com/juanfranciscofernandezherreros/gitops-config) — its Kubernetes manifests and ArgoCD `Application`.
 - [crud-automation](https://github.com/juanfranciscofernandezherreros/crud-automation) — the generator used in Part 3.
 
+## Java & Spring Interview Notes
+
+Independent bilingual articles for technical interview preparation. These
+posts use their own series, categories, subcategories, and topic-based URLs
+instead of the numbered course permalink structure.
+
 ## Local preview
 
 No local Ruby toolchain is set up in this environment; the only real

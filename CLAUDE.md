@@ -4,7 +4,7 @@ Sitio Jekyll (build vía GitHub Actions, `.github/workflows/pages.yml`,
 desplegado con `actions/deploy-pages`). Cada artículo es un post en
 `_posts/`, no un HTML suelto — el front matter controla la URL final.
 
-## Cada artículo lleva slug, nunca `part-N/` a secas
+## Cada artículo del curso lleva slug, nunca `part-N/` a secas
 
 La URL pública de cada artículo (campo `permalink` en el front matter)
 sigue siempre este patrón:
@@ -34,6 +34,14 @@ Ejemplos ya en uso (parte → fichero en `_posts/` → permalink):
 | 1 | `2026-08-22-part-1-hello-world-argocd.html` | `...-es.html` | `part-1/hello-world-argocd/` |
 | 2 | `2026-08-23-part-2-gitops-config.html` | `...-es.html` | `part-2/gitops-config/` |
 | 3 | `2026-08-23-part-3-crud-automation.html` | `...-es.html` | `part-3/crud-automation/` |
+
+### Artículos independientes del curso
+
+Los posts que no pertenecen a `Argo Real World Microservices` no llevan
+`part` y usan una URL temática: `/<tema>/<slug>/` en inglés y
+`/<tema>/<slug>/es/` en español. Deben conservar `series` para que la
+portada pueda agruparlos y filtrarlos. La portada coloca primero el recorrido
+del curso y después los artículos independientes, ordenados por fecha.
 
 ## Cómo está montado un post
 

@@ -1,0 +1,100 @@
+---
+layout: "article"
+title: "What Is a Bean in Java and Spring Boot? An Interview Answer"
+description: "A clear explanation of JavaBeans and Spring Beans, including dependency injection, scopes, lifecycle, and a concise answer for technical interviews."
+permalink: "/java-spring/bean-interview-guide/"
+lang: "en"
+lang_url: "/java-spring/bean-interview-guide/es/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Spring Core"]
+tags: ["java","spring-boot","spring-beans","dependency-injection","ioc","interviews"]
+date: "2026-09-01"
+reading_minutes: 6
+---
+<style>
+:root{color-scheme:light dark;--bg:#f1f3f0;--panel:#fff;--text:#17211b;--muted:#526057;--accent:#28753f;--line:#c9d2ca;--code:#102019;--code-text:#e8f4eb;--notice:#e5f2e8;--warn:#8b5a16;--warn-bg:#f7eddd}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1711;--panel:#17231b;--text:#e8f0ea;--muted:#a9baad;--accent:#7bd893;--line:#304638;--code:#09110c;--code-text:#e8f4eb;--notice:#193122;--warn:#efbd70;--warn-bg:#342718}}:root[data-theme="dark"]{--bg:#0e1711;--panel:#17231b;--text:#e8f0ea;--muted:#a9baad;--accent:#7bd893;--line:#304638;--code:#09110c;--code-text:#e8f4eb;--notice:#193122;--warn:#efbd70;--warn-bg:#342718}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.titleblock,.card,.answer{background:var(--panel);border:1px solid var(--line)}.titleblock{position:relative;padding:28px 32px}.back,.lang,.eyebrow,.num,.stamp dt,pre,code{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:clamp(2.2rem,6vw,3.5rem);line-height:1.02;max-width:20ch}.lede{font-size:1.03rem;color:var(--muted)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.55rem}h3{font-size:1.1rem}p,li{max-width:70ch;line-height:1.6;text-align:justify;hyphens:auto;-webkit-hyphens:auto}.answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}.card{padding:16px}.card h3{margin-bottom:7px}.card p{font-size:.92rem;color:var(--muted);margin:0}.flow{display:flex;flex-wrap:wrap;align-items:center;gap:.65rem;margin:20px 0}.flow span{background:var(--panel);border:1px solid var(--line);padding:.65rem .8rem}.flow b{color:var(--accent)}pre{overflow:auto;background:var(--code);color:var(--code-text);border:1px solid var(--line);padding:15px;line-height:1.55;font-size:.82rem}.ann{color:#8de5a5}.type{color:#9bd7ff}.notice,.trap{padding:14px 18px}.notice{border-left:3px solid var(--accent);background:var(--notice)}.trap{border-left:3px solid var(--warn);background:var(--warn-bg)}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:48px;padding-top:20px}@media(max-width:650px){.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:24px 20px}.lang{position:static}.sheet{padding:0 16px}}
+</style>
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back"><a href="../../">&larr; Back to the blog</a></p>
+    <p class="lang"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Java & Spring Interview Notes</p>
+    <h1>What is a bean?</h1>
+    <p class="lede">An explanation that connects Java, Spring Boot, and dependency injection without relying on an empty memorized definition.</p>
+    <dl class="stamp"><div><dt>Level</dt><dd>Foundations</dd></div><div><dt>Topic</dt><dd>Spring Core</dd></div><div><dt>Goal</dt><dd>Technical interview</dd></div></dl>
+  </div>
+
+  <section id="short-answer"><div class="head"><span class="num">01</span><h2>The 30-second answer</h2></div>
+    <p class="answer"><strong>A Spring Bean is an object created, configured, and managed by the Spring container.</strong> Instead of manually constructing its dependencies with <code>new</code>, we declare what it needs and Spring supplies those objects through dependency injection. By default, a bean has singleton scope within its <code>ApplicationContext</code>.</p>
+    <p>This answer contains the four ideas interviewers usually expect: it is an object, it belongs to the container, it receives dependencies, and it has a managed lifecycle.</p>
+  </section>
+
+  <section id="java-vs-spring"><div class="head"><span class="num">02</span><h2>JavaBean is not the same as Spring Bean</h2></div>
+    <div class="grid">
+      <article class="card"><h3>JavaBean</h3><p>A class that follows Java conventions: private properties, getters and setters, and usually a no-argument constructor. It is a structural convention and does not require Spring.</p></article>
+      <article class="card"><h3>Spring Bean</h3><p>Any object registered in Spring's IoC container. It does not have to follow the JavaBean convention or expose getters, setters, or an empty constructor.</p></article>
+    </div>
+    <p class="trap"><strong>Common mistake:</strong> saying that a Spring Bean is merely a class with getters and setters. That describes a JavaBean and misses the essential role of the Spring container.</p>
+  </section>
+
+  <section id="creation"><div class="head"><span class="num">03</span><h2>How a Spring Bean is created</h2></div>
+    <p>Spring can discover our classes through component scanning. <code>@Component</code> is the general annotation, while <code>@Service</code>, <code>@Repository</code>, and <code>@Controller</code> communicate more specific responsibilities.</p>
+    <pre><span class="ann">@Service</span>
+public class EmailService {
+    public void send(String message) {
+        System.out.println(message);
+    }
+}</pre>
+    <p>We can also declare a bean explicitly with <code>@Bean</code> inside a <code>@Configuration</code> class. This is particularly useful for third-party classes that we cannot annotate.</p>
+    <pre><span class="ann">@Configuration</span>
+public class AppConfig {
+    <span class="ann">@Bean</span>
+    public <span class="type">ObjectMapper</span> objectMapper() {
+        return new ObjectMapper();
+    }
+}</pre>
+    <p class="notice"><strong>Spring Boot does not change the definition of a bean.</strong> It makes registration easier through auto-configuration and component scanning, but the beans still live in the Spring container.</p>
+  </section>
+
+  <section id="injection"><div class="head"><span class="num">04</span><h2>Dependency injection</h2></div>
+    <p>Constructor injection makes dependencies explicit, allows fields to be <code>final</code>, and simplifies testing. When there is a single constructor, Spring does not require us to add <code>@Autowired</code>.</p>
+    <pre><span class="ann">@RestController</span>
+public class UserController {
+    private final EmailService emailService;
+
+    public UserController(EmailService emailService) {
+        this.emailService = emailService;
+    }
+}</pre>
+    <div class="flow" aria-label="Creation and injection flow"><span>Spring scans configuration</span><b>→</b><span>Creates beans</span><b>→</b><span>Resolves dependencies</span><b>→</b><span>Injects ready objects</span></div>
+    <p>This is inversion of control: our class does not decide how to construct all its collaborators. It delegates that responsibility to the framework and focuses on its own behavior.</p>
+  </section>
+
+  <section id="lifecycle"><div class="head"><span class="num">05</span><h2>Lifecycle and scopes</h2></div>
+    <p>In simplified terms, Spring instantiates the bean, injects its dependencies, runs callbacks such as <code>@PostConstruct</code>, makes it available, and may run <code>@PreDestroy</code> when the context closes.</p>
+    <ul>
+      <li><strong>singleton:</strong> one instance per <code>ApplicationContext</code>; this is the default scope.</li>
+      <li><strong>prototype:</strong> a new instance every time it is requested.</li>
+      <li><strong>request:</strong> one instance per HTTP request.</li>
+      <li><strong>session:</strong> one instance per HTTP session.</li>
+    </ul>
+    <p class="trap"><strong>Interview nuance:</strong> a Spring singleton means one instance per container, not necessarily one instance in the entire JVM.</p>
+  </section>
+
+  <section id="follow-ups"><div class="head"><span class="num">06</span><h2>Follow-up questions</h2></div>
+    <div class="grid">
+      <article class="card"><h3>@Bean or @Component?</h3><p><code>@Component</code> goes on the class and is discovered automatically. <code>@Bean</code> goes on a configuration method and gives us control over object construction.</p></article>
+      <article class="card"><h3>What if two beans have the same type?</h3><p>Injection becomes ambiguous. We can select one with <code>@Qualifier</code> or mark the usual candidate with <code>@Primary</code>.</p></article>
+      <article class="card"><h3>Are beans thread-safe?</h3><p>Not automatically. Because singleton services may serve multiple threads, they should normally be stateless or correctly protect mutable state.</p></article>
+      <article class="card"><h3>Can I use new?</h3><p>Yes, but that object will not be managed by Spring. It will not automatically receive injection, proxies, aspects, or lifecycle callbacks.</p></article>
+    </div>
+  </section>
+
+  <section id="interview-version"><div class="head"><span class="num">07</span><h2>The complete interview answer</h2></div>
+    <p class="answer">“A bean in Spring is an instance managed by the IoC container. Spring creates it, resolves and injects its dependencies, and manages its lifecycle. I can register it through component scanning, for example with <code>@Service</code>, or explicitly with a <code>@Bean</code> method. Its default scope is singleton within the context. It should not be confused with a JavaBean, which is simply a class that follows a set of conventions.”</p>
+    <p>You do not need to recite it word for word. Keep the sequence <strong>definition → creation → injection → lifecycle → difference from JavaBean</strong>, then support it with a real example from your project.</p>
+  </section>
+
+  <footer><p>Java & Spring Interview Notes · Foundations explained for technical interviews.</p></footer>
+</div>
