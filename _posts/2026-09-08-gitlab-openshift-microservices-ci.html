@@ -1,0 +1,124 @@
+---
+layout: "article"
+title: "Continuous Integration with GitLab, OpenShift, and Microservices"
+description: "Understand how GitLab CI validates, packages, and delivers independently deployable microservices to OpenShift, with a practical pipeline and interview answer."
+permalink: "/devops/gitlab-openshift-microservices-ci/"
+lang: "en"
+lang_url: "/devops/gitlab-openshift-microservices-ci/es/"
+series: "Microservices Delivery Notes"
+categories: ["GitOps & Kubernetes"]
+subcategories: ["Continuous Integration"]
+tags: ["gitlab-ci","openshift","microservices","ci-cd","containers","kubernetes"]
+date: "2026-09-08"
+reading_minutes: 5
+---
+<style>
+:root{color-scheme:light dark;--bg:#f1f3f0;--panel:#fff;--text:#17211b;--muted:#526057;--accent:#28753f;--line:#c9d2ca;--code:#102019;--code-text:#e8f4eb;--notice:#e5f2e8;--warn:#8b5a16;--warn-bg:#f7eddd}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1711;--panel:#17231b;--text:#e8f0ea;--muted:#a9baad;--accent:#7bd893;--line:#304638;--code:#09110c;--code-text:#e8f4eb;--notice:#193122;--warn:#efbd70;--warn-bg:#342718}}:root[data-theme="dark"]{--bg:#0e1711;--panel:#17231b;--text:#e8f0ea;--muted:#a9baad;--accent:#7bd893;--line:#304638;--code:#09110c;--code-text:#e8f4eb;--notice:#193122;--warn:#efbd70;--warn-bg:#342718}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.titleblock,.card,.answer{background:var(--panel);border:1px solid var(--line)}.titleblock{position:relative;padding:28px 32px}.back,.lang,.eyebrow,.num,.stamp dt,pre,code{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:clamp(2.2rem,6vw,3.5rem);line-height:1.02;max-width:22ch}.lede{font-size:1.03rem;color:var(--muted)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.55rem}h3{font-size:1.1rem}p,li{max-width:70ch;line-height:1.6;text-align:justify;hyphens:auto;-webkit-hyphens:auto}.answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}.card{padding:16px}.card h3{margin-bottom:7px}.card p{font-size:.92rem;color:var(--muted);margin:0}.flow{display:flex;flex-wrap:wrap;align-items:center;gap:.65rem;margin:20px 0}.flow span{background:var(--panel);border:1px solid var(--line);padding:.65rem .8rem}.flow b{color:var(--accent)}pre{overflow:auto;background:var(--code);color:var(--code-text);border:1px solid var(--line);padding:15px;line-height:1.55;font-size:.82rem}.notice,.trap{padding:14px 18px}.notice{border-left:3px solid var(--accent);background:var(--notice)}.trap{border-left:3px solid var(--warn);background:var(--warn-bg)}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:48px;padding-top:20px}@media(max-width:650px){.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:24px 20px}.lang{position:static}.sheet{padding:0 16px}}
+</style>
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back"><a href="../../">&larr; Back to the blog</a></p>
+    <p class="lang"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Microservices Delivery Notes</p>
+    <h1>Continuous integration with GitLab and OpenShift</h1>
+    <p class="lede">How a source-code change becomes a tested, traceable container image that OpenShift can run safely.</p>
+    <dl class="stamp"><div><dt>Level</dt><dd>Intermediate</dd></div><div><dt>Topic</dt><dd>CI/CD</dd></div><div><dt>Context</dt><dd>Microservices</dd></div></dl>
+  </div>
+
+  <section id="definition"><div class="head"><span class="num">01</span><h2>The essential idea</h2></div>
+    <p class="answer"><strong>Continuous integration validates every change to a microservice automatically.</strong> A push or merge request starts a GitLab pipeline that compiles the application, runs tests and quality checks, builds a container image, and publishes an immutable version to a registry. OpenShift runs that version and provides deployment, networking, health checks, scaling, and recovery.</p>
+    <p>GitLab CI and OpenShift solve different parts of the delivery process. GitLab decides whether a change is fit to become a release artifact. OpenShift operates that artifact. Keeping this boundary clear makes failures easier to locate and releases easier to audit.</p>
+  </section>
+
+  <section id="architecture"><div class="head"><span class="num">02</span><h2>End-to-end architecture</h2></div>
+    <div class="flow" aria-label="Continuous integration and deployment flow"><span>Git push</span><b>→</b><span>GitLab pipeline</span><b>→</b><span>Tests and analysis</span><b>→</b><span>Container image</span><b>→</b><span>Registry</span><b>→</b><span>OpenShift</span></div>
+    <div class="grid">
+      <article class="card"><h3>GitLab</h3><p>Stores code, reviews merge requests, runs pipelines, keeps evidence, and controls which changes can be merged.</p></article>
+      <article class="card"><h3>GitLab Runner</h3><p>Executes each job in an isolated environment with the permissions and tools required by that stage.</p></article>
+      <article class="card"><h3>Image registry</h3><p>Stores immutable images identified by a commit SHA or release version instead of a mutable label such as latest.</p></article>
+      <article class="card"><h3>OpenShift</h3><p>Pulls the approved image and manages pods, services, routes, configuration, secrets, probes, and rollout status.</p></article>
+    </div>
+  </section>
+
+  <section id="pipeline"><div class="head"><span class="num">03</span><h2>A pipeline for one microservice</h2></div>
+    <p>Each microservice should produce and validate its own artifact. For a Java service, a simplified <code>.gitlab-ci.yml</code> can describe three stages:</p>
+    <pre>stages:
+  - test
+  - image
+  - deploy
+
+variables:
+  IMAGE_TAG: "$CI_REGISTRY_IMAGE:$CI_COMMIT_SHA"
+
+test:
+  stage: test
+  script:
+    - ./mvnw verify
+
+build-image:
+  stage: image
+  script:
+    - printf '%s' "$CI_REGISTRY_PASSWORD" | podman login -u "$CI_REGISTRY_USER" --password-stdin "$CI_REGISTRY"
+    - podman build -t "$IMAGE_TAG" .
+    - podman push "$IMAGE_TAG"
+
+deploy-development:
+  stage: deploy
+  script:
+    - oc set image deployment/orders-service orders-service="$IMAGE_TAG"
+    - oc rollout status deployment/orders-service --timeout=180s
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'</pre>
+    <p>The example shows the responsibility chain, not a universal production template. Runner type, image builder, credentials, approval rules, and deployment strategy depend on the platform and security model.</p>
+    <p class="notice"><strong>Traceability:</strong> tagging an image with <code>CI_COMMIT_SHA</code> connects the running container to the exact source revision and pipeline that produced it.</p>
+  </section>
+
+  <section id="quality"><div class="head"><span class="num">04</span><h2>What should be validated?</h2></div>
+    <ul>
+      <li><strong>Compilation and unit tests:</strong> verify local behavior quickly.</li>
+      <li><strong>Integration tests:</strong> exercise databases, brokers, or other real dependencies in controlled environments.</li>
+      <li><strong>Contract tests:</strong> detect incompatible API or event changes before consumers fail.</li>
+      <li><strong>Static and dependency analysis:</strong> identify quality issues and known vulnerable libraries.</li>
+      <li><strong>Image scanning:</strong> inspect the operating-system and runtime packages included in the image.</li>
+      <li><strong>Deployment verification:</strong> wait for readiness and run a small smoke test against the deployed service.</li>
+    </ul>
+    <p class="trap"><strong>A green build is not enough:</strong> if the pipeline publishes an image without testing its contracts or checking whether the rollout becomes ready, important failures move from integration time to runtime.</p>
+  </section>
+
+  <section id="openshift"><div class="head"><span class="num">05</span><h2>What OpenShift contributes</h2></div>
+    <p>The pipeline delivers an image; OpenShift turns it into a running workload. A <code>Deployment</code> declares the image and replicas, a <code>Service</code> provides stable internal discovery, and a <code>Route</code> can expose the service externally. ConfigMaps and Secrets separate environment configuration from the image.</p>
+    <p>Readiness probes prevent traffic from reaching a pod before it can serve requests. Liveness probes can restart a stuck container, while startup probes protect applications that legitimately need more initialization time. Resource requests and limits help the scheduler place pods and contain failures.</p>
+    <p>During a rolling update, OpenShift starts new pods and removes old ones progressively. The pipeline should inspect rollout status and fail visibly if the new version never becomes ready.</p>
+  </section>
+
+  <section id="microservices"><div class="head"><span class="num">06</span><h2>Why microservices change the pipeline</h2></div>
+    <p>Independent deployment is one of the main benefits of microservices. A change to <code>orders-service</code> should not require rebuilding unrelated services. Each service therefore needs a clear ownership boundary, its own versioned image, and checks appropriate to its dependencies.</p>
+    <div class="grid">
+      <article class="card"><h3>Independent artifact</h3><p>Build once and promote the same immutable image through environments; do not rebuild it differently for production.</p></article>
+      <article class="card"><h3>Compatible contracts</h3><p>Evolve APIs and events without breaking consumers that may be deployed at a different time.</p></article>
+      <article class="card"><h3>Observable release</h3><p>Correlate logs, metrics, traces, image version, commit, and pipeline so a regression can be diagnosed quickly.</p></article>
+      <article class="card"><h3>Controlled configuration</h3><p>Keep environment-specific URLs and credentials outside the image, with secrets never written into the repository.</p></article>
+    </div>
+  </section>
+
+  <section id="delivery"><div class="head"><span class="num">07</span><h2>CI, delivery, and deployment</h2></div>
+    <ul>
+      <li><strong>Continuous integration:</strong> every change is compiled, tested, and integrated frequently.</li>
+      <li><strong>Continuous delivery:</strong> every accepted change leaves a releasable artifact ready for an authorized deployment.</li>
+      <li><strong>Continuous deployment:</strong> every accepted change is deployed automatically without a manual release decision.</li>
+    </ul>
+    <p>For development, GitLab may update OpenShift directly with <code>oc</code>. For controlled environments, a GitOps model is often clearer: the pipeline publishes the image and updates a deployment repository; a controller such as Argo CD reconciles that declared state with OpenShift. Git then records who requested the version change and makes rollback a versioned operation.</p>
+  </section>
+
+  <section id="security"><div class="head"><span class="num">08</span><h2>Security and operating rules</h2></div>
+    <p>Use a dedicated service account with the minimum permissions required by the job. Store credentials as protected CI variables or retrieve them from a secret manager. Protect production environments, require appropriate approvals, scan dependencies and images, and avoid printing tokens in job logs.</p>
+    <p>Promotion should reference an existing image digest or immutable tag. Rebuilding the same commit for each environment weakens confidence because production would receive different bytes from those tested earlier.</p>
+  </section>
+
+  <section id="interview"><div class="head"><span class="num">09</span><h2>The interview answer</h2></div>
+    <p class="answer">“A change to a microservice starts a GitLab CI pipeline. The pipeline compiles the code, runs unit, integration, contract, quality, and security checks, then creates one immutable container image and publishes it with a traceable version. OpenShift runs that image and manages configuration, networking, probes, replicas, and rolling updates. Each microservice has an independent pipeline and artifact, while compatible contracts protect communication between services. Deployment can be performed directly from GitLab or, preferably for controlled environments, through a GitOps repository reconciled by a controller.”</p>
+    <p>A good explanation follows one commit from source to a verified workload and clearly separates artifact creation from runtime operation.</p>
+  </section>
+
+  <footer><p>Microservices Delivery Notes · From source code to an observable workload.</p></footer>
+</div>
