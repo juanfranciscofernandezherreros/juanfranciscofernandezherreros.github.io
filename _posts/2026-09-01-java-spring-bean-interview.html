@@ -1,7 +1,7 @@
 ---
 layout: "article"
-title: "What Is a Bean in Java and Spring Boot? An Interview Answer"
-description: "A clear explanation of JavaBeans and Spring Beans, including dependency injection, scopes, lifecycle, and a concise answer for technical interviews."
+title: "What Is a Bean in Spring? An Interview Answer"
+description: "A clear explanation of a Spring Bean as an object managed by the container, including dependency injection, scopes, and lifecycle."
 permalink: "/java-spring/bean-interview-guide/"
 lang: "en"
 lang_url: "/java-spring/bean-interview-guide/es/"
@@ -20,22 +20,23 @@ reading_minutes: 6
     <p class="back"><a href="../../">&larr; Back to the blog</a></p>
     <p class="lang"><a href="es/">ES · Español</a></p>
     <p class="eyebrow">Java & Spring Interview Notes</p>
-    <h1>What is a bean?</h1>
-    <p class="lede">An explanation that connects Java, Spring Boot, and dependency injection without relying on an empty memorized definition.</p>
+    <h1>What is a bean in Spring?</h1>
+    <p class="lede">A bean is not a special kind of class: it is an object that Spring creates, configures, and manages inside its container.</p>
     <dl class="stamp"><div><dt>Level</dt><dd>Foundations</dd></div><div><dt>Topic</dt><dd>Spring Core</dd></div><div><dt>Goal</dt><dd>Technical interview</dd></div></dl>
   </div>
 
   <section id="short-answer"><div class="head"><span class="num">01</span><h2>The 30-second answer</h2></div>
-    <p class="answer"><strong>A Spring Bean is an object created, configured, and managed by the Spring container.</strong> Instead of manually constructing its dependencies with <code>new</code>, we declare what it needs and Spring supplies those objects through dependency injection. By default, a bean has singleton scope within its <code>ApplicationContext</code>.</p>
-    <p>This answer contains the four ideas interviewers usually expect: it is an object, it belongs to the container, it receives dependencies, and it has a managed lifecycle.</p>
+    <p class="answer"><strong>A bean is an object instance that Spring creates, configures, and manages inside its IoC container.</strong> A class defines what the object will be; when Spring creates an instance of that class and registers it in the <code>ApplicationContext</code>, that instance becomes a bean. Spring can also supply its dependencies and manage its lifecycle.</p>
+    <p>The essential point is that <strong>bean is not a type of class</strong>. An ordinary Java class can produce a bean when one of its objects is registered in the Spring container.</p>
   </section>
 
-  <section id="java-vs-spring"><div class="head"><span class="num">02</span><h2>JavaBean is not the same as Spring Bean</h2></div>
+  <section id="class-vs-bean"><div class="head"><span class="num">02</span><h2>A class and a bean are not the same</h2></div>
     <div class="grid">
-      <article class="card"><h3>JavaBean</h3><p>A class that follows Java conventions: private properties, getters and setters, and usually a no-argument constructor. It is a structural convention and does not require Spring.</p></article>
-      <article class="card"><h3>Spring Bean</h3><p>Any object registered in Spring's IoC container. It does not have to follow the JavaBean convention or expose getters, setters, or an empty constructor.</p></article>
+      <article class="card"><h3>Java class</h3><p>It is the definition: it declares the fields, constructors, and methods that its objects will have. By itself, it is not a bean and is not managed by Spring.</p></article>
+      <article class="card"><h3>Spring Bean</h3><p>It is a concrete object: an instance that Spring has registered in its container. Spring knows about that object and can inject it wherever it is needed.</p></article>
     </div>
-    <p class="trap"><strong>Common mistake:</strong> saying that a Spring Bean is merely a class with getters and setters. That describes a JavaBean and misses the essential role of the Spring container.</p>
+    <p>For example, <code>EmailService</code> is a class. The <code>EmailService</code> object that Spring creates and keeps in the context is the bean. If we create another object with <code>new EmailService()</code>, that object is not automatically a bean because Spring is not managing it.</p>
+    <p class="trap"><strong>Do not confuse it with a JavaBean:</strong> JavaBean is a class convention with characteristics such as properties exposed through getters and setters. A Spring Bean does not need to follow that convention.</p>
   </section>
 
   <section id="creation"><div class="head"><span class="num">03</span><h2>How a Spring Bean is created</h2></div>
@@ -92,8 +93,8 @@ public class UserController {
   </section>
 
   <section id="interview-version"><div class="head"><span class="num">07</span><h2>The complete interview answer</h2></div>
-    <p class="answer">“A bean in Spring is an instance managed by the IoC container. Spring creates it, resolves and injects its dependencies, and manages its lifecycle. I can register it through component scanning, for example with <code>@Service</code>, or explicitly with a <code>@Bean</code> method. Its default scope is singleton within the context. It should not be confused with a JavaBean, which is simply a class that follows a set of conventions.”</p>
-    <p>You do not need to recite it word for word. Keep the sequence <strong>definition → creation → injection → lifecycle → difference from JavaBean</strong>, then support it with a real example from your project.</p>
+    <p class="answer">“A bean in Spring is an object that the IoC container creates, configures, and manages. It is not a special kind of class: it is an instance of a Java class registered in the <code>ApplicationContext</code>. Spring can resolve and inject its dependencies and manage its lifecycle. I can register it through component scanning, for example with <code>@Service</code>, or explicitly with a <code>@Bean</code> method. Its default scope is singleton within the context.”</p>
+    <p>You do not need to recite it word for word. Keep the sequence <strong>managed object → container registration → injection → lifecycle</strong>, then support it with a real example from your project.</p>
   </section>
 
   <footer><p>Java & Spring Interview Notes · Foundations explained for technical interviews.</p></footer>

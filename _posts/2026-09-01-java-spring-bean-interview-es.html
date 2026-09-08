@@ -1,7 +1,7 @@
 ---
 layout: "article"
-title: "Qué es un bean en Java y Spring Boot: respuesta para entrevistas"
-description: "Una explicación clara de JavaBeans y Spring Beans, con inyección de dependencias, scopes, ciclo de vida y una respuesta breve preparada para entrevistas técnicas."
+title: "Qué es un bean en Spring: respuesta para entrevistas"
+description: "Una explicación clara de qué es un Spring Bean: un objeto gestionado por el contenedor, con inyección de dependencias, scopes y ciclo de vida."
 permalink: "/java-spring/bean-interview-guide/es/"
 lang: "es"
 lang_url: "/java-spring/bean-interview-guide/"
@@ -20,22 +20,23 @@ reading_minutes: 6
     <p class="back"><a href="../../../">&larr; Volver al blog</a></p>
     <p class="lang"><a href="../">EN · English</a></p>
     <p class="eyebrow">Java & Spring Interview Notes</p>
-    <h1>¿Qué es un bean?</h1>
-    <p class="lede">La explicación que conecta Java, Spring Boot e inyección de dependencias sin memorizar una definición vacía.</p>
+    <h1>¿Qué es un bean en Spring?</h1>
+    <p class="lede">Un bean no es una clase especial: es un objeto que Spring crea, configura y gestiona dentro de su contenedor.</p>
     <dl class="stamp"><div><dt>Nivel</dt><dd>Fundamentos</dd></div><div><dt>Tema</dt><dd>Spring Core</dd></div><div><dt>Objetivo</dt><dd>Entrevista técnica</dd></div></dl>
   </div>
 
   <section id="short-answer"><div class="head"><span class="num">01</span><h2>La respuesta de 30 segundos</h2></div>
-    <p class="answer"><strong>Un Spring Bean es un objeto creado, configurado y gestionado por el contenedor de Spring.</strong> En lugar de construir manualmente sus dependencias con <code>new</code>, declaramos qué necesita y Spring se las proporciona mediante inyección de dependencias. Por defecto, un bean tiene scope singleton dentro del <code>ApplicationContext</code>.</p>
-    <p>Esta respuesta contiene las cuatro ideas que normalmente busca el entrevistador: es un objeto, pertenece al contenedor, recibe sus dependencias y tiene un ciclo de vida administrado.</p>
+    <p class="answer"><strong>Un bean es una instancia de un objeto que Spring crea, configura y gestiona dentro de su contenedor IoC.</strong> La clase define cómo será el objeto; cuando Spring crea una instancia de esa clase y la registra en el <code>ApplicationContext</code>, esa instancia pasa a ser un bean. Spring también puede proporcionarle sus dependencias y gestionar su ciclo de vida.</p>
+    <p>La idea esencial es que <strong>bean no es un tipo de clase</strong>. Una clase Java normal puede dar lugar a un bean si registramos uno de sus objetos en el contenedor de Spring.</p>
   </section>
 
-  <section id="java-vs-spring"><div class="head"><span class="num">02</span><h2>JavaBean no es lo mismo que Spring Bean</h2></div>
+  <section id="class-vs-bean"><div class="head"><span class="num">02</span><h2>La clase y el bean no son lo mismo</h2></div>
     <div class="grid">
-      <article class="card"><h3>JavaBean</h3><p>Clase que sigue convenciones de Java: propiedades privadas, getters y setters, y normalmente constructor sin argumentos. Es una convención de estructura; no necesita Spring.</p></article>
-      <article class="card"><h3>Spring Bean</h3><p>Cualquier objeto registrado en el contenedor IoC de Spring. No necesita cumplir la convención JavaBean ni tener getters, setters o constructor vacío.</p></article>
+      <article class="card"><h3>Clase Java</h3><p>Es la definición: declara los campos, constructores y métodos que tendrán sus objetos. Por sí sola no es un bean ni está gestionada por Spring.</p></article>
+      <article class="card"><h3>Bean de Spring</h3><p>Es un objeto concreto, es decir, una instancia que Spring ha registrado en su contenedor. Spring conoce ese objeto y puede inyectarlo donde se necesite.</p></article>
     </div>
-    <p class="trap"><strong>Error habitual:</strong> responder que un Spring Bean es solamente una clase con getters y setters. Esa definición describe un JavaBean y omite el papel fundamental del contenedor de Spring.</p>
+    <p>Por ejemplo, <code>EmailService</code> es una clase. El objeto de <code>EmailService</code> que Spring crea y conserva en el contexto es el bean. Si creamos otro objeto con <code>new EmailService()</code>, ese objeto no es automáticamente un bean porque Spring no lo está gestionando.</p>
+    <p class="trap"><strong>No debe confundirse con JavaBean:</strong> JavaBean es una convención de clases con determinadas características, como propiedades accesibles mediante getters y setters. Un Spring Bean no necesita seguir esa convención.</p>
   </section>
 
   <section id="creation"><div class="head"><span class="num">03</span><h2>Cómo se crea un Spring Bean</h2></div>
@@ -92,8 +93,8 @@ public class UsuarioController {
   </section>
 
   <section id="interview-version"><div class="head"><span class="num">07</span><h2>Respuesta completa para la entrevista</h2></div>
-    <p class="answer">“Un bean en Spring es una instancia administrada por el contenedor IoC. Spring se encarga de crearla, resolver e inyectar sus dependencias y gestionar su ciclo de vida. Puedo registrarla mediante component scanning, por ejemplo con <code>@Service</code>, o explícitamente con un método <code>@Bean</code>. Por defecto usa scope singleton dentro del contexto. No debe confundirse con un JavaBean, que es solo una clase que sigue determinadas convenciones.”</p>
-    <p>No hace falta recitarla literalmente. Mantén el orden <strong>definición → creación → inyección → ciclo de vida → diferencia con JavaBean</strong> y acompáñala con un ejemplo real de tu proyecto.</p>
+    <p class="answer">“Un bean en Spring es un objeto que el contenedor IoC crea, configura y gestiona. No es una clase especial: es una instancia de una clase Java registrada en el <code>ApplicationContext</code>. Spring puede resolver e inyectar sus dependencias y gestionar su ciclo de vida. Puedo registrarlo mediante component scanning, por ejemplo con <code>@Service</code>, o explícitamente con un método <code>@Bean</code>. Por defecto tiene scope singleton dentro del contexto.”</p>
+    <p>No hace falta recitarla literalmente. Mantén el orden <strong>objeto gestionado → registro en el contenedor → inyección → ciclo de vida</strong> y acompáñala con un ejemplo real de tu proyecto.</p>
   </section>
 
   <footer><p>Java & Spring Interview Notes · Fundamentos explicados para entrevistas técnicas.</p></footer>

@@ -1,0 +1,121 @@
+---
+layout: "article"
+title: "Principios SOLID en Java: guía práctica y respuesta de entrevista"
+description: "Aprende los cinco principios SOLID con ejemplos prácticos en Java, señales de alerta, matices y una respuesta breve para entrevistas técnicas."
+permalink: "/java/solid-principles/es/"
+lang: "es"
+lang_url: "/java/solid-principles/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Java Fundamentals"]
+tags: ["java","solid","programacion-orientada-objetos","diseno-de-software","clean-code","entrevistas"]
+date: "2026-09-08"
+reading_minutes: 10
+---
+<style>
+:root{color-scheme:light dark;--bg:#f1f3f0;--panel:#fff;--text:#17211b;--muted:#526057;--accent:#28753f;--line:#c9d2ca;--code:#102019;--code-text:#e8f4eb;--notice:#e5f2e8;--warn:#8b5a16;--warn-bg:#f7eddd}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1711;--panel:#17231b;--text:#e8f0ea;--muted:#a9baad;--accent:#7bd893;--line:#304638;--code:#09110c;--code-text:#e8f4eb;--notice:#193122;--warn:#efbd70;--warn-bg:#342718}}:root[data-theme="dark"]{--bg:#0e1711;--panel:#17231b;--text:#e8f0ea;--muted:#a9baad;--accent:#7bd893;--line:#304638;--code:#09110c;--code-text:#e8f4eb;--notice:#193122;--warn:#efbd70;--warn-bg:#342718}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.titleblock,.card,.answer{background:var(--panel);border:1px solid var(--line)}.titleblock{position:relative;padding:28px 32px}.back,.lang,.eyebrow,.num,.stamp dt,pre,code{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:clamp(2.2rem,6vw,3.5rem);line-height:1.02;max-width:20ch}.lede{font-size:1.03rem;color:var(--muted)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.55rem}h3{font-size:1.1rem}p,li{max-width:70ch;line-height:1.6;text-align:justify;hyphens:auto;-webkit-hyphens:auto}.answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}.card{padding:16px}.card h3{margin-bottom:7px}.card p{font-size:.92rem;color:var(--muted);margin:0}pre{overflow:auto;background:var(--code);color:var(--code-text);border:1px solid var(--line);padding:15px;line-height:1.55;font-size:.82rem}.ann{color:#8de5a5}.type{color:#9bd7ff}.notice,.trap{padding:14px 18px}.notice{border-left:3px solid var(--accent);background:var(--notice)}.trap{border-left:3px solid var(--warn);background:var(--warn-bg)}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:48px;padding-top:20px}@media(max-width:650px){.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:24px 20px}.lang{position:static}.sheet{padding:0 16px}}
+</style>
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back"><a href="../../../">&larr; Volver al blog</a></p>
+    <p class="lang"><a href="../">EN · English</a></p>
+    <p class="eyebrow">Java & Spring Interview Notes</p>
+    <h1>Principios SOLID en Java</h1>
+    <p class="lede">Cinco principios de diseño que ayudan a mantener el código orientado a objetos comprensible, comprobable y adaptable cuando cambian los requisitos.</p>
+    <dl class="stamp"><div><dt>Nivel</dt><dd>Intermedio</dd></div><div><dt>Tema</dt><dd>Diseño de software</dd></div><div><dt>Objetivo</dt><dd>Uso práctico y entrevistas</dd></div></dl>
+  </div>
+
+  <section id="overview"><div class="head"><span class="num">01</span><h2>¿Qué significa SOLID?</h2></div>
+    <p class="answer"><strong>SOLID reúne cinco principios de diseño orientado a objetos:</strong> responsabilidad única, abierto/cerrado, sustitución de Liskov, segregación de interfaces e inversión de dependencias. Orientan la distribución de responsabilidades y dependencias para que un cambio tenga un impacto pequeño y predecible.</p>
+    <p>SOLID no es una regla que todas las clases deban cumplir de forma mecánica. Es un vocabulario para reconocer problemas de diseño. Conviene aplicar un principio cuando hace más seguro un cambio o simplifica las pruebas; las abstracciones innecesarias también pueden dificultar la comprensión de un sistema pequeño.</p>
+  </section>
+
+  <section id="srp"><div class="head"><span class="num">S</span><h2>Principio de responsabilidad única</h2></div>
+    <p><strong>Un módulo debe tener una sola razón para cambiar.</strong> Se trata de agrupar el código por responsabilidad, no de obligar a que cada clase tenga un único método. Si el cálculo de facturas y el envío de correos cambian por motivos de negocio diferentes, deben pertenecer a componentes distintos.</p>
+    <pre>public class ServicioFacturas {
+    private final RepositorioFacturas repositorio;
+    private final EnviadorCorreo enviadorCorreo;
+
+    public Factura crear(Pedido pedido) {
+        Factura factura = Factura.desde(pedido);
+        repositorio.guardar(factura);
+        enviadorCorreo.enviar(factura);
+        return factura;
+    }
+}</pre>
+    <p>La coordinación permanece en <code>ServicioFacturas</code>, mientras que la persistencia y el envío tienen responsabilidades propias. Una señal de alerta es una clase que cambia cuando se modifican aspectos no relacionados como la base de datos, los precios, el formato o las notificaciones.</p>
+  </section>
+
+  <section id="ocp"><div class="head"><span class="num">O</span><h2>Principio abierto/cerrado</h2></div>
+    <p><strong>Las entidades de software deben estar abiertas a la extensión y cerradas a la modificación.</strong> El nuevo comportamiento debería poder añadirse mediante una abstracción estable en lugar de editar repetidamente un condicional cada vez más grande.</p>
+    <pre>public interface PoliticaDescuento {
+    BigDecimal aplicar(BigDecimal precio);
+}
+
+public final class DescuentoVip implements PoliticaDescuento {
+    public BigDecimal aplicar(BigDecimal precio) {
+        return precio.multiply(new BigDecimal("0.90"));
+    }
+}</pre>
+    <p>Un nuevo descuento puede implementar <code>PoliticaDescuento</code> sin cambiar la calculadora que la utiliza. Esto no significa que el código existente nunca pueda modificarse; significa proteger el comportamiento estable frente a cada nueva variante.</p>
+  </section>
+
+  <section id="lsp"><div class="head"><span class="num">L</span><h2>Principio de sustitución de Liskov</h2></div>
+    <p><strong>Una implementación debe poder utilizarse donde se espera su abstracción sin romper el comportamiento prometido.</strong> Un subtipo debe respetar el contrato: no debería exigir precondiciones más fuertes, entregar resultados más débiles ni introducir fallos inesperados.</p>
+    <pre>public interface MetodoPago {
+    Recibo pagar(Dinero importe);
+}
+
+public final class PagoTarjeta implements MetodoPago {
+    public Recibo pagar(Dinero importe) {
+        return pasarela.cobrar(importe);
+    }
+}</pre>
+    <p>Si una implementación lanza <code>UnsupportedOperationException</code> en llamadas normales permitidas por <code>MetodoPago</code>, probablemente la abstracción sea incorrecta. LSP trata sobre compatibilidad de comportamiento, no solo sobre compartir un tipo padre.</p>
+  </section>
+
+  <section id="isp"><div class="head"><span class="num">I</span><h2>Principio de segregación de interfaces</h2></div>
+    <p><strong>Los clientes no deben depender de métodos que no utilizan.</strong> Es preferible definir interfaces pequeñas y centradas en un rol en vez de una gran interfaz que obligue a implementar métodos sin sentido.</p>
+    <pre>public interface Imprimible {
+    void imprimir(Documento documento);
+}
+
+public interface Escaneable {
+    Documento escanear();
+}</pre>
+    <p>Una impresora básica implementa solamente <code>Imprimible</code>; un dispositivo multifunción puede implementar ambas interfaces. Los métodos vacíos o que siempre lanzan una excepción porque la clase no puede cumplir parte de la interfaz son señales de alerta.</p>
+  </section>
+
+  <section id="dip"><div class="head"><span class="num">D</span><h2>Principio de inversión de dependencias</h2></div>
+    <p><strong>La política de alto nivel no debe depender directamente de detalles de bajo nivel; ambas deben depender de abstracciones.</strong> Normalmente, la necesidad del negocio define la abstracción y la infraestructura proporciona una implementación.</p>
+    <pre>public interface RepositorioPedidos {
+    void guardar(Pedido pedido);
+}
+
+public class ServicioCompra {
+    private final RepositorioPedidos repositorio;
+
+    public ServicioCompra(RepositorioPedidos repositorio) {
+        this.repositorio = repositorio;
+    }
+}</pre>
+    <p><code>ServicioCompra</code> no sabe si los pedidos se almacenan con JPA, JDBC o en memoria. La inyección por constructor es un mecanismo que facilita DIP, pero utilizar una interfaz no garantiza por sí solo un buen diseño.</p>
+  </section>
+
+  <section id="together"><div class="head"><span class="num">07</span><h2>Cómo trabajan juntos</h2></div>
+    <div class="grid">
+      <article class="card"><h3>Cambio</h3><p>SRP limita por qué cambia un módulo; OCP permite añadir variantes detrás de contratos estables.</p></article>
+      <article class="card"><h3>Contratos</h3><p>LSP mantiene fiables las implementaciones; ISP conserva cada contrato centrado en sus clientes.</p></article>
+      <article class="card"><h3>Dependencias</h3><p>DIP orienta las dependencias del código hacia abstracciones del negocio y no hacia detalles de infraestructura.</p></article>
+      <article class="card"><h3>Equilibrio</h3><p>Utiliza evidencias de cambio y acoplamiento. No añadas una interfaz o un patrón si no resuelve un problema de diseño actual.</p></article>
+    </div>
+    <p class="notice"><strong>Prueba práctica:</strong> cuando cambia un requisito, comprueba cuántos archivos no relacionados deben modificarse, si el comportamiento puede probarse de forma aislada y si las implementaciones siguen respetando sus contratos.</p>
+  </section>
+
+  <section id="interview-answer"><div class="head"><span class="num">08</span><h2>Respuesta para la entrevista</h2></div>
+    <p class="answer">«SOLID reúne cinco principios de diseño orientado a objetos. SRP separa las razones para cambiar; OCP favorece extender el comportamiento mediante abstracciones estables; LSP exige que las implementaciones respeten sus contratos; ISP mantiene las interfaces pequeñas y específicas para sus clientes; y DIP hace que la política de alto nivel dependa de abstracciones en lugar de detalles de infraestructura. Juntos reducen el acoplamiento y facilitan los cambios y las pruebas. Los aplico de forma pragmática porque las abstracciones adicionales también tienen un coste».</p>
+    <p>Una respuesta sólida explica el resultado de diseño y aporta un ejemplo concreto. Enumerar los cinco principios sin mostrar cómo afectan a los cambios es menos útil que describir una refactorización real.</p>
+  </section>
+
+  <footer><p>Java & Spring Interview Notes · Fundamentos prácticos para entrevistas técnicas.</p></footer>
+</div>
