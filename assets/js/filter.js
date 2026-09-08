@@ -42,7 +42,7 @@
   };
 
   function sortCards(criterion) {
-    var comparator = SORT_COMPARATORS[criterion] || SORT_COMPARATORS.part;
+    var comparator = SORT_COMPARATORS[criterion] || SORT_COMPARATORS['date-desc'];
     cards.slice().sort(comparator).forEach(function (card) {
       cardsContainer.appendChild(card);
     });
@@ -180,12 +180,12 @@
       activeTags.clear();
       query = '';
       if (searchInput) searchInput.value = '';
-      if (sortSelect) sortSelect.value = 'part';
+      if (sortSelect) sortSelect.value = 'date-desc';
       setActiveSingle(seriesButtons, 'all', 'filterSeries');
       setActiveSingle(categoryButtons, 'all', 'filterCategory');
       setActiveSingle(subcategoryButtons, 'all', 'filterSubcategory');
       tagButtons.forEach(function (btn) { btn.classList.remove('active'); });
-      sortCards('part');
+      sortCards('date-desc');
       currentPage = 1;
       apply();
     });
@@ -226,6 +226,8 @@
   if (wantedSort && SORT_COMPARATORS[wantedSort]) {
     if (sortSelect) sortSelect.value = wantedSort;
     sortCards(wantedSort);
+  } else {
+    sortCards('date-desc');
   }
 
   apply();
