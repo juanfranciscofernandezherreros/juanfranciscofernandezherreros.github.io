@@ -1,7 +1,7 @@
 ---
 layout: "article"
-title: "Qué es un bean en Spring: respuesta para entrevistas"
-description: "Una explicación clara de qué es un Spring Bean: un objeto gestionado por el contenedor, con inyección de dependencias, scopes y ciclo de vida."
+title: "Spring Beans en profundidad: creación, inyección y ciclo de vida"
+description: "Guía detallada sobre Spring Beans: registro, resolución de dependencias, scopes, ciclo de vida, proxies, configuración y ejemplos prácticos."
 permalink: "/java-spring/bean-interview-guide/es/"
 lang: "es"
 lang_url: "/java-spring/bean-interview-guide/"
@@ -10,7 +10,7 @@ categories: ["Java & Spring"]
 subcategories: ["Spring Core"]
 tags: ["java","spring-boot","spring-beans","dependency-injection","ioc","interviews"]
 date: "2026-09-01"
-reading_minutes: 6
+reading_minutes: 14
 ---
 <style>
 :root{color-scheme:light dark;--bg:#f1f3f0;--panel:#fff;--text:#17211b;--muted:#526057;--accent:#28753f;--line:#c9d2ca;--code:#102019;--code-text:#e8f4eb;--notice:#e5f2e8;--warn:#8b5a16;--warn-bg:#f7eddd}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1711;--panel:#17231b;--text:#e8f0ea;--muted:#a9baad;--accent:#7bd893;--line:#304638;--code:#09110c;--code-text:#e8f4eb;--notice:#193122;--warn:#efbd70;--warn-bg:#342718}}:root[data-theme="dark"]{--bg:#0e1711;--panel:#17231b;--text:#e8f0ea;--muted:#a9baad;--accent:#7bd893;--line:#304638;--code:#09110c;--code-text:#e8f4eb;--notice:#193122;--warn:#efbd70;--warn-bg:#342718}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.titleblock,.card,.answer{background:var(--panel);border:1px solid var(--line)}.titleblock{position:relative;padding:28px 32px}.back,.lang,.eyebrow,.num,.stamp dt,pre,code{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:clamp(2.2rem,6vw,3.5rem);line-height:1.02;max-width:20ch}.lede{font-size:1.03rem;color:var(--muted)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.55rem}h3{font-size:1.1rem}p,li{max-width:70ch;line-height:1.6;text-align:justify;hyphens:auto;-webkit-hyphens:auto}.answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}.card{padding:16px}.card h3{margin-bottom:7px}.card p{font-size:.92rem;color:var(--muted);margin:0}.flow{display:flex;flex-wrap:wrap;align-items:center;gap:.65rem;margin:20px 0}.flow span{background:var(--panel);border:1px solid var(--line);padding:.65rem .8rem}.flow b{color:var(--accent)}pre{overflow:auto;background:var(--code);color:var(--code-text);border:1px solid var(--line);padding:15px;line-height:1.55;font-size:.82rem}.ann{color:#8de5a5}.type{color:#9bd7ff}.notice,.trap{padding:14px 18px}.notice{border-left:3px solid var(--accent);background:var(--notice)}.trap{border-left:3px solid var(--warn);background:var(--warn-bg)}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:48px;padding-top:20px}@media(max-width:650px){.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:24px 20px}.lang{position:static}.sheet{padding:0 16px}}
@@ -19,27 +19,19 @@ reading_minutes: 6
   <div class="titleblock">
     <p class="back"><a href="../../../">&larr; Volver al blog</a></p>
     <p class="lang"><a href="../">EN · English</a></p>
-    <p class="eyebrow">Java & Spring Interview Notes</p>
-    <h1>¿Qué es un bean en Spring?</h1>
-    <p class="lede">Un bean no es una clase especial: es un objeto que Spring crea, configura y gestiona dentro de su contenedor.</p>
-    <dl class="stamp"><div><dt>Nivel</dt><dd>Fundamentos</dd></div><div><dt>Tema</dt><dd>Spring Core</dd></div><div><dt>Objetivo</dt><dd>Entrevista técnica</dd></div></dl>
+    <p class="eyebrow">Spring Core · Guía práctica</p>
+    <h1>Spring Beans en profundidad</h1>
+    <p class="lede">Cómo registra Spring los beans, cómo resuelve sus dependencias y qué ocurre desde que arranca el contexto hasta que se destruye cada instancia.</p>
+    <dl class="stamp"><div><dt>Nivel</dt><dd>Intermedio</dd></div><div><dt>Tema</dt><dd>Spring Beans</dd></div><div><dt>Lectura</dt><dd>14 minutos</dd></div></dl>
   </div>
 
-  <section id="short-answer"><div class="head"><span class="num">01</span><h2>La respuesta de 30 segundos</h2></div>
-    <p class="answer"><strong>Un bean es una instancia de un objeto que Spring crea, configura y gestiona dentro de su contenedor IoC.</strong> La clase define cómo será el objeto; cuando Spring crea una instancia de esa clase y la registra en el <code>ApplicationContext</code>, esa instancia pasa a ser un bean. Spring también puede proporcionarle sus dependencias y gestionar su ciclo de vida.</p>
-    <p>La idea esencial es que <strong>bean no es un tipo de clase</strong>. Una clase Java normal puede dar lugar a un bean si registramos uno de sus objetos en el contenedor de Spring.</p>
+  <section id="definition"><div class="head"><span class="num">01</span><h2>Qué es exactamente un Spring Bean</h2></div>
+    <p class="answer"><strong>Un Spring Bean es un objeto registrado y gestionado por el contenedor IoC de Spring.</strong> El contenedor mantiene su definición, decide cuándo crearlo, resuelve sus dependencias, aplica postprocesadores y proxies, controla su scope y ejecuta los callbacks de su ciclo de vida.</p>
+    <p>El contenedor se expone normalmente mediante <code>ApplicationContext</code>. Internamente trabaja con metadatos llamados <code>BeanDefinition</code>, que describen el tipo del bean, su nombre, su scope, si debe inicializarse de forma diferida y cuáles son sus dependencias.</p>
+    <div class="flow" aria-label="Proceso general de un bean"><span>BeanDefinition</span><b>→</b><span>Creación</span><b>→</b><span>Inyección</span><b>→</b><span>Postprocesado</span><b>→</b><span>Bean disponible</span></div>
   </section>
 
-  <section id="class-vs-bean"><div class="head"><span class="num">02</span><h2>La clase y el bean no son lo mismo</h2></div>
-    <div class="grid">
-      <article class="card"><h3>Clase Java</h3><p>Es la definición: declara los campos, constructores y métodos que tendrán sus objetos. Por sí sola no es un bean ni está gestionada por Spring.</p></article>
-      <article class="card"><h3>Bean de Spring</h3><p>Es un objeto concreto, es decir, una instancia que Spring ha registrado en su contenedor. Spring conoce ese objeto y puede inyectarlo donde se necesite.</p></article>
-    </div>
-    <p>Por ejemplo, <code>EmailService</code> es una clase. El objeto de <code>EmailService</code> que Spring crea y conserva en el contexto es el bean. Si creamos otro objeto con <code>new EmailService()</code>, ese objeto no es automáticamente un bean porque Spring no lo está gestionando.</p>
-    <p class="trap"><strong>No debe confundirse con JavaBean:</strong> JavaBean es una convención de clases con determinadas características, como propiedades accesibles mediante getters y setters. Un Spring Bean no necesita seguir esa convención.</p>
-  </section>
-
-  <section id="creation"><div class="head"><span class="num">03</span><h2>Cómo se crea un Spring Bean</h2></div>
+  <section id="creation"><div class="head"><span class="num">02</span><h2>Cómo se registra un Spring Bean</h2></div>
     <p>Spring puede descubrir nuestras clases mediante component scanning. <code>@Component</code> es la anotación general; <code>@Service</code>, <code>@Repository</code> y <code>@Controller</code> expresan responsabilidades más concretas.</p>
     <pre><span class="ann">@Service</span>
 public class EmailService {
@@ -55,10 +47,18 @@ public class AppConfig {
         return new ObjectMapper();
     }
 }</pre>
-    <p class="notice"><strong>Spring Boot no cambia la definición de bean.</strong> Facilita su registro mediante auto-configuración y component scanning, pero los beans siguen viviendo en el contenedor de Spring.</p>
+    <p>El nombre predeterminado del bean será <code>objectMapper</code>, igual que el método. Podemos cambiarlo con <code>@Bean("apiObjectMapper")</code>. Con <code>@Component</code>, el nombre predeterminado se deriva del nombre del tipo.</p>
+    <h3>Auto-configuración de Spring Boot</h3>
+    <p>Los starters también pueden registrar beans según las clases disponibles, las propiedades y los beans que ya existan. Una auto-configuración suele combinar <code>@ConditionalOnClass</code>, <code>@ConditionalOnProperty</code> y <code>@ConditionalOnMissingBean</code>.</p>
+    <pre><span class="ann">@Bean</span>
+<span class="ann">@ConditionalOnMissingBean</span>
+public PaymentClient paymentClient(PaymentProperties properties) {
+    return new HttpPaymentClient(properties.baseUrl());
+}</pre>
+    <p class="notice">Si la aplicación declara su propio <code>PaymentClient</code>, la condición evita registrar el bean por defecto. Así se puede personalizar una auto-configuración sin modificar la librería.</p>
   </section>
 
-  <section id="injection"><div class="head"><span class="num">04</span><h2>Inyección de dependencias</h2></div>
+  <section id="injection"><div class="head"><span class="num">03</span><h2>Resolución e inyección de dependencias</h2></div>
     <p>La inyección por constructor deja explícitas las dependencias, permite usar campos <code>final</code> y facilita las pruebas. Si hay un único constructor, Spring no necesita que añadamos <code>@Autowired</code>.</p>
     <pre><span class="ann">@RestController</span>
 public class UsuarioController {
@@ -69,33 +69,139 @@ public class UsuarioController {
     }
 }</pre>
     <div class="flow" aria-label="Flujo de creación e inyección"><span>Spring escanea configuración</span><b>→</b><span>Crea los beans</span><b>→</b><span>Resuelve dependencias</span><b>→</b><span>Inyecta objetos listos</span></div>
-    <p>Esto es inversión de control: nuestra clase no decide cómo construir todas sus colaboradoras. Cede esa responsabilidad al framework y se concentra en su comportamiento.</p>
+    <p>La resolución se realiza principalmente por tipo. Si no hay ningún candidato, Spring lanza normalmente <code>NoSuchBeanDefinitionException</code>. Si hay varios y no puede elegir uno, lanza <code>NoUniqueBeanDefinitionException</code>.</p>
+    <h3>Varios beans del mismo tipo</h3>
+    <pre>public interface NotificationSender {
+    void send(String message);
+}
+
+<span class="ann">@Component("emailSender")</span>
+class EmailSender implements NotificationSender { /* ... */ }
+
+<span class="ann">@Component("smsSender")</span>
+class SmsSender implements NotificationSender { /* ... */ }
+
+<span class="ann">@Service</span>
+class AlertService {
+    private final NotificationSender sender;
+
+    AlertService(<span class="ann">@Qualifier("smsSender")</span> NotificationSender sender) {
+        this.sender = sender;
+    }
+}</pre>
+    <p><code>@Qualifier</code> selecciona un candidato concreto. <code>@Primary</code> marca el candidato preferido cuando no hay qualifier. También podemos inyectar todos los candidatos como <code>List&lt;NotificationSender&gt;</code> o <code>Map&lt;String, NotificationSender&gt;</code>.</p>
   </section>
 
-  <section id="lifecycle"><div class="head"><span class="num">05</span><h2>Ciclo de vida y scopes</h2></div>
-    <p>De forma simplificada, Spring instancia el bean, inyecta sus dependencias, ejecuta callbacks como <code>@PostConstruct</code>, lo deja disponible y, al cerrar el contexto, puede ejecutar <code>@PreDestroy</code>.</p>
-    <ul>
-      <li><strong>singleton:</strong> una instancia por <code>ApplicationContext</code>; es el scope por defecto.</li>
-      <li><strong>prototype:</strong> una instancia nueva cada vez que se solicita.</li>
-      <li><strong>request:</strong> una instancia por petición HTTP.</li>
-      <li><strong>session:</strong> una instancia por sesión HTTP.</li>
-    </ul>
-    <p class="trap"><strong>Matiz de entrevista:</strong> el singleton de Spring significa una instancia por contenedor, no necesariamente una única instancia en toda la JVM.</p>
+  <section id="lifecycle"><div class="head"><span class="num">04</span><h2>Ciclo de vida completo</h2></div>
+    <ol>
+      <li>Spring lee la configuración y registra las definiciones de beans.</li>
+      <li>Los <code>BeanFactoryPostProcessor</code> pueden modificar esas definiciones.</li>
+      <li>Spring instancia el bean y resuelve sus dependencias.</li>
+      <li>Ejecuta callbacks <code>Aware</code>, si el bean los implementa.</li>
+      <li>Los <code>BeanPostProcessor</code> actúan antes de la inicialización.</li>
+      <li>Se ejecutan <code>@PostConstruct</code>, <code>afterPropertiesSet()</code> o el método configurado con <code>initMethod</code>.</li>
+      <li>Los postprocesadores actúan después de la inicialización y pueden devolver un proxy.</li>
+      <li>Al cerrar el contexto se ejecutan <code>@PreDestroy</code>, <code>destroy()</code> o <code>destroyMethod</code>.</li>
+    </ol>
+    <pre><span class="ann">@Component</span>
+public class ExchangeRateCache {
+    <span class="ann">@PostConstruct</span>
+    void loadRates() {
+        // Las dependencias ya están inyectadas.
+    }
+
+    <span class="ann">@PreDestroy</span>
+    void clearResources() {
+        // Liberar conexiones, hilos o recursos propios.
+    }
+}</pre>
+    <p class="trap"><strong>Importante:</strong> evita operaciones remotas frágiles o demasiado pesadas en <code>@PostConstruct</code>. Un fallo impide crear el bean y puede detener el arranque completo.</p>
   </section>
 
-  <section id="follow-ups"><div class="head"><span class="num">06</span><h2>Preguntas de seguimiento</h2></div>
+  <section id="scopes"><div class="head"><span class="num">05</span><h2>Scopes y duración de las instancias</h2></div>
     <div class="grid">
-      <article class="card"><h3>¿@Bean o @Component?</h3><p><code>@Component</code> se coloca en la propia clase y se descubre automáticamente. <code>@Bean</code> se coloca en un método de configuración y nos permite controlar la construcción del objeto.</p></article>
-      <article class="card"><h3>¿Qué ocurre si hay dos beans del mismo tipo?</h3><p>La inyección se vuelve ambigua. Podemos elegir uno con <code>@Qualifier</code> o marcar el candidato habitual con <code>@Primary</code>.</p></article>
-      <article class="card"><h3>¿Los beans son thread-safe?</h3><p>No automáticamente. Como los servicios singleton pueden atender varios hilos, conviene que sean stateless o protejan correctamente cualquier estado mutable.</p></article>
-      <article class="card"><h3>¿Puedo usar new?</h3><p>Sí, pero ese objeto no será administrado por Spring. No recibirá automáticamente inyección, proxies, aspectos ni callbacks del ciclo de vida.</p></article>
+      <article class="card"><h3>singleton</h3><p>Una instancia por definición y por <code>ApplicationContext</code>. Es el scope predeterminado, pero no significa una instancia única en toda la JVM.</p></article>
+      <article class="card"><h3>prototype</h3><p>Una instancia cada vez que se solicita. Spring la inicializa, pero no gestiona automáticamente su destrucción.</p></article>
+      <article class="card"><h3>request</h3><p>Una instancia por petición HTTP. Está disponible únicamente dentro de un contexto web.</p></article>
+      <article class="card"><h3>session</h3><p>Una instancia por sesión HTTP. Su uso requiere especial cuidado en aplicaciones distribuidas.</p></article>
+    </div>
+    <pre><span class="ann">@Component</span>
+<span class="ann">@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)</span>
+public class ReportJob { /* ... */ }</pre>
+    <h3>El problema de inyectar un prototype en un singleton</h3>
+    <p>Si inyectamos directamente un prototype en un singleton, la resolución ocurre una sola vez al crear el singleton. Para obtener una instancia nueva en cada operación podemos utilizar <code>ObjectProvider</code>.</p>
+    <pre><span class="ann">@Service</span>
+public class ReportService {
+    private final ObjectProvider&lt;ReportJob&gt; jobs;
+
+    public ReportService(ObjectProvider&lt;ReportJob&gt; jobs) {
+        this.jobs = jobs;
+    }
+
+    public void generate() {
+        ReportJob job = jobs.getObject();
+        // Nueva instancia en cada llamada.
+    }
+}</pre>
+  </section>
+
+  <section id="proxies"><div class="head"><span class="num">06</span><h2>Proxies y comportamiento añadido por Spring</h2></div>
+    <p>Spring puede devolver un proxy en lugar de la instancia original para aplicar comportamiento transversal. Así funcionan características como <code>@Transactional</code>, <code>@Async</code>, caché, seguridad y aspectos personalizados.</p>
+    <pre><span class="ann">@Service</span>
+public class PaymentService {
+    <span class="ann">@Transactional</span>
+    public void confirmPayment(Long paymentId) {
+        // El proxy abre la transacción antes de entrar
+        // y hace commit o rollback al terminar.
+    }
+}</pre>
+    <p>Una llamada desde otro bean atraviesa el proxy. Una llamada interna mediante <code>this.confirmPayment()</code> no lo atraviesa; por eso la <em>self-invocation</em> puede hacer que <code>@Transactional</code> o <code>@Async</code> parezcan no funcionar.</p>
+    <p class="notice">La solución habitual es separar la operación interceptada en otro bean con una responsabilidad clara.</p>
+  </section>
+
+  <section id="thread-safety"><div class="head"><span class="num">07</span><h2>Singleton no significa thread-safe</h2></div>
+    <p>Un bean singleton puede recibir llamadas simultáneas desde muchas peticiones. Spring no sincroniza sus métodos ni protege su estado. La opción más segura es que los servicios sean stateless.</p>
+    <pre><span class="ann">@Service</span>
+public class UnsafeCounterService {
+    private int counter = 0;
+
+    public int next() {
+        return ++counter; // Condición de carrera.
+    }
+}</pre>
+    <p>El estado de negocio debería vivir en la base de datos, en una caché preparada para concurrencia o en otro sistema que ofrezca las garantías necesarias.</p>
+  </section>
+
+  <section id="testing"><div class="head"><span class="num">08</span><h2>Pruebas de un bean</h2></div>
+    <p>Con inyección por constructor, la lógica del bean puede probarse sin levantar Spring. Mockito proporciona las dependencias y la prueba se mantiene rápida.</p>
+    <pre><span class="ann">@ExtendWith(MockitoExtension.class)</span>
+class TransferServiceTest {
+    <span class="ann">@Mock</span> AccountRepository repository;
+    <span class="ann">@Mock</span> AuditPublisher publisher;
+    <span class="ann">@InjectMocks</span> TransferService service;
+
+    <span class="ann">@Test</span>
+    void publishesAuditAfterTransfer() {
+        service.transfer(/* datos */);
+        verify(publisher).publish(any());
+    }
+}</pre>
+    <p>Usa <code>@SpringBootTest</code> cuando necesites verificar el wiring, la auto-configuración o varios beans trabajando juntos. Para una parte concreta existen slices como <code>@WebMvcTest</code> y <code>@DataJpaTest</code>.</p>
+  </section>
+
+  <section id="errors"><div class="head"><span class="num">09</span><h2>Errores frecuentes</h2></div>
+    <div class="grid">
+      <article class="card"><h3>NoSuchBeanDefinitionException</h3><p>No existe un candidato. Revisa el paquete escaneado, los perfiles, las condiciones y la configuración importada.</p></article>
+      <article class="card"><h3>NoUniqueBeanDefinitionException</h3><p>Hay varios candidatos. Utiliza <code>@Qualifier</code>, <code>@Primary</code> o inyecta la colección completa.</p></article>
+      <article class="card"><h3>BeanCurrentlyInCreationException</h3><p>Suele indicar una dependencia circular. La solución es separar responsabilidades, no esconder el ciclo con <code>@Lazy</code>.</p></article>
+      <article class="card"><h3>BeanCreationException</h3><p>Falló la construcción o inicialización. La causa útil suele encontrarse al final de la cadena de excepciones.</p></article>
     </div>
   </section>
 
-  <section id="interview-version"><div class="head"><span class="num">07</span><h2>Respuesta completa para la entrevista</h2></div>
-    <p class="answer">“Un bean en Spring es un objeto que el contenedor IoC crea, configura y gestiona. No es una clase especial: es una instancia de una clase Java registrada en el <code>ApplicationContext</code>. Spring puede resolver e inyectar sus dependencias y gestionar su ciclo de vida. Puedo registrarlo mediante component scanning, por ejemplo con <code>@Service</code>, o explícitamente con un método <code>@Bean</code>. Por defecto tiene scope singleton dentro del contexto.”</p>
-    <p>No hace falta recitarla literalmente. Mantén el orden <strong>objeto gestionado → registro en el contenedor → inyección → ciclo de vida</strong> y acompáñala con un ejemplo real de tu proyecto.</p>
+  <section id="summary"><div class="head"><span class="num">10</span><h2>Resumen técnico</h2></div>
+    <p class="answer">Un Spring Bean es un objeto cuya definición está registrada en el contenedor IoC. Spring controla su creación, resuelve e inyecta dependencias, aplica postprocesadores y proxies, determina su scope y ejecuta su ciclo de vida. Puede registrarse mediante component scanning, métodos <code>@Bean</code> o auto-configuración. Por defecto es singleton dentro de su <code>ApplicationContext</code>, pero eso no implica thread-safety.</p>
+    <p>En aplicaciones reales: utiliza inyección por constructor, mantén los singletons sin estado mutable, resuelve ambigüedades explícitamente, entiende cuándo intervienen los proxies y carga el contexto completo en pruebas solo cuando aporte valor.</p>
   </section>
 
-  <footer><p>Java & Spring Interview Notes · Fundamentos explicados para entrevistas técnicas.</p></footer>
+  <footer><p>Java & Spring Interview Notes · Spring Beans explicados con detalle y ejemplos prácticos.</p></footer>
 </div>
