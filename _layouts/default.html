@@ -33,9 +33,8 @@
     </a>
     <nav class="site-nav" aria-label="{% if page.lang == 'en' %}Main navigation{% else %}Navegación principal{% endif %}">
       <a href="{{ '/' | relative_url }}">{% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}</a>
-      {% if page.lang == 'en' %}<a href="{{ '/argo-real-world-microservices/' | relative_url }}">Course</a>{% else %}<a href="{{ '/argo-real-world-microservices/es/' | relative_url }}">Curso</a>{% endif %}
-      <a href="{{ '/commands/' | relative_url }}">{% if page.lang == 'en' %}Commands{% else %}Comandos{% endif %}</a>
-      <a href="{{ '/#articles' | relative_url }}">Blog</a>
+      <a href="{{ '/#articles' | relative_url }}">{% if page.lang == 'en' %}Articles{% else %}Artículos{% endif %}</a>
+      <a href="{{ '/commands/' | relative_url }}">{% if page.lang == 'en' %}Resources{% else %}Recursos{% endif %}</a>
       {% if page.lang_url %}<a class="site-lang" href="{{ page.lang_url | relative_url }}">{% if page.lang == 'en' %}ES{% else %}EN{% endif %}</a>{% endif %}
     </nav>
   </div>
