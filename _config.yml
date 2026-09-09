@@ -1,10 +1,10 @@
 title: Juan Francisco Fernández Herreros
 description: >-
-  Software engineer notes on GitOps, Kubernetes, and shipping real microservices —
-  written as a hands-on series with real terminal output and screenshots.
+  Portfolio y blog sobre Java, Spring Boot, microservicios, Kafka, Kubernetes y
+  arquitectura de software, con ejemplos prácticos y experiencias reales.
 url: "https://juanfranciscofernandezherreros.github.io"
 baseurl: ""
-lang: en
+lang: es
 author: Juan Francisco Fernández Herreros
 
 markdown: kramdown

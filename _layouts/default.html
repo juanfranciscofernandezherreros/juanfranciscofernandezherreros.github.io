@@ -17,19 +17,25 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="{{ '/assets/css/base.css' | relative_url }}" />
+<link rel="stylesheet" href="{{ '/assets/css/theme.css' | relative_url }}" />
 <link rel="canonical" href="{{ page.url | absolute_url }}" />
 {% feed_meta %}
 </head>
 <body>
 <header class="site-header">
   <div class="site-header-inner">
-    <a class="site-brand" href="{{ '/' | relative_url }}">Juan Francisco Fernández Herreros</a>
-    <nav class="site-nav" aria-label="Site">
-      <a href="{{ '/' | relative_url }}">Home</a>
-      <a href="{{ '/argo-real-world-microservices/' | relative_url }}">Course</a>
-      <a href="{{ '/argo-real-world-microservices/introduction/' | relative_url }}">Introduction</a>
-      <a href="{{ '/commands/' | relative_url }}">Commands</a>
-      <a href="{{ '/self-hosting/media-server/' | relative_url }}">Media Server</a>
+    <a class="site-brand" href="{{ '/' | relative_url }}" aria-label="Juan Francisco Fernández Herreros — {% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}">
+      <span class="site-brand-mark" aria-hidden="true">JF</span>
+      <span class="site-brand-copy">
+        <strong>Juan Francisco</strong>
+        <small>Backend Engineer</small>
+      </span>
+    </a>
+    <nav class="site-nav" aria-label="{% if page.lang == 'en' %}Main navigation{% else %}Navegación principal{% endif %}">
+      <a href="{{ '/' | relative_url }}">{% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}</a>
+      {% if page.lang == 'en' %}<a href="{{ '/argo-real-world-microservices/' | relative_url }}">Course</a>{% else %}<a href="{{ '/argo-real-world-microservices/es/' | relative_url }}">Curso</a>{% endif %}
+      <a href="{{ '/commands/' | relative_url }}">{% if page.lang == 'en' %}Commands{% else %}Comandos{% endif %}</a>
+      <a href="{{ '/#articles' | relative_url }}">Blog</a>
       {% if page.lang_url %}<a class="site-lang" href="{{ page.lang_url | relative_url }}">{% if page.lang == 'en' %}ES{% else %}EN{% endif %}</a>{% endif %}
     </nav>
   </div>
@@ -37,7 +43,11 @@
 {{ content }}
 <footer class="site-footer">
   <div class="site-footer-inner">
-    <span>© {{ site.time | date: '%Y' }} Juan Francisco Fernández Herreros</span>
+    <div class="footer-brand">
+      <strong>Juan Francisco Fernández Herreros</strong>
+      <span>Backend · Java · Spring Boot · Arquitectura distribuida</span>
+    </div>
+    <span class="footer-copy">© {{ site.time | date: '%Y' }} · Construido para compartir conocimiento.</span>
   </div>
 </footer>
 </body>

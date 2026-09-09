@@ -2,9 +2,10 @@
 layout: default
 title: Juan Francisco Fernández Herreros
 description: >-
-  Software engineer notes on GitOps, Kubernetes, and shipping real microservices —
-  written as a hands-on series with real terminal output and screenshots.
+  Portfolio y blog sobre Java, Spring Boot, microservicios, Kafka, Kubernetes y
+  arquitectura de software, con ejemplos prácticos y experiencias reales.
 permalink: /
+lang: es
 ---
 <style>
   :root{
@@ -520,74 +521,74 @@ permalink: /
     </div>
   </section>
 
-  <section class="slider" id="articles" aria-label="Featured articles" aria-roledescription="carousel">
+  <section class="slider" id="articles" aria-label="Artículos destacados" aria-roledescription="carrusel">
     <div class="slides" id="slides">
       {% for post in posts %}
       {% assign category = post.categories | first %}
       <a class="slide{% if forloop.first %} active{% endif %}"
          href="{{ post.url | relative_url }}"
          aria-roledescription="slide"
-         aria-label="{{ forloop.index }} of {{ forloop.length }}">
-        <span class="slide-eyebrow">{% if post.part %}Part {{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}Introduction{% else %}{{ post.series }}{% endif %} · {{ category }}</span>
+         aria-label="{{ forloop.index }} de {{ forloop.length }}">
+        <span class="slide-eyebrow">{% if post.part %}Parte {{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}Introducción{% else %}{{ post.series }}{% endif %} · {{ category }}</span>
         <h2>{{ post.title }}</h2>
         <p>{{ post.description | truncatewords: 26 }}</p>
-        <span class="go">Read the guide →</span>
+        <span class="go">Leer el artículo →</span>
       </a>
       {% endfor %}
     </div>
-    <div class="slide-dots" id="slide-dots" role="tablist" aria-label="Choose slide">
-      {% for post in posts %}<button type="button" class="dot{% if forloop.first %} active{% endif %}" data-slide-index="{{ forloop.index0 }}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="Show {{ post.title }}"></button>{% endfor %}
+    <div class="slide-dots" id="slide-dots" role="tablist" aria-label="Elegir artículo">
+      {% for post in posts %}<button type="button" class="dot{% if forloop.first %} active{% endif %}" data-slide-index="{{ forloop.index0 }}" role="tab" aria-selected="{% if forloop.first %}true{% else %}false{% endif %}" aria-label="Mostrar {{ post.title }}"></button>{% endfor %}
     </div>
   </section>
 
   <div class="layout">
     <aside class="filters">
       <div class="search-row">
-        <input type="search" id="search-input" placeholder="Search articles…" aria-label="Search articles" />
+        <input type="search" id="search-input" placeholder="Buscar artículos…" aria-label="Buscar artículos" />
       </div>
 
       <p class="filter-label">Series</p>
       <div class="filter-group" id="series-filters">
-        <button type="button" class="pill active" data-filter-series="all">All</button>
+        <button type="button" class="pill active" data-filter-series="all">Todas</button>
         {% for s in all_series %}<button type="button" class="pill" data-filter-series="{{ s }}">{{ s }}</button>{% endfor %}
       </div>
 
-      <p class="filter-label">Category</p>
+      <p class="filter-label">Categoría</p>
       <div class="filter-group" id="category-filters">
-        <button type="button" class="pill active" data-filter-category="all">All</button>
+        <button type="button" class="pill active" data-filter-category="all">Todas</button>
         {% for c in all_categories %}<button type="button" class="pill" data-filter-category="{{ c }}">{{ c }}</button>{% endfor %}
       </div>
 
-      <p class="filter-label">Subcategory</p>
+      <p class="filter-label">Subcategoría</p>
       <div class="filter-group" id="subcategory-filters">
-        <button type="button" class="pill active" data-filter-subcategory="all">All</button>
+        <button type="button" class="pill active" data-filter-subcategory="all">Todas</button>
         {% for s in all_subcategories %}<button type="button" class="pill" data-filter-subcategory="{{ s }}">{{ s }}</button>{% endfor %}
       </div>
 
-      <p class="filter-label">Tags</p>
+      <p class="filter-label">Etiquetas</p>
       <div class="filter-group" id="tag-filters">
         {% for t in all_tags %}<button type="button" class="pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
       </div>
 
-      <p class="filter-label">Sort by</p>
+      <p class="filter-label">Ordenar por</p>
       <div class="sort-row">
         <select id="sort-select" aria-label="Sort articles">
-          <option value="date-desc">Newest first</option>
-          <option value="part">Reading order</option>
-          <option value="date-asc">Oldest first</option>
-          <option value="title-asc">Title A–Z</option>
-          <option value="title-desc">Title Z–A</option>
+          <option value="date-desc">Más recientes</option>
+          <option value="part">Orden de lectura</option>
+          <option value="date-asc">Más antiguos</option>
+          <option value="title-asc">Título A–Z</option>
+          <option value="title-desc">Título Z–A</option>
         </select>
       </div>
 
       <div class="filters-footer">
         <span id="result-count"></span>
-        <button type="button" id="clear-filters">Clear filters</button>
+        <button type="button" id="clear-filters">Limpiar filtros</button>
       </div>
     </aside>
 
     <main>
-      <p class="series-label"><a href="{{ '/argo-real-world-microservices/' | relative_url }}">Argo Real World Microservices — full syllabus →</a></p>
+      <p class="series-label"><a href="{{ '/argo-real-world-microservices/es/' | relative_url }}">Argo Real World Microservices — temario completo →</a></p>
       <div class="cards" id="cards">
         {% for post in posts %}
         <a class="card"
@@ -600,7 +601,7 @@ permalink: /
            data-part="{% if post.part %}{{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}-1{% else %}9999{% endif %}"
            data-date="{{ post.date | date: '%Y-%m-%d' }}"
            data-title="{{ post.title | escape }}">
-          <p class="eyebrow">{% if post.part %}Part {{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}Introduction{% else %}{{ post.series }}{% endif %}</p>
+          <p class="eyebrow">{% if post.part %}Parte {{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}Introducción{% else %}{{ post.series }}{% endif %}</p>
           <h2>{{ post.title }}</h2>
           <p class="desc">{{ post.description }}</p>
           <p class="card-tags">
@@ -608,12 +609,12 @@ permalink: /
             {% for subcategory in post.subcategories %}<span class="badge badge-subcat">{{ subcategory }}</span>{% endfor %}
             {% for t in post.tags %}<span class="badge badge-tag">#{{ t }}</span>{% endfor %}
           </p>
-          <span class="go">Read the guide →</span>
+          <span class="go">Leer el artículo →</span>
         </a>
         {% endfor %}
       </div>
-      <p id="empty-state" class="hidden">No articles match these filters.</p>
-      <nav class="pagination hidden" id="pagination" aria-label="Article pages"></nav>
+      <p id="empty-state" class="hidden">No hay artículos que coincidan con estos filtros.</p>
+      <nav class="pagination hidden" id="pagination" aria-label="Páginas de artículos"></nav>
     </main>
   </div>
 </div>

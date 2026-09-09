@@ -76,7 +76,7 @@
       btn.className = 'pill page-btn' + (opts.active ? ' active' : '');
       btn.textContent = label;
       btn.disabled = !!opts.disabled;
-      btn.setAttribute('aria-label', opts.ariaLabel || ('Page ' + label));
+      btn.setAttribute('aria-label', opts.ariaLabel || ('Página ' + label));
       if (opts.active) btn.setAttribute('aria-current', 'page');
       btn.addEventListener('click', function () {
         currentPage = page;
@@ -86,11 +86,11 @@
       pagination.appendChild(btn);
     }
 
-    addButton('‹ Prev', currentPage - 1, { disabled: currentPage === 1, ariaLabel: 'Previous page' });
+    addButton('‹ Anterior', currentPage - 1, { disabled: currentPage === 1, ariaLabel: 'Página anterior' });
     for (var i = 1; i <= totalPages; i++) {
       addButton(String(i), i, { active: i === currentPage });
     }
-    addButton('Next ›', currentPage + 1, { disabled: currentPage === totalPages, ariaLabel: 'Next page' });
+    addButton('Siguiente ›', currentPage + 1, { disabled: currentPage === totalPages, ariaLabel: 'Página siguiente' });
   }
 
   function apply() {
@@ -107,8 +107,8 @@
 
     if (emptyState) emptyState.classList.toggle('hidden', matched.length !== 0);
     if (resultCount) {
-      var label = matched.length + (matched.length === 1 ? ' article' : ' articles');
-      if (totalPages > 1) label += ' — page ' + currentPage + ' of ' + totalPages;
+      var label = matched.length + (matched.length === 1 ? ' artículo' : ' artículos');
+      if (totalPages > 1) label += ' — página ' + currentPage + ' de ' + totalPages;
       resultCount.textContent = label;
     }
     renderPagination(totalPages);
