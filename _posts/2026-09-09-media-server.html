@@ -1,0 +1,64 @@
+---
+layout: "article"
+title: "Media Server: your automated, self-hosted media library"
+description: "How this Docker-based project turns one request into a downloaded, organized, subtitled and stream-ready movie or TV show."
+permalink: "/self-hosting/media-server/"
+lang: "en"
+lang_url: "/self-hosting/media-server/es/"
+series: "Self-hosting Projects"
+categories: ["Self-hosting"]
+subcategories: ["Media Automation"]
+tags: ["docker","jellyfin","sonarr","radarr","self-hosting","automation"]
+date: "2026-09-09"
+reading_minutes: 7
+---
+<style>
+:root{color-scheme:light dark;--bg:#eef3f3;--panel:#fff;--text:#142329;--muted:#52666d;--accent:#087f8c;--accent-2:#cf5c36;--line:#bdced0;--soft:#dff0f1;--code:#0d2228}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b181c;--panel:#12262c;--text:#e7f1f2;--muted:#a4bac0;--accent:#64d4df;--accent-2:#ff9b78;--line:#315158;--soft:#17363c;--code:#081317}}:root[data-theme="dark"]{--bg:#0b181c;--panel:#12262c;--text:#e7f1f2;--muted:#a4bac0;--accent:#64d4df;--accent-2:#ff9b78;--line:#315158;--soft:#17363c;--code:#081317}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.titleblock,.card,.flow-step,.callout{background:var(--panel);border:1px solid var(--line)}.titleblock{position:relative;padding:30px 32px;border-top:5px solid var(--accent)}.back,.lang,.eyebrow,.num,.stamp dt,.service-tag{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:clamp(2.35rem,6vw,3.8rem);line-height:1;max-width:18ch}.lede{font-size:1.05rem;color:var(--muted)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.65rem}h3{font-size:1.08rem}p,li{max-width:70ch;line-height:1.6;text-align:justify;hyphens:auto;-webkit-hyphens:auto}.answer{font-size:1.08rem}.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:22px 0}.flow-step{padding:15px;min-height:126px}.flow-step b{display:block;color:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:.7rem;margin-bottom:8px}.flow-step p{font-size:.88rem;margin:0;text-align:left}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}.card{padding:18px}.card h3{margin-bottom:8px}.card p{font-size:.92rem;color:var(--muted);margin:0}.service-tag{display:inline-block;color:var(--accent-2);font-size:.72rem;margin:10px 8px 0 0}.callout{padding:18px 20px;border-left:4px solid var(--accent-2)}.callout p{margin:0}.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.button{display:inline-block;padding:10px 16px;border:1px solid var(--accent);font-family:"IBM Plex Mono",monospace;font-size:.8rem;text-decoration:none}.button.primary{background:var(--accent);color:var(--bg);font-weight:600}.button:hover{text-decoration:underline}.small{font-size:.86rem;color:var(--muted)}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:48px;padding-top:20px}@media(max-width:720px){.flow{grid-template-columns:repeat(2,1fr)}.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:26px 20px}.lang{position:static}.sheet{padding:0 16px}}@media(max-width:420px){.flow{grid-template-columns:1fr}}
+</style>
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back"><a href="../../../">&larr; Back to the blog</a></p>
+    <p class="lang"><a href="es/">ES &middot; Español</a></p>
+    <p class="eyebrow">Self-hosting Projects</p>
+    <h1>Media Server</h1>
+    <p class="lede">A reproducible home media platform that connects discovery, downloads, organization, subtitles, transcoding and playback into one automated workflow.</p>
+    <dl class="stamp"><div><dt>Runs on</dt><dd>Linux + Docker</dd></div><div><dt>Experience</dt><dd>Your own streaming hub</dd></div><div><dt>Setup</dt><dd>One guided command</dd></div></dl>
+  </div>
+
+  <section id="what"><div class="head"><span class="num">01</span><h2>What the project does</h2></div>
+    <p class="answer"><strong>Media Server builds and configures a complete self-hosted media ecosystem.</strong> A person can browse and request a film or series; the platform finds a suitable release, downloads it, gives it a consistent name, adds subtitles, optionally reduces its size and makes it available to stream from phones, televisions or a browser.</p>
+    <p>The repository is not a new video player or download engine. Its value is orchestration: it packages proven open-source applications with Docker Compose, creates their storage, connects their APIs and applies useful defaults. This turns what would otherwise be a long, error-prone integration job into a repeatable installation.</p>
+  </section>
+
+  <section id="flow"><div class="head"><span class="num">02</span><h2>From request to playback</h2></div>
+    <div class="flow" aria-label="Media automation workflow">
+      <div class="flow-step"><b>01 &middot; REQUEST</b><p>Jellyseerr provides a friendly catalogue where users search for a title and ask for it.</p></div>
+      <div class="flow-step"><b>02 &middot; FIND</b><p>Sonarr or Radarr asks Prowlarr to search the configured sources and choose a matching release.</p></div>
+      <div class="flow-step"><b>03 &middot; PREPARE</b><p>qBittorrent or SABnzbd downloads it; the automation imports, renames and organizes the result.</p></div>
+      <div class="flow-step"><b>04 &middot; WATCH</b><p>Bazarr adds subtitles, Tdarr can transcode, and Jellyfin streams the finished library.</p></div>
+    </div>
+    <p>This is an event-driven chain rather than a pile of unrelated dashboards. Each application has a narrow responsibility, while shared folders and API connections allow the result of one stage to become the input of the next.</p>
+  </section>
+
+  <section id="services"><div class="head"><span class="num">03</span><h2>The stack, by responsibility</h2></div>
+    <div class="grid">
+      <article class="card"><h3>Discover and play</h3><p>Jellyseerr handles requests. Jellyfin presents the finished film and TV library. Navidrome covers music, and Immich adds a private photo library.</p><span class="service-tag">JELLYSEERR</span><span class="service-tag">JELLYFIN</span><span class="service-tag">NAVIDROME</span><span class="service-tag">IMMICH</span></article>
+      <article class="card"><h3>Find and organize</h3><p>Separate managers monitor films, television, anime and music. Prowlarr maintains their search sources from one place, while Bazarr manages subtitles.</p><span class="service-tag">RADARR</span><span class="service-tag">SONARR</span><span class="service-tag">LIDARR</span><span class="service-tag">PROWLARR</span><span class="service-tag">BAZARR</span></article>
+      <article class="card"><h3>Transfer and optimize</h3><p>qBittorrent and optional SABnzbd perform transfers. Gluetun can isolate torrent traffic behind a VPN, Unpackerr extracts archives, and Tdarr converts video to H.265.</p><span class="service-tag">QBITTORRENT</span><span class="service-tag">SABNZBD</span><span class="service-tag">GLUETUN</span><span class="service-tag">TDARR</span></article>
+      <article class="card"><h3>Operate and maintain</h3><p>Nginx gives services readable local names. Dozzle, Beszel, Scrutiny and Uptime Kuma expose logs, resource usage, disk health and availability. Janitorr can clean up stale content.</p><span class="service-tag">NGINX</span><span class="service-tag">BESZEL</span><span class="service-tag">SCRUTINY</span><span class="service-tag">JANITORR</span></article>
+    </div>
+  </section>
+
+  <section id="automation"><div class="head"><span class="num">04</span><h2>What installation automates</h2></div>
+    <p>The setup script installs prerequisites, creates the media and configuration directories, launches more than 25 containers, discovers generated API keys and wires the services together. It also sets credentials, creates local <code>.media.local</code> addresses and runs over 90 checks against the finished system.</p>
+    <p>Configuration lives in a readable TOML file. It covers quality profiles, subtitle languages, indexers, VPN, Usenet and credentials. Setup is designed to be idempotent, so it can be run again to converge on the same desired state; dedicated modes validate, update, back up, restore or preview changes.</p>
+  </section>
+
+  <section id="fit"><div class="head"><span class="num">05</span><h2>Who it is for</h2></div>
+    <p>This project fits someone who has a Linux home server or NAS, is comfortable owning storage and network access, and wants one coherent platform instead of configuring every application manually. Docker isolates the services, but the machine still needs enough disk space and—if transcoding is expected—suitable CPU or GPU capacity.</p>
+    <div class="callout"><p><strong>Ownership matters.</strong> Self-hosting gives the operator control over accounts, files and retention, but also responsibility for updates, backups, lawful sources and safe remote access. The project keeps the services on the local network by default; Tailscale is the intended optional route for remote access. A VPN for download traffic is optional and disabled by default.</p></div>
+    <div class="cta"><a class="button primary" href="https://github.com/unbalancedparentheses/media-server">View the repository &rarr;</a><a class="button" href="https://github.com/unbalancedparentheses/media-server#quick-start">Read the installation guide</a></div>
+    <p class="small">The repository was renamed or transferred from <code>juanfranciscofernandezherreros</code> to <code>unbalancedparentheses</code>; the original GitHub URL redirects to the current location.</p>
+  </section>
+  <footer><p>This overview describes the project architecture and the role of its components. For current configuration options and requirements, use the repository README as the source of truth.</p></footer>
+</div>

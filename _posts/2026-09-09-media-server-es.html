@@ -1,0 +1,64 @@
+---
+layout: "article"
+title: "Media Server: tu biblioteca multimedia automatizada y autogestionada"
+description: "Cómo este proyecto basado en Docker convierte una petición en una película o serie descargada, ordenada, subtitulada y lista para reproducir."
+permalink: "/self-hosting/media-server/es/"
+lang: "es"
+lang_url: "/self-hosting/media-server/"
+series: "Proyectos self-hosted"
+categories: ["Self-hosting"]
+subcategories: ["Automatización multimedia"]
+tags: ["docker","jellyfin","sonarr","radarr","self-hosting","automatizacion"]
+date: "2026-09-09"
+reading_minutes: 7
+---
+<style>
+:root{color-scheme:light dark;--bg:#eef3f3;--panel:#fff;--text:#142329;--muted:#52666d;--accent:#087f8c;--accent-2:#cf5c36;--line:#bdced0;--soft:#dff0f1;--code:#0d2228}@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0b181c;--panel:#12262c;--text:#e7f1f2;--muted:#a4bac0;--accent:#64d4df;--accent-2:#ff9b78;--line:#315158;--soft:#17363c;--code:#081317}}:root[data-theme="dark"]{--bg:#0b181c;--panel:#12262c;--text:#e7f1f2;--muted:#a4bac0;--accent:#64d4df;--accent-2:#ff9b78;--line:#315158;--soft:#17363c;--code:#081317}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:"IBM Plex Sans","Segoe UI",sans-serif}.sheet{max-width:920px;margin:48px auto 96px;padding:0 24px}a{color:var(--accent)}h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.titleblock,.card,.flow-step,.callout{background:var(--panel);border:1px solid var(--line)}.titleblock{position:relative;padding:30px 32px;border-top:5px solid var(--accent)}.back,.lang,.eyebrow,.num,.stamp dt,.service-tag{font-family:"IBM Plex Mono",monospace}.back,.lang{font-size:.74rem}.lang{position:absolute;right:24px;top:20px}.eyebrow,.num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.titleblock h1{font-size:clamp(2.35rem,6vw,3.8rem);line-height:1;max-width:18ch}.lede{font-size:1.05rem;color:var(--muted)}.stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--line);padding-top:16px}.stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.stamp dd{margin:4px 0 0;font-weight:600}section{margin-top:52px}.head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}h2{font-size:1.65rem}h3{font-size:1.08rem}p,li{max-width:70ch;line-height:1.6;text-align:justify;hyphens:auto;-webkit-hyphens:auto}.answer{font-size:1.08rem}.flow{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:22px 0}.flow-step{padding:15px;min-height:126px}.flow-step b{display:block;color:var(--accent);font-family:"IBM Plex Mono",monospace;font-size:.7rem;margin-bottom:8px}.flow-step p{font-size:.88rem;margin:0;text-align:left}.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}.card{padding:18px}.card h3{margin-bottom:8px}.card p{font-size:.92rem;color:var(--muted);margin:0}.service-tag{display:inline-block;color:var(--accent-2);font-size:.72rem;margin:10px 8px 0 0}.callout{padding:18px 20px;border-left:4px solid var(--accent-2)}.callout p{margin:0}.cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}.button{display:inline-block;padding:10px 16px;border:1px solid var(--accent);font-family:"IBM Plex Mono",monospace;font-size:.8rem;text-decoration:none}.button.primary{background:var(--accent);color:var(--bg);font-weight:600}.button:hover{text-decoration:underline}.small{font-size:.86rem;color:var(--muted)}footer{color:var(--muted);border-top:1px solid var(--line);margin-top:48px;padding-top:20px}@media(max-width:720px){.flow{grid-template-columns:repeat(2,1fr)}.grid,.stamp{grid-template-columns:1fr}.titleblock{padding:26px 20px}.lang{position:static}.sheet{padding:0 16px}}@media(max-width:420px){.flow{grid-template-columns:1fr}}
+</style>
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back"><a href="../../../../">&larr; Volver al blog</a></p>
+    <p class="lang"><a href="../">EN &middot; English</a></p>
+    <p class="eyebrow">Proyectos self-hosted</p>
+    <h1>Media Server</h1>
+    <p class="lede">Una plataforma multimedia doméstica y reproducible que conecta descubrimiento, descargas, organización, subtítulos, transcodificación y reproducción en un único flujo automatizado.</p>
+    <dl class="stamp"><div><dt>Se ejecuta en</dt><dd>Linux + Docker</dd></div><div><dt>Experiencia</dt><dd>Tu propio centro de streaming</dd></div><div><dt>Instalación</dt><dd>Un comando guiado</dd></div></dl>
+  </div>
+
+  <section id="que-es"><div class="head"><span class="num">01</span><h2>Qué hace el proyecto</h2></div>
+    <p class="answer"><strong>Media Server construye y configura un ecosistema multimedia self-hosted completo.</strong> Una persona puede explorar y pedir una película o serie; la plataforma encuentra una versión adecuada, la descarga, le da un nombre coherente, añade subtítulos, puede reducir su tamaño y la deja disponible para verla desde el móvil, la televisión o un navegador.</p>
+    <p>El repositorio no crea un reproductor o un motor de descargas nuevo. Su valor está en la orquestación: empaqueta aplicaciones open source consolidadas con Docker Compose, prepara su almacenamiento, conecta sus APIs y aplica una configuración inicial útil. Así convierte una integración larga y propensa a errores en una instalación repetible.</p>
+  </section>
+
+  <section id="flujo"><div class="head"><span class="num">02</span><h2>De la petición a la reproducción</h2></div>
+    <div class="flow" aria-label="Flujo de automatización multimedia">
+      <div class="flow-step"><b>01 &middot; PEDIR</b><p>Jellyseerr ofrece un catálogo amigable donde buscar un título y solicitarlo.</p></div>
+      <div class="flow-step"><b>02 &middot; ENCONTRAR</b><p>Sonarr o Radarr pide a Prowlarr que consulte las fuentes configuradas y elija un resultado.</p></div>
+      <div class="flow-step"><b>03 &middot; PREPARAR</b><p>qBittorrent o SABnzbd lo descarga; la automatización importa, renombra y ordena el archivo.</p></div>
+      <div class="flow-step"><b>04 &middot; VER</b><p>Bazarr añade subtítulos, Tdarr puede transcodificar y Jellyfin reproduce la biblioteca terminada.</p></div>
+    </div>
+    <p>Es una cadena dirigida por eventos, no una colección de paneles inconexos. Cada aplicación tiene una responsabilidad concreta y las carpetas compartidas y conexiones por API permiten que la salida de una etapa sea la entrada de la siguiente.</p>
+  </section>
+
+  <section id="servicios"><div class="head"><span class="num">03</span><h2>La plataforma, por responsabilidades</h2></div>
+    <div class="grid">
+      <article class="card"><h3>Descubrir y reproducir</h3><p>Jellyseerr gestiona peticiones. Jellyfin presenta la biblioteca final de cine y televisión. Navidrome se ocupa de la música e Immich añade una fototeca privada.</p><span class="service-tag">JELLYSEERR</span><span class="service-tag">JELLYFIN</span><span class="service-tag">NAVIDROME</span><span class="service-tag">IMMICH</span></article>
+      <article class="card"><h3>Buscar y organizar</h3><p>Gestores separados monitorizan películas, televisión, anime y música. Prowlarr mantiene sus fuentes de búsqueda desde un único lugar y Bazarr gestiona los subtítulos.</p><span class="service-tag">RADARR</span><span class="service-tag">SONARR</span><span class="service-tag">LIDARR</span><span class="service-tag">PROWLARR</span><span class="service-tag">BAZARR</span></article>
+      <article class="card"><h3>Transferir y optimizar</h3><p>qBittorrent y el SABnzbd opcional realizan las transferencias. Gluetun puede aislar el tráfico torrent tras una VPN, Unpackerr extrae archivos y Tdarr convierte vídeo a H.265.</p><span class="service-tag">QBITTORRENT</span><span class="service-tag">SABNZBD</span><span class="service-tag">GLUETUN</span><span class="service-tag">TDARR</span></article>
+      <article class="card"><h3>Operar y mantener</h3><p>Nginx asigna nombres locales legibles. Dozzle, Beszel, Scrutiny y Uptime Kuma muestran logs, recursos, salud de discos y disponibilidad. Janitorr puede retirar contenido antiguo.</p><span class="service-tag">NGINX</span><span class="service-tag">BESZEL</span><span class="service-tag">SCRUTINY</span><span class="service-tag">JANITORR</span></article>
+    </div>
+  </section>
+
+  <section id="automatizacion"><div class="head"><span class="num">04</span><h2>Qué automatiza la instalación</h2></div>
+    <p>El script de configuración instala los prerrequisitos, crea los directorios de contenidos y configuración, levanta más de 25 contenedores, descubre las claves API generadas y enlaza los servicios. También establece credenciales, crea direcciones locales <code>.media.local</code> y ejecuta más de 90 comprobaciones sobre el sistema terminado.</p>
+    <p>La configuración se guarda en un fichero TOML legible. Incluye perfiles de calidad, idiomas de subtítulos, indexadores, VPN, Usenet y credenciales. El proceso es idempotente: se puede ejecutar de nuevo para hacer converger el sistema al mismo estado deseado; otros modos permiten validar, actualizar, crear copias de seguridad, restaurar o previsualizar cambios.</p>
+  </section>
+
+  <section id="para-quien"><div class="head"><span class="num">05</span><h2>Para quién está pensado</h2></div>
+    <p>Encaja con quien dispone de un servidor Linux doméstico o NAS, acepta gestionar el almacenamiento y el acceso de red, y prefiere una plataforma coherente frente a configurar cada aplicación a mano. Docker aísla los servicios, pero la máquina necesita suficiente disco y, si habrá transcodificación, capacidad adecuada de CPU o GPU.</p>
+    <div class="callout"><p><strong>El control implica responsabilidad.</strong> El self-hosting permite decidir sobre cuentas, archivos y conservación, pero obliga a mantener actualizaciones y copias de seguridad, usar fuentes legales y proteger el acceso remoto. Por defecto, los servicios permanecen en la red local; Tailscale es la vía opcional prevista para acceder desde fuera. La VPN para las descargas también es opcional y está desactivada inicialmente.</p></div>
+    <div class="cta"><a class="button primary" href="https://github.com/unbalancedparentheses/media-server">Ver el repositorio &rarr;</a><a class="button" href="https://github.com/unbalancedparentheses/media-server#quick-start">Consultar la instalación</a></div>
+    <p class="small">El repositorio fue renombrado o transferido de <code>juanfranciscofernandezherreros</code> a <code>unbalancedparentheses</code>; la URL original de GitHub redirige a la ubicación actual.</p>
+  </section>
+  <footer><p>Esta página resume la arquitectura del proyecto y el papel de sus componentes. Para conocer los requisitos y opciones vigentes, el README del repositorio es la fuente de referencia.</p></footer>
+</div>
