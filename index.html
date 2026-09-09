@@ -48,6 +48,160 @@ permalink: /
 
   .wrap{ width:100%; max-width:1080px; margin:0 auto; padding:48px 24px 96px; }
 
+  /* ---------- portfolio introduction ---------- */
+  .portfolio-hero{
+    display:grid;
+    grid-template-columns:minmax(0, 1.4fr) minmax(280px, .6fr);
+    gap:48px;
+    align-items:center;
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    box-shadow:var(--shadow);
+    padding:clamp(32px, 6vw, 64px);
+    margin-bottom:28px;
+    overflow:hidden;
+  }
+  .hero-eyebrow{
+    margin:0 0 12px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.72rem;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  .portfolio-hero h1{
+    margin:0;
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size:clamp(3rem, 7vw, 5rem);
+    line-height:.92;
+    letter-spacing:.01em;
+    text-transform:uppercase;
+  }
+  .hero-role{
+    margin:14px 0 20px;
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size:clamp(1.35rem, 3vw, 2rem);
+    font-weight:600;
+    color:var(--accent);
+  }
+  .hero-summary{
+    max-width:62ch;
+    margin:0;
+    color:var(--ink-soft);
+    font-size:1rem;
+    line-height:1.65;
+  }
+  .hero-actions{ display:flex; flex-wrap:wrap; gap:10px; margin-top:26px; }
+  .hero-button{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:42px;
+    padding:9px 18px;
+    border:1px solid var(--accent);
+    border-radius:3px;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.78rem;
+    font-weight:500;
+    text-decoration:none;
+  }
+  .hero-button.primary{ background:var(--accent); color:var(--accent-ink); }
+  .hero-button.secondary{ background:transparent; color:var(--accent); }
+  .hero-button:hover{ filter:brightness(.94); }
+  .hero-profile{
+    position:relative;
+    min-height:300px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    padding:28px;
+    background:var(--accent);
+    color:var(--accent-ink);
+  }
+  .hero-monogram{
+    position:absolute;
+    top:20px;
+    right:24px;
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size:7.5rem;
+    font-weight:700;
+    line-height:1;
+    opacity:.12;
+  }
+  .hero-profile strong{
+    display:block;
+    margin-bottom:10px;
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size:2.7rem;
+    line-height:.9;
+  }
+  .hero-profile span{
+    max-width:22ch;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.76rem;
+    line-height:1.55;
+  }
+
+  .about{
+    background:var(--surface);
+    border:1px solid var(--line-strong);
+    box-shadow:var(--shadow);
+    padding:clamp(28px, 5vw, 48px);
+    margin-bottom:28px;
+  }
+  .section-heading{ margin-bottom:28px; }
+  .section-heading h2{
+    margin:0 0 8px;
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size:2rem;
+    text-transform:uppercase;
+  }
+  .section-heading p{
+    max-width:68ch;
+    margin:0;
+    color:var(--ink-soft);
+    font-size:.94rem;
+    line-height:1.6;
+  }
+  .about-grid{
+    display:grid;
+    grid-template-columns:minmax(0, 1.25fr) minmax(280px, .75fr);
+    gap:42px;
+  }
+  .author-copy p{ margin:0 0 14px; color:var(--ink-soft); font-size:.94rem; line-height:1.65; }
+  .author-copy p:last-child{ margin-bottom:0; }
+  .skills-grid{
+    display:grid;
+    grid-template-columns:repeat(2, minmax(0, 1fr));
+    gap:12px;
+  }
+  .skill-card{
+    padding:16px;
+    background:var(--bg);
+    border-top:3px solid var(--accent);
+  }
+  .skill-card h3{
+    margin:0 0 8px;
+    font-family:"Barlow Condensed", "Arial Narrow", sans-serif;
+    font-size:1.1rem;
+    text-transform:uppercase;
+  }
+  .skill-card p{
+    margin:0;
+    font-family:"IBM Plex Mono", monospace;
+    font-size:.7rem;
+    line-height:1.55;
+    color:var(--ink-soft);
+  }
+  @media (max-width:800px){
+    .portfolio-hero, .about-grid{ grid-template-columns:1fr; }
+    .portfolio-hero{ gap:30px; }
+    .hero-profile{ min-height:220px; }
+  }
+  @media (max-width:480px){
+    .skills-grid{ grid-template-columns:1fr; }
+  }
+
   /* ---------- slider ---------- */
   .slider{
     position:relative;
@@ -327,7 +481,46 @@ permalink: /
   {% assign all_subcategories = posts | map: "subcategories" | flatten | uniq | sort %}
   {% assign all_tags = posts | map: "tags" | flatten | uniq | sort %}
 
-  <section class="slider" aria-label="Featured articles" aria-roledescription="carousel">
+  <section class="portfolio-hero" aria-labelledby="author-title">
+    <div>
+      <p class="hero-eyebrow">Hola, mi nombre es</p>
+      <h1 id="author-title">Juan Francisco</h1>
+      <p class="hero-role">Backend Engineer · Java &amp; Spring</p>
+      <p class="hero-summary">Desarrollo servicios backend y arquitecturas distribuidas que no solo funcionan: están pensadas para ser mantenibles, escalables y fáciles de evolucionar.</p>
+      <div class="hero-actions">
+        <a class="hero-button primary" href="#articles">Ver artículos&nbsp; →</a>
+        <a class="hero-button secondary" href="#about">Conocer mi experiencia</a>
+      </div>
+    </div>
+    <div class="hero-profile" aria-label="Más de diez años creando soluciones backend">
+      <span class="hero-monogram" aria-hidden="true">JF</span>
+      <strong>10+ años</strong>
+      <span>Java · Spring Boot · Kafka · Microservicios · Sistemas distribuidos</span>
+    </div>
+  </section>
+
+  <section class="about" id="about" aria-labelledby="about-title">
+    <div class="section-heading">
+      <h2 id="about-title">Sobre mí</h2>
+      <p>Una década construyendo y evolucionando software backend, principalmente en banca y servicios financieros.</p>
+    </div>
+    <div class="about-grid">
+      <div class="author-copy">
+        <p>Llevo alrededor de diez años trabajando como desarrollador backend, principalmente con Java y Spring. Empecé en mantenimiento, testing y aplicaciones tradicionales, y con los años he evolucionado hacia Spring Boot, APIs REST y arquitecturas de microservicios.</p>
+        <p>Gran parte de mi experiencia se ha desarrollado en banca y en el sector financiero, en proyectos relacionados con Deutsche Bank y Bankinter. Actualmente trabajo en atmira, participando en diferentes proyectos donde desarrollamos servicios con Spring Boot y arquitecturas distribuidas.</p>
+        <p>En los últimos años me he centrado especialmente en microservicios, Kafka, CQRS y migraciones de sistemas legacy. También trabajo habitualmente con Oracle, MongoDB, testing automatizado, Jenkins, GitLab CI/CD, SonarQube, Docker y OpenShift.</p>
+        <p>Lo que más me interesa del backend es la arquitectura: crear soluciones que no solo funcionen, sino que también sean mantenibles, escalables y fáciles de evolucionar. Mi objetivo es seguir creciendo como Backend Engineer en proyectos donde pueda profundizar en arquitectura, sistemas distribuidos y tecnologías del ecosistema Java.</p>
+      </div>
+      <div class="skills-grid" aria-label="Competencias principales">
+        <article class="skill-card"><h3>Backend</h3><p>Java · Spring Boot · APIs REST · Testing</p></article>
+        <article class="skill-card"><h3>Arquitectura</h3><p>Microservicios · Kafka · CQRS · Legacy</p></article>
+        <article class="skill-card"><h3>Datos</h3><p>Oracle · MongoDB · Integraciones</p></article>
+        <article class="skill-card"><h3>DevOps</h3><p>Docker · OpenShift · Jenkins · GitLab CI/CD</p></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="slider" id="articles" aria-label="Featured articles" aria-roledescription="carousel">
     <div class="slides" id="slides">
       {% for post in posts %}
       {% assign category = post.categories | first %}
