@@ -1,0 +1,212 @@
+---
+layout: "article"
+title: "Máquinas de estados — Fundamentos teóricos"
+description: "Introducción teórica a las máquinas de estados finitos: estados, eventos, transiciones, guardas, acciones, determinismo, modelos de Mealy y Moore, composición y diseño."
+og_title: "Máquinas de estados — Fundamentos teóricos"
+og_description: "Una guía conceptual sobre máquinas de estados finitos y cómo modelar comportamiento sin depender de un lenguaje o framework concreto."
+twitter_title: "Máquinas de estados — Fundamentos teóricos"
+twitter_description: "Estados, eventos, transiciones, guardas y modelos formales explicados desde cero."
+permalink: "/state-machines/es/"
+lang: "es"
+categories: ["Concepts & Theory"]
+subcategories: ["Software Architecture", "Foundations"]
+tags: ["state-machine","fsm","automata","software-architecture","design","theory"]
+date: "2026-09-10"
+reading_minutes: 12
+---
+
+<style>
+  :root{
+    --bg:#eef1f0; --surface:#ffffff; --surface-2:#e6ebe9; --ink:#14202b; --ink-soft:#4a5a66;
+    --line:#c7d0ce; --line-strong:#9fb0ac; --accent:#1d5c8a; --accent-ink:#ffffff; --accent-soft:#e2edf4;
+    --good:#1f7a4d; --good-soft:#e2f2e8; --warn:#a15d10; --warn-soft:#f6e8d6;
+    --shadow:0 1px 2px rgba(20,32,43,.06),0 8px 24px -12px rgba(20,32,43,.18);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+      --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+      --good:#5fd394; --good-soft:#12301f; --warn:#e3a855; --warn-soft:#332209;
+      --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -14px rgba(0,0,0,.6);
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0e1c2a; --surface:#132639; --surface-2:#0c1a27; --ink:#e7eef3; --ink-soft:#9fb4c4;
+    --line:#26415a; --line-strong:#3a5b78; --accent:#6fb7e0; --accent-ink:#0e1c2a; --accent-soft:#17324a;
+    --good:#5fd394; --good-soft:#12301f; --warn:#e3a855; --warn-soft:#332209;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 12px 32px -14px rgba(0,0,0,.6);
+  }
+  *{box-sizing:border-box} html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--ink); font-family:"IBM Plex Sans","Segoe UI",system-ui,sans-serif;
+    background:repeating-linear-gradient(0deg,transparent 0 39px,color-mix(in srgb,var(--line) 40%,transparent) 39px 40px),
+               repeating-linear-gradient(90deg,transparent 0 39px,color-mix(in srgb,var(--line) 40%,transparent) 39px 40px),var(--bg);
+    -webkit-font-smoothing:antialiased;
+  }
+  a{color:var(--accent)}
+  h1,h2,h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-weight:700;text-transform:uppercase;letter-spacing:.02em;text-wrap:balance;color:var(--ink);margin:0}
+  p{line-height:1.65;max-width:72ch;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
+  code,.mono{font-family:"IBM Plex Mono",monospace}
+  .sheet{max-width:960px;margin:48px auto 96px;padding:0 24px}
+  .titleblock{background:var(--surface);border:1px solid var(--line-strong);box-shadow:var(--shadow);padding:30px 32px 26px}
+  .back-link,.eyebrow{font-family:"IBM Plex Mono",monospace;font-size:.74rem;letter-spacing:.08em}
+  .back-link{margin:0 0 16px}.back-link a{text-decoration:none;color:var(--ink-soft)}
+  .eyebrow{margin:0 0 10px;color:var(--accent);text-transform:uppercase;letter-spacing:.16em}
+  .titleblock h1{font-size:clamp(2.3rem,6vw,3.6rem);line-height:.98;max-width:18ch}
+  .lede{margin:16px 0 0!important;color:var(--ink-soft);font-size:1.04rem;max-width:66ch!important}
+  section{margin-top:56px}
+  .section-head{display:flex;align-items:baseline;gap:12px;border-bottom:1px solid var(--line-strong);padding-bottom:10px;margin-bottom:22px}
+  .section-head .num{font-family:"IBM Plex Mono",monospace;color:var(--accent);font-size:.85rem}.section-head h2{font-size:1.55rem}
+  .muted{color:var(--ink-soft)}
+  .note{background:var(--accent-soft);border-left:3px solid var(--accent);padding:16px 20px;margin:22px 0}.note p{margin:0;font-size:.92rem}
+  .formula{background:var(--surface);border:1px solid var(--line);box-shadow:var(--shadow);padding:20px 22px;margin:22px 0;font-family:"IBM Plex Mono",monospace;font-size:.9rem;line-height:1.7;overflow:auto}
+  .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:20px}
+  .card{background:var(--surface);border:1px solid var(--line);padding:16px 18px}.card h3{font-size:1.08rem;margin-bottom:7px}.card p{font-size:.9rem;color:var(--ink-soft);margin:0;text-align:left}
+  .diagram{background:var(--surface);border:1px solid var(--line-strong);box-shadow:var(--shadow);padding:28px;margin:24px 0;overflow:auto}
+  .flow{display:flex;align-items:center;justify-content:center;gap:14px;min-width:660px}
+  .state{min-width:145px;padding:18px 14px;text-align:center;border:2px solid var(--accent);border-radius:999px;background:var(--accent-soft);font-family:"IBM Plex Mono",monospace;font-weight:600}
+  .arrow{font-family:"IBM Plex Mono",monospace;color:var(--ink-soft);text-align:center;min-width:130px}.arrow strong{display:block;color:var(--accent);font-size:1.15rem}.arrow span{font-size:.74rem}
+  table{width:100%;border-collapse:collapse;background:var(--surface);margin:20px 0;box-shadow:var(--shadow)}
+  th,td{border:1px solid var(--line);padding:12px 14px;vertical-align:top;text-align:left;font-size:.9rem}th{font-family:"IBM Plex Mono",monospace;color:var(--accent);background:var(--surface-2)}
+  .checklist{display:grid;gap:10px;margin-top:20px}.item{background:var(--surface);border:1px solid var(--line);padding:14px 16px}.item strong{font-family:"IBM Plex Mono",monospace;color:var(--accent)}
+  @media(max-width:680px){.grid{grid-template-columns:1fr}.sheet{padding:0 16px}.titleblock{padding:24px 22px}p{text-align:left}}
+</style>
+
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back-link"><a href="/">← Volver al inicio</a></p>
+    <p class="eyebrow">Arquitectura de software · Teoría</p>
+    <h1>Máquinas de estados</h1>
+    <p class="lede">Una máquina de estados es una forma de describir un sistema a partir de situaciones discretas y de las reglas que permiten pasar de una a otra. Su valor no está en el dibujo: está en convertir comportamiento implícito en un modelo explícito, limitado y razonable.</p>
+  </div>
+
+  <section id="idea">
+    <div class="section-head"><span class="num">01</span><h2>La idea fundamental</h2></div>
+    <p>Muchos sistemas no responden igual al mismo evento en todo momento. Una puerta puede reaccionar a <em>cerrar</em> solamente si está abierta; un pedido puede aceptar <em>enviar</em> solamente si ya fue pagado; una conexión puede reintentarse mientras está caída, pero no cuando ya está establecida. En todos estos casos, la respuesta depende del <strong>estado actual</strong>.</p>
+    <p class="muted">La máquina de estados formaliza esa dependencia. En vez de dispersar condiciones por el programa — múltiples <code>if</code>, banderas booleanas y combinaciones difíciles de razonar — define cuáles son los estados válidos y qué eventos producen transiciones entre ellos.</p>
+    <div class="note"><p><strong>Modelo mental:</strong> estado = memoria relevante del sistema; evento = algo que ocurre; transición = regla que decide el siguiente estado.</p></div>
+  </section>
+
+  <section id="formal">
+    <div class="section-head"><span class="num">02</span><h2>Definición formal</h2></div>
+    <p>Una máquina de estados finitos, o <strong>FSM</strong> (<em>Finite State Machine</em>), puede representarse mediante un conjunto finito de estados, un conjunto de eventos o símbolos de entrada, un estado inicial y una función de transición.</p>
+    <div class="formula">M = (S, Σ, δ, s₀)<br><br>S  = conjunto de estados<br>Σ  = conjunto de eventos o entradas<br>δ  = función de transición<br>s₀ = estado inicial<br><br>δ(s, e) → s'</div>
+    <p>La expresión <code>δ(s, e) → s'</code> significa: si la máquina se encuentra en el estado <code>s</code> y recibe el evento <code>e</code>, evoluciona hacia el estado <code>s'</code>. En modelos más ricos, la transición puede incluir una condición — una <strong>guarda</strong> — y una acción asociada.</p>
+  </section>
+
+  <section id="parts">
+    <div class="section-head"><span class="num">03</span><h2>Elementos de una máquina de estados</h2></div>
+    <div class="grid">
+      <div class="card"><h3>Estado</h3><p>Situación estable y reconocible del sistema. Debe representar una diferencia de comportamiento, no simplemente un dato cualquiera.</p></div>
+      <div class="card"><h3>Evento</h3><p>Hecho que la máquina procesa: una orden, una señal externa, el paso del tiempo o el resultado de otra operación.</p></div>
+      <div class="card"><h3>Transición</h3><p>Relación entre un estado origen y uno destino que se activa ante un evento válido.</p></div>
+      <div class="card"><h3>Guarda</h3><p>Condición booleana adicional que debe cumplirse para permitir una transición.</p></div>
+      <div class="card"><h3>Acción</h3><p>Efecto asociado a una transición o a la entrada/salida de un estado: emitir un mensaje, registrar un cambio o iniciar un proceso.</p></div>
+      <div class="card"><h3>Estado inicial</h3><p>Punto desde el que comienza la vida de una instancia de la máquina.</p></div>
+    </div>
+  </section>
+
+  <section id="example">
+    <div class="section-head"><span class="num">04</span><h2>Ejemplo conceptual: un pedido</h2></div>
+    <p>Imaginemos un pedido con tres estados: <strong>Creado</strong>, <strong>Pagado</strong> y <strong>Enviado</strong>. El evento <code>pagar</code> solamente tiene sentido cuando el pedido está creado; el evento <code>enviar</code> solamente cuando está pagado.</p>
+    <div class="diagram">
+      <div class="flow">
+        <div class="state">CREADO</div>
+        <div class="arrow"><strong>→</strong><span>pagar</span></div>
+        <div class="state">PAGADO</div>
+        <div class="arrow"><strong>→</strong><span>enviar</span></div>
+        <div class="state">ENVIADO</div>
+      </div>
+    </div>
+    <p>El modelo hace visibles dos cosas importantes: no todas las operaciones son válidas en cualquier momento y el historial completo deja de ser necesario para decidir qué se puede hacer ahora. El estado resume la parte del pasado que todavía importa.</p>
+  </section>
+
+  <section id="transition-table">
+    <div class="section-head"><span class="num">05</span><h2>Tabla de transiciones</h2></div>
+    <p>Un diagrama es intuitivo, pero una tabla suele ser más precisa cuando el número de reglas aumenta.</p>
+    <table>
+      <thead><tr><th>Estado actual</th><th>Evento</th><th>Condición</th><th>Nuevo estado</th></tr></thead>
+      <tbody>
+        <tr><td>Creado</td><td>pagar</td><td>pago autorizado</td><td>Pagado</td></tr>
+        <tr><td>Creado</td><td>cancelar</td><td>—</td><td>Cancelado</td></tr>
+        <tr><td>Pagado</td><td>enviar</td><td>stock disponible</td><td>Enviado</td></tr>
+        <tr><td>Pagado</td><td>reembolsar</td><td>—</td><td>Reembolsado</td></tr>
+      </tbody>
+    </table>
+    <p class="muted">La tabla obliga a responder una pregunta útil: ¿qué ocurre con los eventos que no aparecen? El sistema puede rechazarlos, ignorarlos o tratarlos explícitamente como errores. Esa decisión forma parte del contrato de la máquina.</p>
+  </section>
+
+  <section id="determinism">
+    <div class="section-head"><span class="num">06</span><h2>Determinismo</h2></div>
+    <p>Una máquina es <strong>determinista</strong> cuando, para un estado y un evento concretos, existe como máximo un resultado válido. Esta propiedad reduce la ambigüedad: conociendo el estado actual y el evento, podemos predecir el siguiente estado.</p>
+    <p>Las guardas pueden introducir varias transiciones para un mismo evento, pero deberían ser mutuamente excluyentes o tener una prioridad perfectamente definida. Si dos guardas pueden cumplirse a la vez sin una regla clara, el modelo deja de ser fácil de razonar.</p>
+  </section>
+
+  <section id="moore-mealy">
+    <div class="section-head"><span class="num">07</span><h2>Moore y Mealy</h2></div>
+    <p>Dos formulaciones clásicas añaden una noción explícita de salida al modelo.</p>
+    <div class="grid">
+      <div class="card"><h3>Máquina de Moore</h3><p>La salida depende únicamente del estado actual. Cada estado describe no solo dónde está la máquina, sino también qué salida produce mientras permanece allí.</p></div>
+      <div class="card"><h3>Máquina de Mealy</h3><p>La salida depende del estado actual y del evento recibido. La acción queda asociada a la transición, por lo que suele representar respuestas reactivas de forma compacta.</p></div>
+    </div>
+    <p class="muted">En software de negocio real es habitual mezclar ideas de ambos modelos: acciones al entrar en un estado, acciones al salir y acciones propias de una transición.</p>
+  </section>
+
+  <section id="extended">
+    <div class="section-head"><span class="num">08</span><h2>Máquinas de estados extendidas</h2></div>
+    <p>Una FSM pura intenta representar toda la memoria relevante mediante estados discretos. Esto puede producir una explosión combinatoria. Por ejemplo, si un proceso tiene cinco fases y además mantiene tres flags independientes, convertir cada combinación en un estado distinto puede volver el modelo inmanejable.</p>
+    <p>Las <strong>máquinas de estados extendidas</strong> mantienen variables de contexto además del estado. Las guardas consultan ese contexto y las acciones pueden modificarlo. La clave consiste en no convertir el contexto en un sustituto del estado: si una variable cambia qué eventos son válidos, probablemente está representando una dimensión de estado que merece atención explícita.</p>
+  </section>
+
+  <section id="hierarchy">
+    <div class="section-head"><span class="num">09</span><h2>Jerarquía y composición</h2></div>
+    <p>Cuando una máquina crece, muchos estados comparten comportamiento. Las <strong>máquinas jerárquicas</strong> permiten agrupar estados dentro de estados superiores. Un reproductor, por ejemplo, puede tener un estado superior <code>Activo</code> que contenga <code>Reproduciendo</code> y <code>Pausado</code>; ambos heredan reglas comunes frente a eventos como <code>apagar</code>.</p>
+    <p>La <strong>composición</strong> ofrece otra estrategia: en vez de crear una máquina gigante, varias máquinas pequeñas modelan aspectos independientes y se coordinan mediante eventos. Es una forma de controlar la complejidad sin perder precisión.</p>
+  </section>
+
+  <section id="state-vs-data">
+    <div class="section-head"><span class="num">10</span><h2>Estado no es lo mismo que datos</h2></div>
+    <p>Un error frecuente consiste en llamar “estado” a cualquier atributo mutable. La dirección de envío, el nombre del cliente o el importe de un pedido son datos; <em>Pagado</em> o <em>Enviado</em> son estados porque modifican las operaciones permitidas y las reglas futuras.</p>
+    <div class="note"><p>Una heurística útil: si cambiar un valor altera qué eventos son válidos o cómo debe reaccionar el sistema, ese valor participa en el estado conductual.</p></div>
+  </section>
+
+  <section id="benefits">
+    <div class="section-head"><span class="num">11</span><h2>Por qué usar una máquina de estados</h2></div>
+    <div class="checklist">
+      <div class="item"><strong>01 · Hace explícitas las reglas.</strong> Las transiciones válidas dejan de estar repartidas por distintas capas del código.</div>
+      <div class="item"><strong>02 · Reduce estados imposibles.</strong> El modelo define qué combinaciones pueden existir y cuáles no.</div>
+      <div class="item"><strong>03 · Mejora las pruebas.</strong> Cada transición puede verificarse como una regla aislada y el grafo completo permite razonar sobre cobertura.</div>
+      <div class="item"><strong>04 · Facilita auditoría.</strong> Registrar eventos y cambios de estado produce un historial comprensible del proceso.</div>
+      <div class="item"><strong>05 · Separa decisión y efecto.</strong> La máquina decide qué transición es válida; otras partes pueden encargarse de ejecutar efectos externos.</div>
+    </div>
+  </section>
+
+  <section id="risks">
+    <div class="section-head"><span class="num">12</span><h2>Cuándo una máquina se vuelve problemática</h2></div>
+    <p>El modelo deja de ayudar cuando cada detalle se convierte en un estado, cuando las acciones contienen demasiada lógica de negocio, cuando las guardas dependen de datos externos impredecibles o cuando varias transiciones producen efectos irreversibles sin una semántica clara ante fallos.</p>
+    <p class="muted">La máquina debe modelar decisiones y evolución del proceso, no absorber toda la aplicación. Cuanto más limpios sean sus límites, más fácil será entenderla, probarla y cambiarla.</p>
+  </section>
+
+  <section id="distributed">
+    <div class="section-head"><span class="num">13</span><h2>Máquinas de estados y sistemas distribuidos</h2></div>
+    <p>En sistemas distribuidos aparece una dificultad adicional: una transición local puede requerir efectos externos que no son atómicos. Actualizar el estado y publicar un mensaje, por ejemplo, son dos operaciones distintas. Si una tiene éxito y la otra falla, el sistema puede quedar inconsistente.</p>
+    <p>Por eso, una máquina de estados no elimina problemas como idempotencia, reintentos, entrega de mensajes o consistencia eventual. Lo que sí hace es proporcionar un marco preciso para decidir <em>qué debía ocurrir</em> y cuál es el estado observable después de cada paso.</p>
+  </section>
+
+  <section id="design">
+    <div class="section-head"><span class="num">14</span><h2>Cómo pensar un buen modelo</h2></div>
+    <div class="checklist">
+      <div class="item"><strong>Empieza por los estados estables.</strong> Nómbralos según situaciones del dominio, no según métodos o pantallas.</div>
+      <div class="item"><strong>Enumera los eventos reales.</strong> Pregunta qué hechos pueden hacer cambiar el comportamiento.</div>
+      <div class="item"><strong>Construye la tabla antes del código.</strong> Detectar transiciones ambiguas sobre papel es mucho más barato.</div>
+      <div class="item"><strong>Haz explícitos los casos inválidos.</strong> Un evento inesperado también necesita una semántica.</div>
+      <div class="item"><strong>Minimiza efectos en la decisión.</strong> Mantener pura la lógica de transición mejora pruebas, reproducibilidad y observabilidad.</div>
+    </div>
+  </section>
+
+  <section id="summary">
+    <div class="section-head"><span class="num">15</span><h2>Resumen</h2></div>
+    <p>Una máquina de estados es, ante todo, una herramienta para razonar. Define un conjunto limitado de situaciones válidas, especifica los eventos que pueden modificar esas situaciones y hace explícitas las reglas de evolución. La formalización puede ser tan sencilla como una tabla o tan rica como una máquina jerárquica con guardas, acciones y contexto.</p>
+    <p class="muted">Su utilidad aparece cuando el comportamiento depende claramente de la historia reciente del sistema. En esos casos, convertir esa historia en un estado explícito suele producir software más predecible, verificable y fácil de explicar.</p>
+  </section>
+</div>
