@@ -1,6 +1,64 @@
 (function () {
   var PAGE_SIZE = 5;
   var cardsContainer = document.getElementById('cards');
+
+  // Standalone Jekyll pages are not part of site.posts. Add the state-machines
+  // theory page to the same client-side catalogue so it behaves like every
+  // other article in search, filters, sorting and pagination.
+  if (cardsContainer && !cardsContainer.querySelector('[href$="/state-machines/es/"]')) {
+    var stateMachineCard = document.createElement('a');
+    stateMachineCard.className = 'card';
+    stateMachineCard.href = '/state-machines/es/';
+    stateMachineCard.dataset.series = '';
+    stateMachineCard.dataset.categories = 'Concepts & Theory';
+    stateMachineCard.dataset.subcategories = 'Software Architecture,Foundations';
+    stateMachineCard.dataset.tags = 'state-machine,fsm,automata,software-architecture,design,theory';
+    stateMachineCard.dataset.search = 'máquinas de estados — fundamentos teóricos introducción teórica a las máquinas de estados finitos: estados, eventos, transiciones, guardas, acciones, determinismo, modelos de mealy y moore, composición y diseño.';
+    stateMachineCard.dataset.part = '9999';
+    stateMachineCard.dataset.date = '2026-09-10';
+    stateMachineCard.dataset.title = 'Máquinas de estados — Fundamentos teóricos';
+    stateMachineCard.innerHTML = '<p class="eyebrow">Concepts &amp; Theory</p>' +
+      '<h2>Máquinas de estados — Fundamentos teóricos</h2>' +
+      '<p class="desc">Introducción teórica a las máquinas de estados finitos: estados, eventos, transiciones, guardas, acciones, determinismo, modelos de Mealy y Moore, composición y diseño.</p>' +
+      '<p class="card-tags">' +
+        '<span class="badge badge-cat">Concepts &amp; Theory</span>' +
+        '<span class="badge badge-subcat">Software Architecture</span>' +
+        '<span class="badge badge-subcat">Foundations</span>' +
+        '<span class="badge badge-tag">#state-machine</span>' +
+        '<span class="badge badge-tag">#fsm</span>' +
+        '<span class="badge badge-tag">#automata</span>' +
+        '<span class="badge badge-tag">#software-architecture</span>' +
+        '<span class="badge badge-tag">#design</span>' +
+        '<span class="badge badge-tag">#theory</span>' +
+      '</p>' +
+      '<span class="go">Leer el artículo →</span>';
+    cardsContainer.appendChild(stateMachineCard);
+  }
+
+  function ensureFilter(containerId, dataAttribute, value, label) {
+    var container = document.getElementById(containerId);
+    if (!container) return;
+    var selector = '[data-' + dataAttribute + ']';
+    var exists = Array.prototype.some.call(container.querySelectorAll(selector), function (btn) {
+      return btn.getAttribute('data-' + dataAttribute) === value;
+    });
+    if (!exists) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'pill';
+      btn.setAttribute('data-' + dataAttribute, value);
+      btn.textContent = label;
+      container.appendChild(btn);
+    }
+  }
+
+  ensureFilter('category-filters', 'filter-category', 'Concepts & Theory', 'Concepts & Theory');
+  ensureFilter('subcategory-filters', 'filter-subcategory', 'Software Architecture', 'Software Architecture');
+  ensureFilter('subcategory-filters', 'filter-subcategory', 'Foundations', 'Foundations');
+  ['state-machine', 'fsm', 'automata', 'software-architecture', 'design', 'theory'].forEach(function (tag) {
+    ensureFilter('tag-filters', 'filter-tag', tag, '#' + tag);
+  });
+
   var cards = Array.prototype.slice.call(document.querySelectorAll('#cards .card'));
   var seriesButtons = Array.prototype.slice.call(document.querySelectorAll('#series-filters .pill'));
   var categoryButtons = Array.prototype.slice.call(document.querySelectorAll('#category-filters .pill'));
