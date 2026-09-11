@@ -11,6 +11,7 @@ layout: default
 
 {% assign previous_article = nil %}
 {% assign next_article = nil %}
+{% assign found_current = false %}
 {% if page.series %}
   {% assign series_articles = site.posts | where: "series", page.series | where: "lang", page.lang %}
   {% if page.part %}
@@ -18,7 +19,6 @@ layout: default
   {% else %}
     {% assign series_articles = series_articles | sort: "date" %}
   {% endif %}
-  {% assign found_current = false %}
   {% for candidate in series_articles %}
     {% if found_current and next_article == nil %}
       {% assign next_article = candidate %}
@@ -29,10 +29,31 @@ layout: default
       {% assign previous_article = candidate %}
     {% endif %}
   {% endfor %}
+  {% if found_current == false %}
+    {% assign previous_article = nil %}
+    {% assign next_article = nil %}
+  {% endif %}
 {% endif %}
 
 {% assign primary_category = page.categories | first %}
 {% assign related_count = 0 %}
+{% capture related_cards %}
+  {% if primary_category %}
+    {% assign recent_posts = site.posts | where: "lang", page.lang %}
+    {% for candidate in recent_posts %}
+      {% if candidate.url != page.url and candidate.categories contains primary_category and related_count < 3 %}
+        <a class="related-reading-card" href="{{ candidate.url | relative_url }}">
+          <span>{{ candidate.date | date: "%Y-%m-%d" }}</span>
+          <strong>{{ candidate.title }}</strong>
+          {% if candidate.description %}<small>{{ candidate.description }}</small>{% endif %}
+        </a>
+        {% assign related_count = related_count | plus: 1 %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endcapture %}
+
+{% if previous_article or next_article or related_count > 0 %}
 <section class="article-discovery" aria-label="{% if page.lang == 'en' %}Continue reading{% else %}Seguir leyendo{% endif %}">
   {% if previous_article or next_article %}
   <div class="series-nav-wrap">
@@ -57,26 +78,15 @@ layout: default
   </div>
   {% endif %}
 
-  {% if primary_category %}
+  {% if related_count > 0 %}
   <div class="related-reading">
     <p class="article-discovery-kicker">{% if page.lang == 'en' %}Go deeper{% else %}Profundiza{% endif %}</p>
     <h2>{% if page.lang == 'en' %}More in {{ primary_category }}{% else %}Más sobre {{ primary_category }}{% endif %}</h2>
-    <div class="related-reading-grid">
-      {% assign recent_posts = site.posts | where: "lang", page.lang %}
-      {% for candidate in recent_posts %}
-        {% if candidate.url != page.url and candidate.categories contains primary_category and related_count < 3 %}
-          <a class="related-reading-card" href="{{ candidate.url | relative_url }}">
-            <span>{{ candidate.date | date: "%Y-%m-%d" }}</span>
-            <strong>{{ candidate.title }}</strong>
-            {% if candidate.description %}<small>{{ candidate.description }}</small>{% endif %}
-          </a>
-          {% assign related_count = related_count | plus: 1 %}
-        {% endif %}
-      {% endfor %}
-    </div>
+    <div class="related-reading-grid">{{ related_cards }}</div>
   </div>
   {% endif %}
 </section>
+{% endif %}
 
 {% if page.url == '/state-machines/es/' %}
 <section style="max-width:960px;margin:0 auto 96px;padding:0 24px;">
