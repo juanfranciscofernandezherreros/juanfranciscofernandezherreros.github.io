@@ -1,0 +1,85 @@
+.article-discovery{
+  max-width:940px;
+  margin:0 auto 96px;
+  padding:0 24px;
+}
+.article-discovery > div + div{ margin-top:42px; }
+.article-discovery-kicker{
+  margin:0 0 8px;
+  color:var(--accent);
+  font-family:"IBM Plex Mono",monospace;
+  font-size:.72rem;
+  font-weight:600;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+}
+.article-discovery h2{
+  margin:0 0 16px;
+  color:var(--ink);
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif;
+  font-size:clamp(1.55rem,4vw,2rem);
+  line-height:1.05;
+  text-transform:uppercase;
+}
+.series-nav,
+.related-reading-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+}
+.related-reading-grid{ grid-template-columns:repeat(3,minmax(0,1fr)); }
+.series-nav-card,
+.related-reading-card{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  gap:8px;
+  padding:18px 20px;
+  background:var(--surface);
+  border:1px solid var(--line);
+  border-radius:12px;
+  box-shadow:var(--shadow);
+  color:var(--ink);
+  text-decoration:none;
+  transition:transform .15s ease,border-color .15s ease,box-shadow .15s ease;
+}
+.series-nav-card:hover,
+.series-nav-card:focus-visible,
+.related-reading-card:hover,
+.related-reading-card:focus-visible{
+  border-color:var(--accent);
+  transform:translateY(-2px);
+  outline:2px solid transparent;
+}
+.series-nav-card-next{ text-align:right; }
+.series-nav-label,
+.related-reading-card > span{
+  color:var(--accent);
+  font-family:"IBM Plex Mono",monospace;
+  font-size:.68rem;
+  font-weight:600;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.series-nav-card strong,
+.related-reading-card strong{
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif;
+  font-size:1.2rem;
+  line-height:1.15;
+}
+.series-nav-card small,
+.related-reading-card small{
+  color:var(--ink-soft);
+  font-size:.86rem;
+  line-height:1.5;
+}
+.series-nav-spacer{ min-height:1px; }
+@media(max-width:760px){
+  .series-nav,.related-reading-grid{ grid-template-columns:1fr; }
+  .series-nav-spacer{ display:none; }
+  .series-nav-card-next{ text-align:left; }
+}
+@media(prefers-reduced-motion:reduce){
+  .series-nav-card,.related-reading-card{ transition:none; }
+  .series-nav-card:hover,.series-nav-card:focus-visible,.related-reading-card:hover,.related-reading-card:focus-visible{ transform:none; }
+}
