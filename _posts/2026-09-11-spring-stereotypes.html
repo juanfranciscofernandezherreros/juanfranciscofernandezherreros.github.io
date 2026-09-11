@@ -1,0 +1,144 @@
+---
+layout: "article"
+title: "Spring Stereotype Annotations: @Component, @Service, @Repository and @Controller"
+description: "Understand what Spring stereotype annotations are, how component scanning turns annotated classes into beans, what each stereotype communicates, and how to answer the topic in a technical interview."
+permalink: "/java-spring/spring-stereotypes/"
+lang: "en"
+lang_url: "/java-spring/spring-stereotypes/es/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Spring Core"]
+tags: ["java","spring","spring-boot","stereotypes","component-scan","spring-beans","interviews"]
+date: "2026-09-11"
+reading_minutes: 8
+---
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back"><a href="../../">&larr; Back to the blog</a></p>
+    <p class="lang"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Spring Core · Interview guide</p>
+    <h1>Spring stereotype annotations</h1>
+    <p class="lede">Why <code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, and <code>@Controller</code> are more than labels, how Spring discovers them, and how to explain the difference between a stereotype and a bean.</p>
+    <dl class="stamp"><div><dt>Level</dt><dd>Foundations</dd></div><div><dt>Topic</dt><dd>Spring Core</dd></div><div><dt>Goal</dt><dd>Technical interview</dd></div></dl>
+  </div>
+
+  <section id="short-answer">
+    <div class="head"><span class="num">01</span><h2>The 30-second answer</h2></div>
+    <p class="answer"><strong>Spring stereotypes are annotations that classify application components and allow Spring to discover them during component scanning.</strong> <code>@Component</code> is the generic stereotype. <code>@Service</code>, <code>@Repository</code>, and <code>@Controller</code> are specialized stereotypes that communicate the responsibility of the class. When Spring discovers one of these classes, it can create an instance and register that instance as a bean in the <code>ApplicationContext</code>.</p>
+    <p>The key interview distinction is simple: <strong>the annotation is not the bean</strong>. The annotation marks the class for discovery; the object that Spring creates and manages is the bean.</p>
+  </section>
+
+  <section id="why-stereotypes">
+    <div class="head"><span class="num">02</span><h2>Why Spring calls them stereotypes</h2></div>
+    <p>A stereotype describes the role a class plays in the application. Two classes can both become Spring beans while having very different responsibilities. The stereotype makes that responsibility visible to humans, tooling, and in some cases the framework itself.</p>
+    <div class="grid">
+      <article class="card"><h3>@Component</h3><p>The generic stereotype. Use it when no more specific role describes the component.</p></article>
+      <article class="card"><h3>@Service</h3><p>Usually identifies application or domain-service logic. Its main value is semantic clarity.</p></article>
+      <article class="card"><h3>@Repository</h3><p>Identifies persistence components and participates in Spring's persistence-exception translation mechanism.</p></article>
+      <article class="card"><h3>@Controller</h3><p>Identifies Spring MVC controllers that handle web requests and normally resolve views or responses.</p></article>
+    </div>
+    <p><code>@RestController</code> deserves a nuance: it is composed from <code>@Controller</code> and <code>@ResponseBody</code>. It is used for controllers whose handler return values are written to the HTTP response body, commonly as JSON.</p>
+  </section>
+
+  <section id="component-scan">
+    <div class="head"><span class="num">03</span><h2>From annotation to bean: component scanning</h2></div>
+    <p>A stereotype does not magically execute business logic. Its first practical effect is to make a class a candidate for component scanning.</p>
+    <pre><span class="ann">@Service</span>
+public class PaymentService {
+    public void confirmPayment(Long paymentId) {
+        // business logic
+    }
+}</pre>
+    <div class="flow" aria-label="From stereotype annotation to managed Spring bean"><span>Annotated class</span><b>→</b><span>Component scan</span><b>→</b><span>BeanDefinition</span><b>→</b><span>Object created</span><b>→</b><span>Managed bean</span></div>
+    <p>Spring registers metadata for the discovered component as a <code>BeanDefinition</code>. The container can then instantiate it, resolve its dependencies, apply post-processors and proxies, and manage its lifecycle.</p>
+    <p class="notice"><strong>Spring Boot connection:</strong> <code>@SpringBootApplication</code> includes component scanning through <code>@ComponentScan</code>. By default, scanning starts from the package containing the application class and its subpackages, which is why package structure matters.</p>
+  </section>
+
+  <section id="hierarchy">
+    <div class="head"><span class="num">04</span><h2>The annotation relationship</h2></div>
+    <p>The specialized stereotypes are themselves meta-annotated so Spring can treat them as components. A useful mental model is:</p>
+    <pre>@Component
+├── @Service
+├── @Repository
+└── @Controller
+    └── @RestController  // conceptually: @Controller + @ResponseBody</pre>
+    <p>This diagram is a conceptual view, not Java inheritance. Annotations are composed through meta-annotations. That distinction is worth making in an interview because saying that <code>@Service</code> "extends" <code>@Component</code> is technically inaccurate.</p>
+  </section>
+
+  <section id="component-vs-service">
+    <div class="head"><span class="num">05</span><h2>@Component vs @Service: does it change runtime behavior?</h2></div>
+    <p>For ordinary component scanning, both can result in a managed Spring bean. This works:</p>
+    <pre><span class="ann">@Component</span>
+public class PaymentService {
+    // ...
+}</pre>
+    <p>But this communicates intent better:</p>
+    <pre><span class="ann">@Service</span>
+public class PaymentService {
+    // ...
+}</pre>
+    <p>The choice matters because architecture is also communication. A reader should be able to look at the annotation and understand whether the class is infrastructure, business logic, persistence, or an HTTP boundary.</p>
+    <p class="trap"><strong>Do not overstate the difference:</strong> <code>@Service</code> does not automatically make a method transactional, thread-safe, or asynchronous. Those behaviors require separate mechanisms such as <code>@Transactional</code>, proxies, or explicit concurrency design.</p>
+  </section>
+
+  <section id="repository">
+    <div class="head"><span class="num">06</span><h2>Why @Repository is more than documentation</h2></div>
+    <p><code>@Repository</code> communicates that the class belongs to the persistence boundary, but it can also participate in exception translation. Spring can translate supported persistence exceptions into its consistent <code>DataAccessException</code> hierarchy.</p>
+    <pre><span class="ann">@Repository</span>
+public class JdbcOrderRepository {
+    // persistence operations
+}</pre>
+    <p>The useful architectural consequence is that higher layers can depend on Spring's persistence exception abstraction instead of being tightly coupled to a particular database technology's exception types.</p>
+    <p class="notice">The exact translation depends on the configured persistence infrastructure and post-processing. In a typical Spring Boot data stack much of this wiring is configured automatically, but the stereotype itself should not be described as a universal try/catch mechanism.</p>
+  </section>
+
+  <section id="stereotype-vs-bean">
+    <div class="head"><span class="num">07</span><h2>Stereotype is not the same as Bean</h2></div>
+    <p>This is one of the strongest follow-up questions in an interview.</p>
+    <pre><span class="ann">@Service</span>
+public class InvoiceService {
+}
+</pre>
+    <p><code>InvoiceService</code> is a class marked with a stereotype. If component scanning discovers it, Spring registers its definition and normally creates a managed instance. <strong>That instance is the bean.</strong></p>
+    <p>You can also create a bean without any stereotype annotation:</p>
+    <pre><span class="ann">@Configuration</span>
+public class AppConfig {
+    <span class="ann">@Bean</span>
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
+}</pre>
+    <p><code>ObjectMapper</code> becomes a bean even though the <code>ObjectMapper</code> class is not annotated with your application's <code>@Component</code> or <code>@Service</code>. This is one reason <code>@Bean</code> is useful for third-party types or when construction requires explicit configuration.</p>
+    <p>For a deeper explanation of what happens after registration, continue with <a href="{{ '/java-spring/bean-interview-guide/' | relative_url }}">Spring Beans in depth</a>.</p>
+  </section>
+
+  <section id="interview-followups">
+    <div class="head"><span class="num">08</span><h2>Common interview follow-ups</h2></div>
+    <div class="grid">
+      <article class="card"><h3>Is @Service required?</h3><p>No. A service class could be registered with <code>@Component</code> or explicitly with <code>@Bean</code>. <code>@Service</code> communicates the role more clearly.</p></article>
+      <article class="card"><h3>What does @RestController add?</h3><p>It combines controller semantics with <code>@ResponseBody</code>, so handler return values are written to the response body by default.</p></article>
+      <article class="card"><h3>Can scanning miss a stereotype?</h3><p>Yes. If the class is outside the configured scan packages, it will not be discovered just because it has <code>@Service</code> or another stereotype.</p></article>
+      <article class="card"><h3>Can I create my own stereotype?</h3><p>Yes. Spring supports composed annotations, so a custom annotation can itself be meta-annotated with <code>@Component</code> and other annotations.</p></article>
+    </div>
+  </section>
+
+  <section id="interview-answer">
+    <div class="head"><span class="num">09</span><h2>A strong interview answer</h2></div>
+    <p class="answer">“Spring stereotypes are annotations used to classify application components and make them candidates for component scanning. <code>@Component</code> is the generic stereotype, while <code>@Service</code>, <code>@Repository</code>, and <code>@Controller</code> express more specific responsibilities. When Spring discovers one of these classes, it registers metadata for it and can create a managed bean in the <code>ApplicationContext</code>. The stereotype itself is not the bean: it marks the class for discovery. I also distinguish <code>@Repository</code> because it can participate in persistence exception translation, and <code>@RestController</code> because it combines controller behavior with <code>@ResponseBody</code>. Beans do not have to come from stereotypes; they can also be declared explicitly with <code>@Bean</code>.”</p>
+    <p>That answer works because it covers the definition, the mechanism, the semantic differences, one framework-specific nuance, and the relationship with beans without claiming that every stereotype changes runtime behavior.</p>
+  </section>
+
+  <section id="takeaways">
+    <div class="head"><span class="num">10</span><h2>What to remember</h2></div>
+    <ul>
+      <li>A stereotype classifies a component; a bean is the managed object.</li>
+      <li><code>@Component</code> is generic; specialized stereotypes communicate architectural intent.</li>
+      <li>Component scanning is what connects stereotypes to automatic bean registration.</li>
+      <li><code>@Repository</code> has persistence-specific semantics beyond naming.</li>
+      <li><code>@RestController</code> is a composed web stereotype with response-body semantics.</li>
+      <li><code>@Bean</code> is an alternative registration mechanism and does not require annotating the target class.</li>
+    </ul>
+  </section>
+
+  <footer><p>Java & Spring Interview Notes · Spring stereotypes explained from annotation to managed bean.</p></footer>
+</div>
