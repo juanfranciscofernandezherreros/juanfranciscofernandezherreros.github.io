@@ -12,7 +12,23 @@ tags: ["java","spring","spring-boot","stereotypes","component-scan","spring-bean
 date: "2026-09-11"
 reading_minutes: 8
 ---
-<div class="sheet">
+<style>
+.spring-stereotypes{--panel:var(--surface);--muted:var(--ink-soft);--line-local:var(--line);--code-local:var(--code-bg);--code-text-local:var(--code-ink);--notice-local:var(--accent-soft);--warn:#8b5a16;--warn-bg:#f7eddd;max-width:940px;margin:36px auto 96px;padding:0 24px}
+.spring-stereotypes .titleblock{position:relative;background:var(--panel);border:1px solid var(--line-local);padding:clamp(28px,5vw,46px)}
+.spring-stereotypes .back,.spring-stereotypes .lang,.spring-stereotypes .eyebrow,.spring-stereotypes .num,.spring-stereotypes .stamp dt,.spring-stereotypes pre,.spring-stereotypes code{font-family:"IBM Plex Mono",monospace}
+.spring-stereotypes .back,.spring-stereotypes .lang{font-size:.74rem}.spring-stereotypes .lang{position:absolute;right:28px;top:24px}.spring-stereotypes .eyebrow,.spring-stereotypes .num{color:var(--accent);font-size:.76rem;text-transform:uppercase;letter-spacing:.08em}
+.spring-stereotypes h1,.spring-stereotypes h2,.spring-stereotypes h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}
+.spring-stereotypes .titleblock h1{font-size:clamp(2.5rem,7vw,4.2rem);line-height:.98;max-width:18ch}.spring-stereotypes .lede{font-size:1.04rem;color:var(--muted);max-width:66ch;line-height:1.65}
+.spring-stereotypes .stamp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border-top:1px solid var(--line-local);padding-top:18px;margin-top:24px}.spring-stereotypes .stamp div{padding:12px;border-radius:8px;background:var(--surface-2)}.spring-stereotypes .stamp dt{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}.spring-stereotypes .stamp dd{margin:4px 0 0;font-weight:650}
+.spring-stereotypes section{margin-top:64px}.spring-stereotypes .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:20px}.spring-stereotypes h2{font-size:clamp(1.55rem,4vw,2rem)}.spring-stereotypes h3{font-size:1.08rem}.spring-stereotypes p,.spring-stereotypes li{max-width:72ch;line-height:1.72}.spring-stereotypes .answer{background:var(--panel);border:1px solid var(--line-local);border-left:4px solid var(--accent);padding:20px 22px;font-size:1.02rem}
+.spring-stereotypes .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin:22px 0}.spring-stereotypes .card{background:var(--panel);border:1px solid var(--line-local);padding:18px;min-height:100%}.spring-stereotypes .card h3{margin-bottom:8px;color:var(--ink)}.spring-stereotypes .card p{font-size:.93rem;color:var(--muted);margin:0}
+.spring-stereotypes .flow{display:flex;flex-wrap:wrap;align-items:center;gap:.65rem;margin:22px 0}.spring-stereotypes .flow span{background:var(--panel);border:1px solid var(--line-local);border-radius:8px;padding:.68rem .82rem;font-family:"IBM Plex Mono",monospace;font-size:.78rem}.spring-stereotypes .flow b{color:var(--accent)}
+.spring-stereotypes pre{overflow:auto;background:var(--code-local);color:var(--code-text-local);border:1px solid var(--line-local);padding:17px 18px;line-height:1.6;font-size:.84rem}.spring-stereotypes .ann{color:#8de5a5}.spring-stereotypes .notice,.spring-stereotypes .trap{padding:15px 18px;margin:20px 0}.spring-stereotypes .notice{border-left:3px solid var(--accent);background:var(--notice-local)}.spring-stereotypes .trap{border-left:3px solid var(--warn);background:var(--warn-bg)}
+.spring-stereotypes footer{color:var(--muted);border-top:1px solid var(--line-local);margin-top:54px;padding-top:22px}
+@media(prefers-color-scheme:dark){.spring-stereotypes{--warn:#ffc66d;--warn-bg:#2a2116}}
+@media(max-width:650px){.spring-stereotypes{padding:0 16px}.spring-stereotypes .grid,.spring-stereotypes .stamp{grid-template-columns:1fr}.spring-stereotypes .titleblock{padding:26px 20px}.spring-stereotypes .lang{position:static;margin-top:0}.spring-stereotypes .flow{align-items:stretch}.spring-stereotypes .flow span{flex:1 1 100%}.spring-stereotypes .flow b{display:none}}
+</style>
+<div class="sheet spring-stereotypes">
   <div class="titleblock">
     <p class="back"><a href="../../">&larr; Back to the blog</a></p>
     <p class="lang"><a href="es/">ES · Español</a></p>
