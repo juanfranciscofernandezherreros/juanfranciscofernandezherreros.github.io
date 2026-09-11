@@ -200,7 +200,7 @@ Siempre que exista una relación real, enlazar a contenido previo o posterior de
 
 Preferir enlaces contextuales del tipo “si quieres entender por qué…” frente a bloques genéricos de “otros posts”.
 
-En una serie, cada artículo debe responder “de dónde venimos” y “qué tiene sentido leer después” sin obligar al lector a volver a la portada.
+En una serie, cada artículo debe responder “de dónde venimos” y “qué tiene sentido leer después” sin obligar al lector a volver a la portada. `_layouts/article.html` aporta una ruta de lectura automática para posts de una serie y hasta tres lecturas relacionadas por categoría; no duplicar manualmente ese bloque salvo que el artículo necesite una recomendación contextual distinta.
 
 Toda ancla debe existir y los enlaces EN ↔ ES deben ser recíprocos.
 
@@ -235,18 +235,21 @@ Los elementos visuales deben enseñar algo: arquitectura, flujo, estado, compara
 - Tablas con `th` correctos.
 - Controles personalizados navegables por teclado y con `:focus-visible`.
 
-## 14. HTML y layouts
+## 14. HTML, layouts y CSS heredado
 
-`_layouts/default.html` ya aporta `<head>`, viewport, fuentes, CSS global, canonical y metadatos sociales.
+`_layouts/default.html` aporta `<head>`, viewport, fuentes, CSS global, canonical y metadatos sociales. `assets/css/theme.css` es la capa visual global que normaliza la apariencia de artículos antiguos y nuevos. `assets/css/article-discovery.css` contiene la navegación compartida que aparece al final de los artículos.
 
 Por tanto:
 
 - no añadir `<html>`, `<head>` o `<body>` dentro de posts;
-- no duplicar viewport ni fuentes;
-- no copiar CSS global dentro de cada artículo;
+- no duplicar viewport ni enlaces de fuentes;
+- no introducir selectores globales nuevos dentro de un post (`html`, `body`, `*`, `a`, `p`, `h1`… sin scope);
+- el CSS nuevo o modificado de un artículo debe quedar acotado bajo `.sheet` o una clase específica del artículo, por ejemplo `.spring-beans ...`;
+- se permiten variables, paletas y componentes visuales propios cuando aporten identidad al artículo y no rompan la capa global;
+- los bloques `<style>` heredados pueden mantenerse si el artículo ya funciona y la tarea no requiere refactorizarlos; cuando se toque una regla heredada, aprovechar para acotarla en lugar de ampliar su alcance global;
 - preferir HTML semántico: `article`, `section`, `nav`, `figure`, `figcaption`, `table`, `code`, `pre`.
 
-`_layouts/article.html` genera la barra de categorías/subcategorías/tags: no duplicarla manualmente.
+`_layouts/article.html` genera la barra de categorías/subcategorías/tags y la navegación editorial compartida: no duplicarlas manualmente.
 
 ## 15. Comandos y referencias
 
