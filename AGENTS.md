@@ -290,7 +290,8 @@ Después de editar:
 4. Comprobar navegación EN/ES y anterior/siguiente.
 5. Revisar responsive, accesibilidad y contraste.
 6. Confirmar que ejemplos, comandos y texto cuentan la misma historia.
-7. Ejecutar la validación disponible. Si no se ejecutó una build real de Jekyll, no afirmar que “la build pasa”.
+7. Confirmar que el artículo aparece en `index.html` mediante la colección correcta (`lang`, `series`, categorías, subcategorías y tags) y que puede encontrarse con buscador/filtros.
+8. Ejecutar la validación disponible. Si no se ejecutó una build real de Jekyll, no afirmar que “la build pasa”.
 
 ## 18. Checklist editorial antes de dar un artículo por terminado
 
@@ -308,9 +309,25 @@ Un artículo está listo cuando se puede responder “sí” a casi todo esto:
 - ¿La conclusión aporta una decisión, aprendizaje o siguiente paso?
 - ¿EN y ES tienen la misma calidad cuando existen ambas versiones?
 - ¿El artículo se ve bien en móvil y escritorio?
+- ¿El artículo aparece en el índice y puede localizarse por su serie, categoría o tags?
 
 ## 19. Regla final
 
 No optimizar el blog para producir más páginas. Optimizarlo para producir páginas que un desarrollador quiera guardar, compartir o consultar de nuevo.
 
 Cuando haya que elegir entre cantidad y profundidad, elegir profundidad. Cuando haya que elegir entre parecer sofisticado y ser claro, elegir claridad. Cuando haya que elegir entre una explicación genérica y una experiencia concreta, elegir la experiencia concreta.
+
+## 20. Índice y descubrimiento obligatorio
+
+Todo artículo nuevo debe quedar visible desde el índice principal del blog. Publicar un archivo en `_posts/` no es suficiente si el lector no puede descubrirlo desde la portada.
+
+`index.html` construye el catálogo a partir de los posts en español y usa el front matter para alimentar carrusel, tarjetas, búsqueda y filtros. Por tanto, al crear o modificar un artículo hay que comprobar expresamente que:
+
+- la versión española usa `lang: "es"` y entra en la colección mostrada por el índice;
+- `series`, `categories`, `subcategories` y `tags` son coherentes y permiten encontrar el artículo con los filtros existentes;
+- el título y la descripción funcionan bien tanto en la tarjeta como en el carrusel;
+- si pertenece a una serie, aparece además conectado con los otros artículos de esa serie mediante la navegación editorial;
+- si existe pareja EN/ES, la versión española es la que se muestra en el índice principal y `lang_url` permite llegar a la inglesa;
+- después de la build se verifica que la URL del artículo está presente en la portada generada y no queda como contenido huérfano.
+
+No dar por terminado ni publicar un artículo que no pueda descubrirse desde el índice o desde una ruta editorial clara.
