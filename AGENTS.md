@@ -1,44 +1,119 @@
-# Reglas editoriales y técnicas del repositorio
+# Reglas del blog para agentes
 
-Estas reglas aplican a todo `juanfranciscofernandezherreros.github.io` y son la fuente de verdad para cualquier agente que modifique el blog. `AGENTS.md` y `CLAUDE.md` deben permanecer sincronizados y contener las mismas normas.
+Estas reglas aplican a todo `juanfranciscofernandezherreros.github.io`. El objetivo no es solo que el sitio funcione: debe sentirse como un blog técnico con personalidad, criterio editorial y artículos que merezca la pena terminar y compartir.
 
-El sitio es Jekyll, se construye con `.github/workflows/pages.yml` y se despliega mediante GitHub Pages. Antes de editar, revisar siempre los archivos relacionados, reutilizar patrones existentes y hacer cambios mínimos, coherentes y verificables.
+`AGENTS.md` y `CLAUDE.md` deben mantenerse sincronizados. Si se modifica uno, se modifica el otro con el mismo contenido.
 
-## Objetivo editorial
+El sitio usa Jekyll y GitHub Pages. Antes de tocar código o contenido, revisa la estructura existente, uno o dos artículos recientes y los layouts relacionados. Reutiliza patrones reales del repositorio antes de inventar otros nuevos.
 
-El blog debe parecer una publicación técnica cuidada, no una colección de páginas independientes. Cada artículo debe ser correcto, útil, legible, visualmente coherente y suficientemente completo para que un lector técnico entienda el tema sin depender de contexto implícito.
+## 1. Norte editorial
 
-- Priorizar claridad, precisión técnica y ejemplos concretos sobre relleno.
-- Explicar el porqué además del cómo.
-- Evitar repeticiones, frases vacías, introducciones largas y conclusiones que solo repiten el texto.
-- No inventar resultados, comandos ejecutados, benchmarks, versiones, capturas o comportamientos no verificados.
-- Si un dato puede cambiar con el tiempo, comprobarlo antes de publicarlo.
-- Mantener tono profesional, directo y pedagógico.
-- Los artículos EN y ES deben cubrir el mismo contenido y estructura esencial; no hacer una versión claramente inferior a la otra.
+Cada publicación debe cumplir al menos una de estas funciones:
 
-## Flujo obligatorio antes de modificar contenido
+- enseñar algo que el lector pueda aplicar;
+- explicar con claridad algo que normalmente se explica mal;
+- documentar una experiencia real, un fallo, una decisión o una investigación;
+- comparar alternativas con criterios concretos;
+- construir una idea paso a paso hasta llegar a una conclusión útil.
 
-1. Leer este archivo completo.
-2. Revisar uno o dos artículos recientes del mismo tipo para copiar convenciones reales de estructura, CSS, badges y navegación.
-3. Comprobar si existe versión EN/ES y mantener ambas coordinadas cuando la petición afecte al contenido compartido.
-4. Revisar categorías, subcategorías y tags ya usados antes de crear otros.
-5. No cambiar permalinks existentes salvo petición explícita.
-6. Verificar rutas y enlaces resolviendo la URL final, no solo a ojo.
-7. Después de editar, revisar front matter, HTML, Liquid, enlaces, navegación y consistencia visual.
-8. Si no hay Jekyll/Ruby disponible localmente, no afirmar que la build pasó: la validación definitiva es GitHub Actions.
+No publicar contenido de relleno. Si un artículo no aporta una idea, experiencia, explicación, ejemplo o conclusión que justifique su existencia, hay que mejorarlo antes de publicarlo.
 
-## Tipos de contenido
+El blog debe transmitir experiencia práctica. Preferir ejemplos reales, decisiones, trade-offs, errores, límites y aprendizajes frente a texto genérico que podría aparecer en cualquier documentación.
 
-### Artículos del curso Argo Real World Microservices
+## 2. Regla de interés: cada artículo necesita una razón para seguir leyendo
 
-Viven en `_posts/` y usan:
+Un artículo interesante no es uno lleno de adornos. Es uno que crea una pregunta y la resuelve bien.
+
+Siempre que encaje con el tema, estructurar la pieza alrededor de uno de estos motores narrativos:
+
+- **Problema → investigación → solución → consecuencias.**
+- **Hipótesis → experimento → resultado → aprendizaje.**
+- **Antes → cambio → después.**
+- **Error real → diagnóstico → causa raíz → prevención.**
+- **Comparación → criterios → decisión → cuándo elegir otra cosa.**
+- **Concepto abstracto → ejemplo concreto → modelo mental reutilizable.**
+
+La introducción debe llegar al problema o promesa principal rápido. Evitar aperturas genéricas como “en el mundo actual…”, “hoy en día…” o definiciones de diccionario que no ayuden al lector.
+
+En las primeras pantallas del artículo debe quedar claro:
+
+1. qué problema o pregunta se va a resolver;
+2. por qué importa;
+3. qué obtendrá el lector al terminar.
+
+## 3. Voz y estilo
+
+Escribir con tono técnico, directo, curioso y pedagógico. El texto puede tener personalidad, pero nunca debe sacrificar precisión.
+
+- Explica el **porqué**, no solo el **cómo**.
+- Usa frases concretas y verbos activos.
+- Elimina introducciones largas, repeticiones y conclusiones que solo resumen lo ya dicho.
+- Cuando una decisión tenga costes, explícalos.
+- Cuando una regla tenga excepciones, menciónalas.
+- Cuando algo falle de forma interesante, no ocultes el fallo: úsalo para enseñar.
+- No exageres resultados ni uses lenguaje de marketing vacío.
+- No inventes comandos ejecutados, benchmarks, errores, capturas, versiones ni resultados.
+- Si un dato puede haber cambiado con el tiempo, verifícalo antes de publicarlo.
+
+Preferir ejemplos que parezcan de producción frente a ejemplos artificiales tipo `foo/bar` cuando el dominio permita algo más expresivo.
+
+## 4. Densidad de valor
+
+Cada sección debe justificar su espacio. Antes de añadir un bloque, pregunta: “¿qué entiende o puede hacer el lector después de esto que antes no podía?”.
+
+Un buen artículo alterna de forma natural entre:
+
+- explicación;
+- ejemplo;
+- evidencia o salida real;
+- interpretación;
+- siguiente decisión.
+
+No encadenar cinco bloques de código sin explicar qué cambia entre ellos. No insertar diagramas decorativos. No usar tablas cuando tres frases son más claras.
+
+Las listas deben servir para comparar, resumir o ejecutar; no para fragmentar prosa sin motivo.
+
+## 5. Artículos técnicos: estándar mínimo
+
+Todo artículo técnico debe comprobar:
+
+- nombres de herramientas, APIs, clases, métodos y conceptos;
+- comandos válidos en el contexto descrito;
+- coherencia de rutas, puertos, namespaces, nombres y versiones;
+- código compilable o claramente marcado como pseudocódigo;
+- transiciones explicadas entre teoría y práctica;
+- límites y casos de fallo importantes;
+- ausencia de contradicciones entre texto, código, tablas y diagramas.
+
+Cuando el artículo acompaña a un repositorio o ZIP de ejemplo, ambos deben describir el mismo dominio, endpoints, estados y flujo.
+
+Si se muestra una salida de terminal, debe estar claro si es salida real, abreviada o representativa.
+
+## 6. Estructura recomendada de una publicación
+
+No todos los artículos deben usar exactamente la misma plantilla, pero esta secuencia funciona bien como base:
+
+1. **Hook útil:** problema, síntoma, pregunta o resultado llamativo.
+2. **Contexto mínimo:** lo necesario para entender el escenario.
+3. **Objetivo:** qué se va a demostrar, construir o decidir.
+4. **Desarrollo:** pasos o razonamiento con ejemplos verificables.
+5. **Momento clave:** descubrimiento, trade-off, fallo o decisión importante.
+6. **Resultado:** qué cambió y cómo comprobarlo.
+7. **Lecciones:** ideas reutilizables, no un simple resumen.
+8. **Siguiente paso:** enlace natural a otro artículo, parte de la serie o experimento.
+
+Los tutoriales largos deben permitir escaneo visual con buenos `h2`, `h3`, código, tablas o callouts cuando aporten valor.
+
+## 7. Series y continuidad
+
+Los artículos de `Argo Real World Microservices` viven en `_posts/` y usan:
 
 ```text
 /argo-real-world-microservices/part-N/<slug-descriptivo>/
 /argo-real-world-microservices/part-N/<slug-descriptivo>/es/
 ```
 
-Nunca usar `/part-N/` a secas. `part-N` conserva el orden del curso y `<slug-descriptivo>` identifica el tema. El slug debe ser igual en EN y ES; solo cambia `/es/`.
+Nunca usar `/part-N/` a secas. El slug debe ser el mismo en EN y ES; solo cambia `/es/`.
 
 Nombre de archivo:
 
@@ -47,24 +122,35 @@ _posts/YYYY-MM-DD-part-N-<slug>.html
 _posts/YYYY-MM-DD-part-N-<slug>-es.html
 ```
 
-### Artículos independientes
+Cada parte debe funcionar por sí sola y, a la vez, dejar claro qué aporta a la historia global del curso. La navegación anterior/siguiente debe formar una cadena correcta.
 
-También viven en `_posts/`, pero no llevan `part`. Deben usar una URL temática estable:
+Los artículos independientes también viven en `_posts/` y usan una URL temática estable:
 
 ```text
 /<tema>/<slug>/
 /<tema>/<slug>/es/
 ```
 
-Deben incluir `series` para que la portada pueda agruparlos y filtrarlos.
+Deben incluir `series` si pertenecen a una familia reconocible de contenidos.
 
-### Páginas estáticas editoriales
+## 8. Bilingüismo
 
-`introduction*.html`, `argo-real-world-microservices*.html`, `commands.html` y páginas teóricas similares pueden vivir en la raíz cuando no deben participar como posts de `site.posts`. Deben seguir las mismas reglas visuales, de accesibilidad y calidad que los artículos.
+Cuando exista pareja EN/ES:
 
-## Front matter
+- mismo slug y estructura conceptual;
+- `lang` correcto;
+- `lang_url` cruzado y recíproco;
+- mismas secciones esenciales, ejemplos, tablas y recursos;
+- adaptar el idioma de forma natural, no hacer traducción palabra por palabra;
+- no traducir nombres de APIs, comandos o identificadores técnicos que deban conservarse.
 
-Todo post debe tener como mínimo:
+Ninguna versión debe sentirse como una copia secundaria de menor calidad.
+
+Si solo existe un idioma por decisión editorial, no crear automáticamente el otro salvo petición explícita.
+
+## 9. Front matter
+
+Todo post debe incluir como mínimo:
 
 ```yaml
 layout: article
@@ -87,202 +173,141 @@ Los artículos del curso añaden:
 part: N
 ```
 
-`og_title`, `og_description`, `twitter_title` y `twitter_description` son opcionales y solo deben añadirse si aportan una variante útil. No duplicar metadatos sin motivo.
+`lang_url` usa rutas absolutas desde la raíz, no URLs completas con dominio.
 
-`lang_url` debe ser una ruta absoluta desde la raíz del sitio, por ejemplo `/java/solid-principles/es/`. `_layouts/default.html` la transforma con `absolute_url` para `hreflang`. No exigir una URL completa con dominio dentro del front matter.
+`reading_minutes` debe estimarse sobre texto visible real, aproximadamente 200 palabras por minuto, redondeando hacia arriba y con mínimo 3.
 
-`reading_minutes` se estima con el texto real visible del artículo, excluyendo `<style>`, HTML y bloques puramente decorativos: unas 200 palabras por minuto, redondeando hacia arriba y con mínimo 3.
+No añadir `og_*` o `twitter_*` copiando metadatos sin aportar una variante útil.
 
-## Estructura de un artículo
+## 10. SEO sin escribir para robots
 
-Cada artículo debe incluir:
+La prioridad es el lector, pero cada artículo debe ser fácil de descubrir y entender desde buscadores y redes.
 
-- un `<style>` propio cuando necesite estilos específicos;
-- un único contenedor principal `.sheet`;
-- un `titleblock` o encabezado equivalente con contexto claro;
-- secciones ordenadas con `id` estable cuando puedan enlazarse;
-- ejemplos, diagramas, tablas o código solo cuando aporten comprensión;
-- navegación de idioma si existe traducción;
-- navegación anterior/siguiente cuando pertenezca a una serie secuencial.
+- Título específico, humano y descriptivo.
+- `description` que explique el valor del artículo, no una lista de keywords.
+- Un único `h1` visible.
+- `h2` y `h3` en orden lógico.
+- Permalink corto, descriptivo y estable.
+- Categorías y tags útiles; no keyword stuffing.
+- Primera parte del artículo comprensible sin contexto externo.
+- Enlaces internos hacia piezas relacionadas cuando ayuden de verdad.
 
-No duplicar manualmente la barra de categorías/subcategorías/tags: `_layouts/article.html` ya la genera.
+No cambiar permalinks existentes salvo petición explícita: pueden romper SEO, enlaces externos y progreso guardado.
 
-## Diseño visual común
+## 11. Enlazado interno: convertir artículos en una red
 
-La identidad del blog debe mantenerse aunque cada artículo pueda tener una paleta ligeramente distinta.
+Siempre que exista una relación real, enlazar a contenido previo o posterior del blog. El objetivo es que un buen artículo lleve de forma natural a otro.
 
-Valores base para contenido editorial:
+Preferir enlaces contextuales del tipo “si quieres entender por qué…” frente a bloques genéricos de “otros posts”.
+
+En una serie, cada artículo debe responder “de dónde venimos” y “qué tiene sentido leer después” sin obligar al lector a volver a la portada.
+
+Toda ancla debe existir y los enlaces EN ↔ ES deben ser recíprocos.
+
+## 12. Diseño visual
+
+El blog debe parecer una publicación coherente, no una colección de micrositios.
+
+Base editorial:
 
 ```css
 .sheet { max-width: 920px; margin: 48px auto 96px; padding: 0 24px; }
 p { max-width: 70ch; line-height: 1.6; text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
 ```
 
-- No ampliar `.sheet` ni la medida de lectura sin una razón específica.
-- El texto de prosa debe ir justificado; en móvil puede pasar a izquierda si mejora legibilidad.
-- No centrar párrafos, listas explicativas ni texto de diagramas.
-- Eyebrows, captions, badges y etiquetas cortas van a la izquierda.
-- `index.html` puede mantener su encabezado centrado de forma intencionada.
-- Mantener jerarquía tipográfica consistente: `h1` principal, `h2` por sección y `h3` para bloques internos.
-- Evitar bloques gigantes de texto: dividir por ideas, no por longitud arbitraria.
-- Tablas y código deben tener `overflow-x:auto` o equivalente en pantallas pequeñas.
-- Los estados hover/focus deben conservar contraste y ser visibles.
+- Mantener una medida de lectura cómoda.
+- No centrar párrafos ni listas explicativas.
+- En móvil se puede usar alineación izquierda si mejora legibilidad.
+- Mantener jerarquía tipográfica consistente.
+- Código y tablas deben funcionar en pantallas pequeñas.
+- Hover y focus deben conservar contraste.
+- Un artículo puede tener detalles visuales propios, pero no debe romper la identidad global.
 
-## HTML y layout global
+Los elementos visuales deben enseñar algo: arquitectura, flujo, estado, comparación, secuencia o relación. Evitar decoración gratuita que distraiga del contenido.
 
-`_layouts/default.html` ya aporta `<head>`, viewport, Google Fonts, `base.css`, `theme.css`, canonical y metadatos sociales.
+## 13. Accesibilidad
+
+- Imágenes informativas con `alt` útil; decorativas con `alt=""`.
+- No depender solo del color para comunicar estados.
+- Contraste suficiente en light y dark mode.
+- Enlaces y controles con texto comprensible fuera de contexto.
+- Diagramas complejos acompañados de explicación textual.
+- Tablas con `th` correctos.
+- Controles personalizados navegables por teclado y con `:focus-visible`.
+
+## 14. HTML y layouts
+
+`_layouts/default.html` ya aporta `<head>`, viewport, fuentes, CSS global, canonical y metadatos sociales.
 
 Por tanto:
 
-- no añadir `<html>`, `<head>` o `<body>` dentro de artículos;
-- no repetir `<meta name="viewport">`;
-- no repetir enlaces a `fonts.googleapis.com`;
-- no repetir CSS global salvo que el artículo necesite una excepción concreta;
-- preferir HTML semántico: `article`, `section`, `nav`, `table`, `figure`, `figcaption`, `code`, `pre` cuando correspondan.
+- no añadir `<html>`, `<head>` o `<body>` dentro de posts;
+- no duplicar viewport ni fuentes;
+- no copiar CSS global dentro de cada artículo;
+- preferir HTML semántico: `article`, `section`, `nav`, `figure`, `figcaption`, `table`, `code`, `pre`.
 
-## Calidad del contenido técnico
+`_layouts/article.html` genera la barra de categorías/subcategorías/tags: no duplicarla manualmente.
 
-Todo artículo técnico debe pasar estas comprobaciones:
+## 15. Comandos y referencias
 
-- los nombres de herramientas, APIs, clases, métodos y conceptos son correctos;
-- los comandos son ejecutables en el contexto descrito;
-- las rutas, puertos, namespaces, nombres de recursos y versiones no se contradicen dentro del artículo;
-- el código mostrado compila o es explícitamente pseudocódigo;
-- las transiciones entre teoría y ejemplo están explicadas;
-- una tabla o diagrama no contradice el texto;
-- los estados de error, limitaciones o casos inválidos importantes se mencionan;
-- no presentar una simplificación didáctica como si fuera una regla universal.
-
-Cuando un artículo acompaña a un repositorio de ejemplo, el texto y el proyecto deben describir el mismo dominio, estados, endpoints, nombres y flujo.
-
-## Código y comandos
-
-Los bloques de terminal deben mostrar el comando exacto. Si el curso introduce un comando nuevo, sincronizar también `commands.html`.
+Los bloques de terminal deben mostrar comandos exactos. Si el curso introduce un comando nuevo, revisar si también debe añadirse a `commands.html`.
 
 En `commands.html`:
 
 - reutilizar una entrada existente si el comando y propósito son equivalentes;
-- añadir la nueva referencia `.refs` en lugar de duplicar;
-- si aparece una herramienta nueva, crear su `tool-section` y entrada en el TOC;
-- actualizar el `<span class="count">` de la sección;
-- los enlaces de referencia deben apuntar al `id` real de la sección de origen.
+- añadir referencias en lugar de duplicar contenido;
+- si aparece una herramienta nueva, crear su sección y entrada en el TOC;
+- mantener recuentos y anclas sincronizados.
 
-No modificar `assets/js/commands-filter.js` salvo que cambie el comportamiento del buscador.
+No modificar `assets/js/commands-filter.js` salvo que cambie realmente el comportamiento del buscador.
 
-## Enlaces y navegación
+## 16. Imágenes, diagramas y descargas
 
-- No cambiar permalinks existentes salvo petición expresa: pueden romper SEO, enlaces externos, navegación y progreso guardado.
-- Preferir rutas Jekyll estables (`relative_url`/`absolute_url`) en plantillas y páginas Liquid.
-- En HTML estático de artículos, comprobar la profundidad real de cualquier ruta relativa.
-- Los enlaces EN ↔ ES deben ser recíprocos.
-- Los enlaces anterior/siguiente de una serie deben formar una cadena correcta.
-- Toda ancla `#...` debe existir realmente en el destino.
-- Los enlaces a archivos descargables deben apuntar a un archivo existente en el repositorio publicado.
+- Preferir assets locales con nombres descriptivos.
+- Optimizar imágenes demasiado pesadas.
+- Una captura de terminal complementa al comando; no lo sustituye.
+- Toda descarga mencionada debe existir en una ruta publicada.
+- Un ZIP de ejemplo debe coincidir con el artículo que lo describe.
 
-## Bilingüismo
+## 17. Flujo obligatorio antes de publicar cambios
 
-Cuando haya pareja EN/ES:
+Antes de editar:
 
-- mismo slug y estructura conceptual;
-- `lang` correcto;
-- `lang_url` cruzado y recíproco;
-- mismas secciones esenciales, ejemplos, tablas y recursos;
-- adaptar el idioma, no traducir nombres de APIs, código, comandos o identificadores técnicos que deban conservarse;
-- mantener categorías y tags coherentes. Se permite traducir una etiqueta editorial si el sitio ya sigue ese patrón, pero no crear taxonomías duplicadas sin necesidad.
+1. Leer estas reglas.
+2. Revisar uno o dos artículos recientes del mismo tipo.
+3. Revisar layout, estilos y JS afectados.
+4. Comprobar si existe versión EN/ES.
+5. Reutilizar taxonomías existentes antes de crear nuevas.
 
-Si solo existe una versión por decisión editorial, no inventar automáticamente la otra salvo que el usuario lo pida.
+Después de editar:
 
-## SEO y descubrimiento
+1. Verificar front matter.
+2. Revisar HTML/Liquid y jerarquía de headings.
+3. Revisar rutas, enlaces y anclas.
+4. Comprobar navegación EN/ES y anterior/siguiente.
+5. Revisar responsive, accesibilidad y contraste.
+6. Confirmar que ejemplos, comandos y texto cuentan la misma historia.
+7. Ejecutar la validación disponible. Si no se ejecutó una build real de Jekyll, no afirmar que “la build pasa”.
 
-Cada artículo debe tener:
+## 18. Checklist editorial antes de dar un artículo por terminado
 
-- título específico y descriptivo;
-- `description` útil, natural y distinta del título;
-- un único `h1` visible;
-- headings en orden lógico;
-- permalink corto, descriptivo y estable;
-- categorías/tags relevantes, no una lista de palabras clave indiscriminada;
-- canonical gestionado por el layout;
-- `hreflang` cuando existe `lang_url`.
+Un artículo está listo cuando se puede responder “sí” a casi todo esto:
 
-No llenar `og_*` o `twitter_*` copiando exactamente el resto del front matter salvo que haya una razón real.
+- ¿El título promete algo concreto?
+- ¿La introducción llega rápido al problema?
+- ¿Hay una idea o aprendizaje que merezca ser recordado?
+- ¿Se explica por qué ocurre, no solo qué comandos ejecutar?
+- ¿Los ejemplos son creíbles y coherentes?
+- ¿Se muestran límites, fallos o trade-offs relevantes?
+- ¿Cada diagrama, tabla o bloque de código aporta información?
+- ¿El lector puede escanear el artículo y entender su estructura?
+- ¿Hay enlaces internos útiles?
+- ¿La conclusión aporta una decisión, aprendizaje o siguiente paso?
+- ¿EN y ES tienen la misma calidad cuando existen ambas versiones?
+- ¿El artículo se ve bien en móvil y escritorio?
 
-## Accesibilidad
+## 19. Regla final
 
-- Toda imagen informativa necesita `alt` que describa lo que aporta; una imagen decorativa puede usar `alt=""`.
-- No depender únicamente del color para comunicar estados.
-- Mantener contraste suficiente en light y dark mode.
-- Enlaces y controles deben tener texto comprensible fuera de contexto.
-- Diagramas complejos deben incluir una explicación textual cercana.
-- Tablas deben usar `th` para encabezados.
-- No usar tamaños de fuente tan pequeños que dificulten la lectura.
-- Mantener navegación por teclado y `:focus-visible` cuando haya controles personalizados.
+No optimizar el blog para producir más páginas. Optimizarlo para producir páginas que un desarrollador quiera guardar, compartir o consultar de nuevo.
 
-## Imágenes, diagramas y descargas
-
-- Usar assets locales con nombres descriptivos y estables.
-- Evitar imágenes enormes si pueden optimizarse sin pérdida útil.
-- Capturas de terminal deben complementar, no sustituir, el comando en texto.
-- Toda descarga mencionada en un artículo debe existir bajo `assets/downloads/` o una ruta equivalente publicada.
-- Si se adjunta un ZIP de ejemplo, su contenido debe corresponder al ejemplo descrito en el artículo.
-
-## Páginas especiales
-
-### `introduction.html` / `introduction-es.html`
-
-Teoría del curso fuera de la numeración. Usan `layout: article`, no tienen `part`, no viven en `_posts/` y deben mantener `lang_url` cruzado.
-
-### `argo-real-world-microservices.html` / `-es.html`
-
-Landing y temario del curso. El listado de módulos se genera con Liquid a partir de `site.posts`; no duplicar manualmente títulos, descripciones ni `reading_minutes`.
-
-El progreso usa `assets/js/course-progress.js` y la clave `argo-course-progress`, indexada por `post.url`. Cambiar un permalink puede hacer perder el progreso guardado.
-
-### `state-machines-theory-es.html` y páginas teóricas similares
-
-Deben seguir las mismas reglas editoriales y visuales que los posts aunque sean páginas raíz. Si enlazan un ejemplo descargable, el ejemplo debe coincidir exactamente con el caso explicado.
-
-## Revisión de artículos existentes
-
-Cuando se pida revisar o normalizar el blog completo, auditar al menos:
-
-1. front matter obligatorio;
-2. patrón de permalink;
-3. parejas EN/ES y `lang_url`;
-4. `reading_minutes` razonable;
-5. `.sheet` de 920px y prosa de 70ch/1.6;
-6. texto justificado y responsive;
-7. ausencia de viewport/fonts duplicados;
-8. headings y un solo `h1`;
-9. enlaces internos, externos y anclas;
-10. navegación anterior/siguiente;
-11. comandos sincronizados con `commands.html`;
-12. accesibilidad de imágenes/tablas/controles;
-13. coherencia entre texto, diagramas y ejemplos descargables;
-14. ortografía, gramática y terminología técnica;
-15. funcionamiento conceptual en light/dark y móvil.
-
-Corregir primero errores objetivos y roturas; después normalizar estilo. No rehacer el diseño de un artículo únicamente por preferencia estética si ya cumple estas reglas.
-
-## Criterio de terminado
-
-Un cambio está terminado cuando:
-
-- cumple estas reglas;
-- no rompe URLs existentes sin autorización;
-- EN/ES quedan sincronizados cuando corresponde;
-- enlaces y anclas están comprobados;
-- el contenido técnico no se contradice;
-- la presentación sigue siendo legible en escritorio y móvil;
-- se han actualizado archivos dependientes como `commands.html` cuando procede;
-- se ha ejecutado la validación disponible y se indica con claridad cualquier comprobación que solo pueda realizar GitHub Actions.
-
-`AGENTS.md` y `CLAUDE.md` deben mantenerse idénticos. Si se modifica uno, modificar el otro en el mismo cambio.
-
-## Organización de la raíz del repositorio
-
-- `index.html` debe ser el único archivo `.html` ubicado directamente en la raíz del repositorio.
-- Las páginas estáticas editoriales que no pertenezcan a `_posts/` deben vivir en `pages/`, conservando sus `permalink` públicos para no romper URLs, SEO, navegación ni progreso guardado.
-- No crear nuevas páginas HTML sueltas en la raíz. Antes de añadir una página estática, colocarla en `pages/`.
-- Los archivos y directorios técnicos que deban permanecer en la raíz por convención o por funcionamiento de las herramientas —por ejemplo `.github/`, `AGENTS.md`, `CLAUDE.md`, `Gemfile`, `_config.yml`, `_layouts/`, `_posts/` y `assets/`— pueden permanecer allí.
-- Esta regla de organización prevalece sobre cualquier referencia anterior de este documento que indique que `introduction*.html`, `argo-real-world-microservices*.html`, `commands.html` o páginas teóricas similares pueden vivir directamente en la raíz.
+Cuando haya que elegir entre cantidad y profundidad, elegir profundidad. Cuando haya que elegir entre parecer sofisticado y ser claro, elegir claridad. Cuando haya que elegir entre una explicación genérica y una experiencia concreta, elegir la experiencia concreta.
