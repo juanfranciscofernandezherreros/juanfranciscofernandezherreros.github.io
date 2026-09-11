@@ -1,12 +1,83 @@
 ---
 layout: default
 ---
-<div class="meta-bar-wrap">
+<div class="meta-bar-wrap" aria-label="Article taxonomy">
   {% for category in page.categories %}<a class="badge badge-cat" href="{{ '/' | relative_url }}?category={{ category | slugify }}">{{ category }}</a>{% endfor %}
   {% for subcategory in page.subcategories %}<a class="badge badge-subcat" href="{{ '/' | relative_url }}?subcategory={{ subcategory | slugify }}">{{ subcategory }}</a>{% endfor %}
   {% for tag in page.tags %}<a class="badge badge-tag" href="{{ '/' | relative_url }}?tag={{ tag | slugify }}">#{{ tag }}</a>{% endfor %}
 </div>
+
 {{ content }}
+
+{% assign previous_article = nil %}
+{% assign next_article = nil %}
+{% if page.series %}
+  {% assign series_articles = site.posts | where: "series", page.series | where: "lang", page.lang %}
+  {% if page.part %}
+    {% assign series_articles = series_articles | sort: "part" %}
+  {% else %}
+    {% assign series_articles = series_articles | sort: "date" %}
+  {% endif %}
+  {% assign found_current = false %}
+  {% for candidate in series_articles %}
+    {% if found_current and next_article == nil %}
+      {% assign next_article = candidate %}
+    {% endif %}
+    {% if candidate.url == page.url %}
+      {% assign found_current = true %}
+    {% elsif found_current == false %}
+      {% assign previous_article = candidate %}
+    {% endif %}
+  {% endfor %}
+{% endif %}
+
+{% assign primary_category = page.categories | first %}
+{% assign related_count = 0 %}
+<section class="article-discovery" aria-label="{% if page.lang == 'en' %}Continue reading{% else %}Seguir leyendo{% endif %}">
+  {% if previous_article or next_article %}
+  <div class="series-nav-wrap">
+    <p class="article-discovery-kicker">{% if page.lang == 'en' %}Reading path{% else %}Ruta de lectura{% endif %}</p>
+    <h2>{% if page.lang == 'en' %}Continue the series{% else %}Continúa la serie{% endif %}</h2>
+    <nav class="series-nav" aria-label="{% if page.lang == 'en' %}Previous and next article{% else %}Artículo anterior y siguiente{% endif %}">
+      {% if previous_article %}
+      <a class="series-nav-card" href="{{ previous_article.url | relative_url }}">
+        <span class="series-nav-label">← {% if page.lang == 'en' %}Previous{% else %}Anterior{% endif %}</span>
+        <strong>{{ previous_article.title }}</strong>
+        {% if previous_article.description %}<small>{{ previous_article.description }}</small>{% endif %}
+      </a>
+      {% else %}<span class="series-nav-spacer" aria-hidden="true"></span>{% endif %}
+      {% if next_article %}
+      <a class="series-nav-card series-nav-card-next" href="{{ next_article.url | relative_url }}">
+        <span class="series-nav-label">{% if page.lang == 'en' %}Next{% else %}Siguiente{% endif %} →</span>
+        <strong>{{ next_article.title }}</strong>
+        {% if next_article.description %}<small>{{ next_article.description }}</small>{% endif %}
+      </a>
+      {% endif %}
+    </nav>
+  </div>
+  {% endif %}
+
+  {% if primary_category %}
+  <div class="related-reading">
+    <p class="article-discovery-kicker">{% if page.lang == 'en' %}Go deeper{% else %}Profundiza{% endif %}</p>
+    <h2>{% if page.lang == 'en' %}More in {{ primary_category }}{% else %}Más sobre {{ primary_category }}{% endif %}</h2>
+    <div class="related-reading-grid">
+      {% assign recent_posts = site.posts | where: "lang", page.lang %}
+      {% for candidate in recent_posts %}
+        {% if candidate.url != page.url and candidate.categories contains primary_category and related_count < 3 %}
+          <a class="related-reading-card" href="{{ candidate.url | relative_url }}">
+            <span>{{ candidate.date | date: "%Y-%m-%d" }}</span>
+            <strong>{{ candidate.title }}</strong>
+            {% if candidate.description %}<small>{{ candidate.description }}</small>{% endif %}
+          </a>
+          {% assign related_count = related_count | plus: 1 %}
+        {% endif %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+
 {% if page.url == '/state-machines/es/' %}
 <section style="max-width:960px;margin:0 auto 96px;padding:0 24px;">
   <div style="background:var(--surface,#fff);border:1px solid var(--line-strong,#9fb0ac);padding:22px 24px;box-shadow:var(--shadow,0 1px 2px rgba(20,32,43,.06));">
