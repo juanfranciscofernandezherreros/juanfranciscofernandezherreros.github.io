@@ -1,0 +1,144 @@
+---
+layout: "article"
+title: "Anotaciones estereotipo en Spring: @Component, @Service, @Repository y @Controller"
+description: "Entiende qué son los estereotipos de Spring, cómo component scanning convierte clases anotadas en beans, qué comunica cada anotación y cómo responderlo en una entrevista técnica."
+permalink: "/java-spring/spring-stereotypes/es/"
+lang: "es"
+lang_url: "/java-spring/spring-stereotypes/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Spring Core"]
+tags: ["java","spring","spring-boot","stereotypes","component-scan","spring-beans","interviews"]
+date: "2026-09-11"
+reading_minutes: 8
+---
+<div class="sheet">
+  <div class="titleblock">
+    <p class="back"><a href="../../../">&larr; Volver al blog</a></p>
+    <p class="lang"><a href="../">EN · English</a></p>
+    <p class="eyebrow">Spring Core · Guía de entrevista</p>
+    <h1>Anotaciones estereotipo en Spring</h1>
+    <p class="lede">Por qué <code>@Component</code>, <code>@Service</code>, <code>@Repository</code> y <code>@Controller</code> son más que etiquetas, cómo las descubre Spring y cómo explicar la diferencia entre un estereotipo y un bean.</p>
+    <dl class="stamp"><div><dt>Nivel</dt><dd>Fundamentos</dd></div><div><dt>Tema</dt><dd>Spring Core</dd></div><div><dt>Objetivo</dt><dd>Entrevista técnica</dd></div></dl>
+  </div>
+
+  <section id="short-answer">
+    <div class="head"><span class="num">01</span><h2>La respuesta de 30 segundos</h2></div>
+    <p class="answer"><strong>Los estereotipos de Spring son anotaciones que clasifican componentes de la aplicación y permiten que Spring los descubra durante el component scanning.</strong> <code>@Component</code> es el estereotipo genérico. <code>@Service</code>, <code>@Repository</code> y <code>@Controller</code> son estereotipos especializados que comunican la responsabilidad de la clase. Cuando Spring descubre una de estas clases, puede crear una instancia y registrar esa instancia como bean dentro del <code>ApplicationContext</code>.</p>
+    <p>La distinción clave en entrevista es sencilla: <strong>la anotación no es el bean</strong>. La anotación marca la clase para su descubrimiento; el objeto que Spring crea y gestiona es el bean.</p>
+  </section>
+
+  <section id="why-stereotypes">
+    <div class="head"><span class="num">02</span><h2>Por qué Spring los llama estereotipos</h2></div>
+    <p>Un estereotipo describe el papel que desempeña una clase dentro de la aplicación. Dos clases pueden convertirse en beans de Spring y tener responsabilidades completamente distintas. El estereotipo hace visible esa responsabilidad para las personas, las herramientas y, en algunos casos, para el propio framework.</p>
+    <div class="grid">
+      <article class="card"><h3>@Component</h3><p>El estereotipo genérico. Se usa cuando ningún rol más específico describe bien el componente.</p></article>
+      <article class="card"><h3>@Service</h3><p>Suele identificar lógica de aplicación o de dominio. Su principal valor es comunicar intención.</p></article>
+      <article class="card"><h3>@Repository</h3><p>Identifica componentes de persistencia y participa en el mecanismo de traducción de excepciones de persistencia de Spring.</p></article>
+      <article class="card"><h3>@Controller</h3><p>Identifica controladores de Spring MVC que manejan peticiones web y normalmente resuelven vistas o respuestas.</p></article>
+    </div>
+    <p><code>@RestController</code> merece un matiz: está compuesta a partir de <code>@Controller</code> y <code>@ResponseBody</code>. Se usa para controladores cuyos valores de retorno se escriben directamente en el cuerpo de la respuesta HTTP, normalmente como JSON.</p>
+  </section>
+
+  <section id="component-scan">
+    <div class="head"><span class="num">03</span><h2>De la anotación al bean: component scanning</h2></div>
+    <p>Un estereotipo no ejecuta mágicamente la lógica de negocio. Su primer efecto práctico es convertir la clase en candidata para el component scanning.</p>
+    <pre><span class="ann">@Service</span>
+public class PaymentService {
+    public void confirmPayment(Long paymentId) {
+        // lógica de negocio
+    }
+}</pre>
+    <div class="flow" aria-label="De anotación estereotipo a bean gestionado por Spring"><span>Clase anotada</span><b>→</b><span>Component scan</span><b>→</b><span>BeanDefinition</span><b>→</b><span>Objeto creado</span><b>→</b><span>Bean gestionado</span></div>
+    <p>Spring registra metadatos del componente descubierto como un <code>BeanDefinition</code>. A partir de ahí, el contenedor puede instanciarlo, resolver sus dependencias, aplicar postprocesadores y proxies y gestionar su ciclo de vida.</p>
+    <p class="notice"><strong>Relación con Spring Boot:</strong> <code>@SpringBootApplication</code> incluye component scanning mediante <code>@ComponentScan</code>. Por defecto, el escaneo parte del paquete donde está la clase de aplicación y continúa por sus subpaquetes, por eso la estructura de paquetes importa.</p>
+  </section>
+
+  <section id="hierarchy">
+    <div class="head"><span class="num">04</span><h2>La relación entre las anotaciones</h2></div>
+    <p>Los estereotipos especializados están meta-anotados para que Spring pueda tratarlos como componentes. Un modelo mental útil es:</p>
+    <pre>@Component
+├── @Service
+├── @Repository
+└── @Controller
+    └── @RestController  // conceptualmente: @Controller + @ResponseBody</pre>
+    <p>Este diagrama es conceptual, no representa herencia de Java. Las anotaciones se componen mediante meta-anotaciones. Ese matiz es importante en una entrevista porque decir que <code>@Service</code> "extiende" <code>@Component</code> no es técnicamente preciso.</p>
+  </section>
+
+  <section id="component-vs-service">
+    <div class="head"><span class="num">05</span><h2>@Component vs @Service: ¿cambia el comportamiento?</h2></div>
+    <p>Para un component scanning normal, ambas pueden terminar registrando un bean gestionado por Spring. Esto funciona:</p>
+    <pre><span class="ann">@Component</span>
+public class PaymentService {
+    // ...
+}</pre>
+    <p>Pero esto comunica mejor la intención:</p>
+    <pre><span class="ann">@Service</span>
+public class PaymentService {
+    // ...
+}</pre>
+    <p>La elección importa porque la arquitectura también es comunicación. Un lector debería poder mirar la anotación y entender si la clase pertenece a infraestructura, lógica de negocio, persistencia o al límite HTTP.</p>
+    <p class="trap"><strong>No exageres la diferencia:</strong> <code>@Service</code> no hace automáticamente que un método sea transaccional, thread-safe o asíncrono. Esos comportamientos requieren mecanismos separados como <code>@Transactional</code>, proxies o un diseño explícito de concurrencia.</p>
+  </section>
+
+  <section id="repository">
+    <div class="head"><span class="num">06</span><h2>Por qué @Repository es más que documentación</h2></div>
+    <p><code>@Repository</code> comunica que la clase pertenece a la capa de persistencia, pero también puede participar en la traducción de excepciones. Spring puede transformar excepciones de persistencia soportadas en su jerarquía consistente de <code>DataAccessException</code>.</p>
+    <pre><span class="ann">@Repository</span>
+public class JdbcOrderRepository {
+    // operaciones de persistencia
+}</pre>
+    <p>La consecuencia arquitectónica útil es que las capas superiores pueden depender de una abstracción de excepciones de persistencia de Spring en lugar de quedar acopladas directamente a los tipos de excepción de una tecnología concreta.</p>
+    <p class="notice">La traducción exacta depende de la infraestructura de persistencia y del postprocesado configurados. En un stack típico de datos con Spring Boot gran parte de este wiring se configura automáticamente, pero no conviene describir el estereotipo como un try/catch universal.</p>
+  </section>
+
+  <section id="stereotype-vs-bean">
+    <div class="head"><span class="num">07</span><h2>Estereotipo no es lo mismo que Bean</h2></div>
+    <p>Esta es una de las mejores preguntas de seguimiento en una entrevista.</p>
+    <pre><span class="ann">@Service</span>
+public class InvoiceService {
+}
+</pre>
+    <p><code>InvoiceService</code> es una clase marcada con un estereotipo. Si component scanning la descubre, Spring registra su definición y normalmente crea una instancia gestionada. <strong>Esa instancia es el bean.</strong></p>
+    <p>También podemos crear un bean sin utilizar ningún estereotipo:</p>
+    <pre><span class="ann">@Configuration</span>
+public class AppConfig {
+    <span class="ann">@Bean</span>
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper();
+    }
+}</pre>
+    <p><code>ObjectMapper</code> se convierte en bean aunque la clase <code>ObjectMapper</code> no esté anotada con <code>@Component</code> ni <code>@Service</code> en nuestra aplicación. Esta es una de las razones por las que <code>@Bean</code> es útil para tipos de terceros o cuando la construcción necesita configuración explícita.</p>
+    <p>Para entender qué ocurre después del registro, continúa con <a href="{{ '/java-spring/bean-interview-guide/es/' | relative_url }}">Spring Beans en profundidad</a>.</p>
+  </section>
+
+  <section id="interview-followups">
+    <div class="head"><span class="num">08</span><h2>Preguntas de seguimiento habituales</h2></div>
+    <div class="grid">
+      <article class="card"><h3>¿Es obligatorio @Service?</h3><p>No. Una clase de servicio podría registrarse con <code>@Component</code> o explícitamente con <code>@Bean</code>. <code>@Service</code> comunica mejor su responsabilidad.</p></article>
+      <article class="card"><h3>¿Qué añade @RestController?</h3><p>Combina la semántica de controlador con <code>@ResponseBody</code>, de modo que los valores de retorno se escriben en el cuerpo de la respuesta por defecto.</p></article>
+      <article class="card"><h3>¿Puede el scanning ignorar un estereotipo?</h3><p>Sí. Si la clase está fuera de los paquetes configurados para escaneo, no será descubierta solo por tener <code>@Service</code> u otro estereotipo.</p></article>
+      <article class="card"><h3>¿Puedo crear mi propio estereotipo?</h3><p>Sí. Spring soporta anotaciones compuestas, por lo que una anotación propia puede estar meta-anotada con <code>@Component</code> y otras anotaciones.</p></article>
+    </div>
+  </section>
+
+  <section id="interview-answer">
+    <div class="head"><span class="num">09</span><h2>Una respuesta sólida de entrevista</h2></div>
+    <p class="answer">“Los estereotipos de Spring son anotaciones que se usan para clasificar componentes de la aplicación y hacerlos candidatos para component scanning. <code>@Component</code> es el estereotipo genérico, mientras que <code>@Service</code>, <code>@Repository</code> y <code>@Controller</code> expresan responsabilidades más concretas. Cuando Spring descubre una de estas clases, registra sus metadatos y puede crear un bean gestionado dentro del <code>ApplicationContext</code>. El estereotipo no es el bean: marca la clase para su descubrimiento. También diferencio <code>@Repository</code> porque puede participar en la traducción de excepciones de persistencia, y <code>@RestController</code> porque combina comportamiento de controlador con <code>@ResponseBody</code>. Además, los beans no tienen que venir de estereotipos; también pueden declararse explícitamente con <code>@Bean</code>.”</p>
+    <p>Esta respuesta funciona porque cubre definición, mecanismo, diferencias semánticas, un matiz específico del framework y la relación con los beans sin afirmar que todos los estereotipos cambian el comportamiento en runtime.</p>
+  </section>
+
+  <section id="takeaways">
+    <div class="head"><span class="num">10</span><h2>Qué debes recordar</h2></div>
+    <ul>
+      <li>Un estereotipo clasifica un componente; un bean es el objeto gestionado.</li>
+      <li><code>@Component</code> es genérico; los estereotipos especializados comunican intención arquitectónica.</li>
+      <li>Component scanning conecta los estereotipos con el registro automático de beans.</li>
+      <li><code>@Repository</code> tiene semántica específica de persistencia además del nombre.</li>
+      <li><code>@RestController</code> es un estereotipo web compuesto con semántica de response body.</li>
+      <li><code>@Bean</code> es un mecanismo alternativo de registro y no requiere anotar la clase objetivo.</li>
+    </ul>
+  </section>
+
+  <footer><p>Java & Spring Interview Notes · Estereotipos de Spring explicados desde la anotación hasta el bean gestionado.</p></footer>
+</div>
