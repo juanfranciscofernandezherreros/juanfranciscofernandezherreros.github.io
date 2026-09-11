@@ -1,224 +1,280 @@
-# Reglas de este repositorio: juanfranciscofernandezherreros.github.io
+# Reglas editoriales y técnicas del repositorio
 
-Sitio Jekyll (build vía GitHub Actions, `.github/workflows/pages.yml`,
-desplegado con `actions/deploy-pages`). Cada artículo es un post en
-`_posts/`, no un HTML suelto — el front matter controla la URL final.
+Estas reglas aplican a todo `juanfranciscofernandezherreros.github.io` y son la fuente de verdad para cualquier agente que modifique el blog. `AGENTS.md` y `CLAUDE.md` deben permanecer sincronizados y contener las mismas normas.
 
-## Cada artículo del curso lleva slug, nunca `part-N/` a secas
+El sitio es Jekyll, se construye con `.github/workflows/pages.yml` y se despliega mediante GitHub Pages. Antes de editar, revisar siempre los archivos relacionados, reutilizar patrones existentes y hacer cambios mínimos, coherentes y verificables.
 
-La URL pública de cada artículo (campo `permalink` en el front matter)
-sigue siempre este patrón:
+## Objetivo editorial
 
-```
+El blog debe parecer una publicación técnica cuidada, no una colección de páginas independientes. Cada artículo debe ser correcto, útil, legible, visualmente coherente y suficientemente completo para que un lector técnico entienda el tema sin depender de contexto implícito.
+
+- Priorizar claridad, precisión técnica y ejemplos concretos sobre relleno.
+- Explicar el porqué además del cómo.
+- Evitar repeticiones, frases vacías, introducciones largas y conclusiones que solo repiten el texto.
+- No inventar resultados, comandos ejecutados, benchmarks, versiones, capturas o comportamientos no verificados.
+- Si un dato puede cambiar con el tiempo, comprobarlo antes de publicarlo.
+- Mantener tono profesional, directo y pedagógico.
+- Los artículos EN y ES deben cubrir el mismo contenido y estructura esencial; no hacer una versión claramente inferior a la otra.
+
+## Flujo obligatorio antes de modificar contenido
+
+1. Leer este archivo completo.
+2. Revisar uno o dos artículos recientes del mismo tipo para copiar convenciones reales de estructura, CSS, badges y navegación.
+3. Comprobar si existe versión EN/ES y mantener ambas coordinadas cuando la petición afecte al contenido compartido.
+4. Revisar categorías, subcategorías y tags ya usados antes de crear otros.
+5. No cambiar permalinks existentes salvo petición explícita.
+6. Verificar rutas y enlaces resolviendo la URL final, no solo a ojo.
+7. Después de editar, revisar front matter, HTML, Liquid, enlaces, navegación y consistencia visual.
+8. Si no hay Jekyll/Ruby disponible localmente, no afirmar que la build pasó: la validación definitiva es GitHub Actions.
+
+## Tipos de contenido
+
+### Artículos del curso Argo Real World Microservices
+
+Viven en `_posts/` y usan:
+
+```text
 /argo-real-world-microservices/part-N/<slug-descriptivo>/
 /argo-real-world-microservices/part-N/<slug-descriptivo>/es/
 ```
 
-**Nunca** `/argo-real-world-microservices/part-N/` a secas — `part-N` por
-sí solo no es un slug válido.
+Nunca usar `/part-N/` a secas. `part-N` conserva el orden del curso y `<slug-descriptivo>` identifica el tema. El slug debe ser igual en EN y ES; solo cambia `/es/`.
 
-- `part-N` da el orden de lectura dentro de la serie (se mantiene en la
-  URL a petición explícita del usuario — no quitarlo).
-- `<slug-descriptivo>` nombra el tema real del artículo — normalmente el
-  repo del que trata (`hello-world-argocd`, `gitops-config`,
-  `crud-automation`...) o, si no hay un repo concreto, una frase corta en
-  kebab-case (`before-you-begin`).
-- El slug es el mismo en inglés y en español — solo cambia con el sufijo
-  `/es/`, igual que el resto del sitio.
+Nombre de archivo:
 
-Ejemplos ya en uso (parte → fichero en `_posts/` → permalink):
+```text
+_posts/YYYY-MM-DD-part-N-<slug>.html
+_posts/YYYY-MM-DD-part-N-<slug>-es.html
+```
 
-| Parte | Fichero (en) | Fichero (es) | Permalink |
-| --- | --- | --- | --- |
-| 0 | `2026-08-23-part-0-before-you-begin.html` | `...-es.html` | `part-0/before-you-begin/` |
-| 1 | `2026-08-22-part-1-hello-world-argocd.html` | `...-es.html` | `part-1/hello-world-argocd/` |
-| 2 | `2026-08-23-part-2-gitops-config.html` | `...-es.html` | `part-2/gitops-config/` |
-| 3 | `2026-08-23-part-3-crud-automation.html` | `...-es.html` | `part-3/crud-automation/` |
+### Artículos independientes
 
-### Artículos independientes del curso
+También viven en `_posts/`, pero no llevan `part`. Deben usar una URL temática estable:
 
-Los posts que no pertenecen a `Argo Real World Microservices` no llevan
-`part` y usan una URL temática: `/<tema>/<slug>/` en inglés y
-`/<tema>/<slug>/es/` en español. Deben conservar `series` para que la
-portada pueda agruparlos y filtrarlos. La portada coloca primero el recorrido
-del curso y después los artículos independientes, ordenados por fecha.
+```text
+/<tema>/<slug>/
+/<tema>/<slug>/es/
+```
 
-## Cómo está montado un post
+Deben incluir `series` para que la portada pueda agruparlos y filtrarlos.
 
-Cada fichero en `_posts/` es HTML puro (no Markdown — el contenido ya es
-HTML estructurado con `<pre>`, diagramas, etc., y kramdown lo estropearía).
-Front matter obligatorio en cada post:
+### Páginas estáticas editoriales
+
+`introduction*.html`, `argo-real-world-microservices*.html`, `commands.html` y páginas teóricas similares pueden vivir en la raíz cuando no deben participar como posts de `site.posts`. Deben seguir las mismas reglas visuales, de accesibilidad y calidad que los artículos.
+
+## Front matter
+
+Todo post debe tener como mínimo:
 
 ```yaml
 layout: article
-title: "..."                # sin el sufijo " — Argo Real World Microservices"
-description: "..."          # meta description / og:description base
-og_title: "..."             # opcional, si difiere de title + series
-og_description: "..."       # opcional
-twitter_title: "..."        # opcional
-twitter_description: "..."  # opcional, si es más corto que description
-permalink: "/argo-real-world-microservices/part-N/<slug>/[es/]"
-lang: "en"                  # o "es"
-lang_url: "..."             # URL absoluta de la versión en el otro idioma
-series: "Argo Real World Microservices"
-part: N
-categories: ["Nombre de categoría"]   # una o varias, badge + filtro
-subcategories: ["Nombre de subcategoría"] # una o varias, badge + filtro
-tags: ["tag1", "tag2", ...]           # filtro múltiple en la portada
+title: "..."
+description: "..."
+permalink: "/ruta/estable/"
+lang: "en" # o "es"
+lang_url: "/ruta/de/la/otra/version/"
+series: "..."
+categories: ["..."]
+subcategories: ["..."]
+tags: ["...", "..."]
 date: "YYYY-MM-DD"
-reading_minutes: N          # minutos de lectura reales (~200 palabras/min,
-                             # redondeado arriba, mínimo 3) — alimenta el
-                             # temario del curso, ver más abajo
+reading_minutes: N
 ```
 
-El cuerpo del fichero es: un `<style>` completo (cada artículo trae el
-suyo, con sus propios tokens — no hay hoja de estilos global compartida
-más allá de `assets/css/base.css`, que solo aporta las badges de
-categoría/subcategoría/tag) seguido del `<div class="sheet">…</div>` con el contenido
-real (titleblock, secciones, footer). El layout `_layouts/article.html`
-añade automáticamente la barra de categoría/subcategoría/tags encima; **no** hay que
-repetirla a mano dentro del post.
+Los artículos del curso añaden:
 
-- `_layouts/default.html`: `<head>` común (meta tags, viewport, la hoja de
-  Google Fonts, `base.css`). **No** repetir el meta viewport ni el
-  `<link>` de fonts.googleapis.com dentro del contenido de ningún post o
-  página raíz (`index.html`, `commands.html`, `introduction*.html`) —
-  `default.html` ya los pone en `<head>` para todo el sitio; duplicarlos
-  en `{{ content }}` los mete además en el `<body>` (posición inválida) y
-  duplica la petición de red, lo cual penaliza LCP/render-blocking en
-  Lighthouse/PageSpeed. Ya pasó en `index.html` y `commands.html` — se
-  corrigió quitando la copia repetida.
-- `_layouts/article.html`: envuelve `default` y añade la barra de badges
-  de categoría/subcategoría/tags antes de `{{ content }}`.
-- La portada (`index.html`, raíz) lista `site.posts` con `lang == "en"`,
-  ordenados por `part`, y monta los filtros (serie, categoría, subcategoría, tags,
-  buscador) a partir de esos mismos campos — ver `assets/js/filter.js`.
-  Un enlace `?category=<slug>`, `?subcategory=<slug>` o `?tag=<slug>` a la portada preselecciona
-  ese filtro (usado por las badges de cada artículo).
+```yaml
+part: N
+```
 
-## Alineación de texto — igual en todos los artículos
+`og_title`, `og_description`, `twitter_title` y `twitter_description` son opcionales y solo deben añadirse si aportan una variante útil. No duplicar metadatos sin motivo.
 
-El texto de prosa (párrafos `p`, definiciones `.term-card dd`, `.note p`,
-`<li>` de `.compare-col`) va **justificado** (`text-align:justify;`),
-con `hyphens:auto; -webkit-hyphens:auto;` para que la partición de
-palabras evite ríos de espacio en blanco — ambos bordes, izquierdo y
-derecho, quedan rectos. Es lo que ya lleva el selector `p{...}` global de
-cada artículo; cualquier bloque de prosa nuevo debe llevarlo también.
-Nunca centrado.
+`lang_url` debe ser una ruta absoluta desde la raíz del sitio, por ejemplo `/java/solid-principles/es/`. `_layouts/default.html` la transforma con `absolute_url` para `hreflang`. No exigir una URL completa con dominio dentro del front matter.
 
-Las etiquetas cortas de una sola línea (eyebrows, badges, captions de
-diagrama como `.arch-arrow-row`) van **alineadas a la izquierda**
-(`text-align:left;`) — justificar una sola línea no tiene efecto visual,
-así que no hace falta añadirlo ahí, pero tampoco deben ir centradas.
+`reading_minutes` se estima con el texto real visible del artículo, excluyendo `<style>`, HTML y bloques puramente decorativos: unas 200 palabras por minuto, redondeando hacia arriba y con mínimo 3.
 
-Esto aplica a **todo** el contenido de cada artículo (`_posts/*.html`,
-`introduction*.html`) y a `commands.html`. La única excepción sigue
-siendo `index.html` (la portada), donde el `h1`/`.role` del encabezado sí
-está centrado a propósito — no extender ese centrado a texto de artículo
-ni a diagramas.
+## Estructura de un artículo
 
-Mantener también el mismo ancho de columna de lectura en todos los
-artículos: `p{ max-width:70ch; line-height:1.6; }` y `.sheet{ max-width:920px; }`,
-copiados tal cual del resto de posts. Si un artículo nuevo cambia estos
-valores, el texto deja de alinearse visualmente con el resto de la serie
-al navegar de uno a otro.
+Cada artículo debe incluir:
 
-## Al añadir una parte nueva
+- un `<style>` propio cuando necesite estilos específicos;
+- un único contenedor principal `.sheet`;
+- un `titleblock` o encabezado equivalente con contexto claro;
+- secciones ordenadas con `id` estable cuando puedan enlazarse;
+- ejemplos, diagramas, tablas o código solo cuando aporten comprensión;
+- navegación de idioma si existe traducción;
+- navegación anterior/siguiente cuando pertenezca a una serie secuencial.
 
-1. Crear `_posts/<date>-part-N-<slug>[-es].html` con el front matter de
-   arriba (permalink, lang_url, categories, subcategories, tags, part, series, date).
-2. Elegir `categories`/`subcategories`/`tags` coherentes con lo ya usado (revisar los
-   posts existentes antes de inventar una categoría nueva).
-3. Actualizar `lang_url` cruzado entre la versión en/es.
-4. Si el artículo anterior tiene un enlace "next" o el siguiente tiene
-   "back", actualizarlos a mano dentro del contenido (son HTML estático,
-   no se generan solos).
-5. Añadir cualquier comando de terminal nuevo del artículo a
-   `commands.html` (`/commands/`) — ver más abajo. Es el glosario
-   centralizado, no se genera solo a partir de los posts.
-6. Sin `bundle`/`jekyll` instalados localmente en esta máquina — la
-   única build real ocurre en GitHub Actions al hacer push a `main`.
-   Revisar el log del workflow tras publicar.
+No duplicar manualmente la barra de categorías/subcategorías/tags: `_layouts/article.html` ya la genera.
 
-## `introduction.html` / `introduction-es.html` — teoría, fuera de la numeración
+## Diseño visual común
 
-Páginas estáticas en la raíz (`/argo-real-world-microservices/introduction/`
-y `.../es/`), con `layout: "article"` pero sin campo `part` — no viven en
-`_posts/` ni aparecen en el slider/listado de `site.posts` de la portada
-(ese bucle asume `part` numérico). Son el equivalente teórico de la serie:
-qué es un microservicio, un contenedor, Kubernetes, CI/CD, GitOps y ArgoCD,
-sin comandos ni pasos prácticos. Enlazadas desde `_layouts/default.html`
-(`.site-nav`, junto a `/commands/` y `/argo-real-world-microservices/`) y
-desde la Parte 0 (nota al inicio de la sección `#what`, en ambos idiomas).
-Al editarlas, mantener el `lang_url` cruzado y los enlaces relativos según
-su profundidad real (`/argo-real-world-microservices/introduction/` = 2
-niveles bajo la raíz; `.../es/` = 3).
+La identidad del blog debe mantenerse aunque cada artículo pueda tener una paleta ligeramente distinta.
 
-## `argo-real-world-microservices.html` / `-es.html` — landing/temario del curso
+Valores base para contenido editorial:
 
-Páginas estáticas en la raíz (`/argo-real-world-microservices/` y `.../es/`),
-`layout: "article"`, sin `part`. Es la portada del curso: objetivos de
-aprendizaje, prerrequisitos, y el temario completo con checkboxes de
-progreso guardados en `localStorage` (`assets/js/course-progress.js`, clave
-`argo-course-progress`, keyed por `post.url` — por eso el progreso no se
-pierde si cambia el orden de los módulos, solo si cambia un permalink).
+```css
+.sheet { max-width: 920px; margin: 48px auto 96px; padding: 0 24px; }
+p { max-width: 70ch; line-height: 1.6; text-align: justify; hyphens: auto; -webkit-hyphens: auto; }
+```
 
-El temario **no** está escrito a mano — se genera con Liquid a partir de
-`site.posts` (filtrado por `lang`, ordenado por `part`) más la página de
-Introduction correspondiente, igual que hace `index.html` con el slider.
-Cada módulo tira de `post.title`, `post.description` y `post.reading_minutes`
-— no dupliques ese texto a mano aquí; si cambia la descripción de un
-artículo, el temario se actualiza solo en el próximo build.
+- No ampliar `.sheet` ni la medida de lectura sin una razón específica.
+- El texto de prosa debe ir justificado; en móvil puede pasar a izquierda si mejora legibilidad.
+- No centrar párrafos, listas explicativas ni texto de diagramas.
+- Eyebrows, captions, badges y etiquetas cortas van a la izquierda.
+- `index.html` puede mantener su encabezado centrado de forma intencionada.
+- Mantener jerarquía tipográfica consistente: `h1` principal, `h2` por sección y `h3` para bloques internos.
+- Evitar bloques gigantes de texto: dividir por ideas, no por longitud arbitraria.
+- Tablas y código deben tener `overflow-x:auto` o equivalente en pantallas pequeñas.
+- Los estados hover/focus deben conservar contraste y ser visibles.
 
-- `reading_minutes` es un campo de front matter nuevo (además de los ya
-  documentados arriba) en `introduction*.html` y en cada `_posts/part-N-*`:
-  minutos de lectura estimados a partir del recuento real de palabras del
-  cuerpo (excluyendo el `<style>` y las etiquetas), no un número inventado.
-  Al añadir una parte nueva, calcula el suyo con el mismo criterio
-  (~200 palabras/minuto, redondeado hacia arriba, mínimo 3) en vez de
-  copiar el de otra parte.
-- Enlazada desde `_layouts/default.html` (`.site-nav`, como "Course") y
-  desde `index.html` (el `.series-label` sobre la lista de tarjetas).
-- El progreso marcado en esta página es independiente por idioma (EN y ES
-  tienen cada uno su propio `data-module-id` por URL) — no hay sincronía
-  cruzada EN/ES a propósito, ya que son dos recorridos de lectura
-  distintos aunque cubran el mismo contenido.
+## HTML y layout global
 
-## `commands.html` — glosario de comandos
+`_layouts/default.html` ya aporta `<head>`, viewport, Google Fonts, `base.css`, `theme.css`, canonical y metadatos sociales.
 
-Página estática en la raíz (`/commands/`), enlazada desde la portada.
-Centraliza **todos** los comandos de terminal usados en la serie,
-agrupados por herramienta (`winget`, `git`, `docker`, `kind`, `kubectl`,
-`argocd`, `maven / java`, `python`, `curl` — cada uno con su propio
-`<section class="tool-section" id="...">`) en vez de por artículo, para
-que sea un glosario de consulta y no un resumen narrativo.
+Por tanto:
 
-No se genera con Liquid a partir de los posts — es contenido curado a
-mano, cada `.cmd-entry` con: el comando exacto tal como aparece en el
-artículo (dentro de un `<pre>`, con el binario envuelto en
-`<span class="c">` igual que en los artículos), una descripción corta, y
-uno o más enlaces `.refs` de vuelta al artículo de origen (con ancla
-`#install`, `#verify`, `#startup`, `#commands`... cuando la sección
-tiene `id`; sin ancla si el comando vive antes de la primera `<section>`
-del artículo, p.ej. dentro del panel "Live locally").
+- no añadir `<html>`, `<head>` o `<body>` dentro de artículos;
+- no repetir `<meta name="viewport">`;
+- no repetir enlaces a `fonts.googleapis.com`;
+- no repetir CSS global salvo que el artículo necesite una excepción concreta;
+- preferir HTML semántico: `article`, `section`, `nav`, `table`, `figure`, `figcaption`, `code`, `pre` cuando correspondan.
 
-Al añadir un artículo nuevo con comandos:
-- Si el comando ya existe (mismo binario + mismo propósito, p.ej.
-  `docker build` o `mvn -f app/pom.xml clean package` que se repiten en
-  varias partes), añadir el nuevo enlace `.refs` a la entrada existente
-  en vez de duplicar la entrada.
-- Si es un comando nuevo, añadir una `.cmd-entry` nueva bajo la
-  `tool-section` de su binario (crear la sección + entrada en el `.toc`
-  de arriba si es una herramienta nueva en la serie).
-- Actualizar el `<span class="count">` de la sección — debe coincidir
-  con el número real de `.cmd-entry` dentro de ella.
-- El buscador de la página (`assets/js/commands-filter.js`) funciona
-  sobre el texto visible de cada `.cmd-entry` — no hace falta tocarlo al
-  añadir entradas nuevas.
+## Calidad del contenido técnico
 
-Verificar los enlaces con resolución real de URL (no a ojo) antes de
-publicar — este repo ya tiene un historial de enlaces rotos por cambiar
-la profundidad de anidamiento sin recalcular las rutas relativas. Como
-los permalinks se mantienen exactamente iguales a los de antes de migrar
-a Jekyll, los enlaces relativos dentro del contenido de cada post (p.ej.
-`../../part-1/hello-world-argocd/`) siguen siendo válidos tal cual.
+Todo artículo técnico debe pasar estas comprobaciones:
+
+- los nombres de herramientas, APIs, clases, métodos y conceptos son correctos;
+- los comandos son ejecutables en el contexto descrito;
+- las rutas, puertos, namespaces, nombres de recursos y versiones no se contradicen dentro del artículo;
+- el código mostrado compila o es explícitamente pseudocódigo;
+- las transiciones entre teoría y ejemplo están explicadas;
+- una tabla o diagrama no contradice el texto;
+- los estados de error, limitaciones o casos inválidos importantes se mencionan;
+- no presentar una simplificación didáctica como si fuera una regla universal.
+
+Cuando un artículo acompaña a un repositorio de ejemplo, el texto y el proyecto deben describir el mismo dominio, estados, endpoints, nombres y flujo.
+
+## Código y comandos
+
+Los bloques de terminal deben mostrar el comando exacto. Si el curso introduce un comando nuevo, sincronizar también `commands.html`.
+
+En `commands.html`:
+
+- reutilizar una entrada existente si el comando y propósito son equivalentes;
+- añadir la nueva referencia `.refs` en lugar de duplicar;
+- si aparece una herramienta nueva, crear su `tool-section` y entrada en el TOC;
+- actualizar el `<span class="count">` de la sección;
+- los enlaces de referencia deben apuntar al `id` real de la sección de origen.
+
+No modificar `assets/js/commands-filter.js` salvo que cambie el comportamiento del buscador.
+
+## Enlaces y navegación
+
+- No cambiar permalinks existentes salvo petición expresa: pueden romper SEO, enlaces externos, navegación y progreso guardado.
+- Preferir rutas Jekyll estables (`relative_url`/`absolute_url`) en plantillas y páginas Liquid.
+- En HTML estático de artículos, comprobar la profundidad real de cualquier ruta relativa.
+- Los enlaces EN ↔ ES deben ser recíprocos.
+- Los enlaces anterior/siguiente de una serie deben formar una cadena correcta.
+- Toda ancla `#...` debe existir realmente en el destino.
+- Los enlaces a archivos descargables deben apuntar a un archivo existente en el repositorio publicado.
+
+## Bilingüismo
+
+Cuando haya pareja EN/ES:
+
+- mismo slug y estructura conceptual;
+- `lang` correcto;
+- `lang_url` cruzado y recíproco;
+- mismas secciones esenciales, ejemplos, tablas y recursos;
+- adaptar el idioma, no traducir nombres de APIs, código, comandos o identificadores técnicos que deban conservarse;
+- mantener categorías y tags coherentes. Se permite traducir una etiqueta editorial si el sitio ya sigue ese patrón, pero no crear taxonomías duplicadas sin necesidad.
+
+Si solo existe una versión por decisión editorial, no inventar automáticamente la otra salvo que el usuario lo pida.
+
+## SEO y descubrimiento
+
+Cada artículo debe tener:
+
+- título específico y descriptivo;
+- `description` útil, natural y distinta del título;
+- un único `h1` visible;
+- headings en orden lógico;
+- permalink corto, descriptivo y estable;
+- categorías/tags relevantes, no una lista de palabras clave indiscriminada;
+- canonical gestionado por el layout;
+- `hreflang` cuando existe `lang_url`.
+
+No llenar `og_*` o `twitter_*` copiando exactamente el resto del front matter salvo que haya una razón real.
+
+## Accesibilidad
+
+- Toda imagen informativa necesita `alt` que describa lo que aporta; una imagen decorativa puede usar `alt=""`.
+- No depender únicamente del color para comunicar estados.
+- Mantener contraste suficiente en light y dark mode.
+- Enlaces y controles deben tener texto comprensible fuera de contexto.
+- Diagramas complejos deben incluir una explicación textual cercana.
+- Tablas deben usar `th` para encabezados.
+- No usar tamaños de fuente tan pequeños que dificulten la lectura.
+- Mantener navegación por teclado y `:focus-visible` cuando haya controles personalizados.
+
+## Imágenes, diagramas y descargas
+
+- Usar assets locales con nombres descriptivos y estables.
+- Evitar imágenes enormes si pueden optimizarse sin pérdida útil.
+- Capturas de terminal deben complementar, no sustituir, el comando en texto.
+- Toda descarga mencionada en un artículo debe existir bajo `assets/downloads/` o una ruta equivalente publicada.
+- Si se adjunta un ZIP de ejemplo, su contenido debe corresponder al ejemplo descrito en el artículo.
+
+## Páginas especiales
+
+### `introduction.html` / `introduction-es.html`
+
+Teoría del curso fuera de la numeración. Usan `layout: article`, no tienen `part`, no viven en `_posts/` y deben mantener `lang_url` cruzado.
+
+### `argo-real-world-microservices.html` / `-es.html`
+
+Landing y temario del curso. El listado de módulos se genera con Liquid a partir de `site.posts`; no duplicar manualmente títulos, descripciones ni `reading_minutes`.
+
+El progreso usa `assets/js/course-progress.js` y la clave `argo-course-progress`, indexada por `post.url`. Cambiar un permalink puede hacer perder el progreso guardado.
+
+### `state-machines-theory-es.html` y páginas teóricas similares
+
+Deben seguir las mismas reglas editoriales y visuales que los posts aunque sean páginas raíz. Si enlazan un ejemplo descargable, el ejemplo debe coincidir exactamente con el caso explicado.
+
+## Revisión de artículos existentes
+
+Cuando se pida revisar o normalizar el blog completo, auditar al menos:
+
+1. front matter obligatorio;
+2. patrón de permalink;
+3. parejas EN/ES y `lang_url`;
+4. `reading_minutes` razonable;
+5. `.sheet` de 920px y prosa de 70ch/1.6;
+6. texto justificado y responsive;
+7. ausencia de viewport/fonts duplicados;
+8. headings y un solo `h1`;
+9. enlaces internos, externos y anclas;
+10. navegación anterior/siguiente;
+11. comandos sincronizados con `commands.html`;
+12. accesibilidad de imágenes/tablas/controles;
+13. coherencia entre texto, diagramas y ejemplos descargables;
+14. ortografía, gramática y terminología técnica;
+15. funcionamiento conceptual en light/dark y móvil.
+
+Corregir primero errores objetivos y roturas; después normalizar estilo. No rehacer el diseño de un artículo únicamente por preferencia estética si ya cumple estas reglas.
+
+## Criterio de terminado
+
+Un cambio está terminado cuando:
+
+- cumple estas reglas;
+- no rompe URLs existentes sin autorización;
+- EN/ES quedan sincronizados cuando corresponde;
+- enlaces y anclas están comprobados;
+- el contenido técnico no se contradice;
+- la presentación sigue siendo legible en escritorio y móvil;
+- se han actualizado archivos dependientes como `commands.html` cuando procede;
+- se ha ejecutado la validación disponible y se indica con claridad cualquier comprobación que solo pueda realizar GitHub Actions.
+
+`AGENTS.md` y `CLAUDE.md` deben mantenerse idénticos. Si se modifica uno, modificar el otro en el mismo cambio.
