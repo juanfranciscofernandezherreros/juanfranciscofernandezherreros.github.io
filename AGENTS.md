@@ -278,3 +278,11 @@ Un cambio está terminado cuando:
 - se ha ejecutado la validación disponible y se indica con claridad cualquier comprobación que solo pueda realizar GitHub Actions.
 
 `AGENTS.md` y `CLAUDE.md` deben mantenerse idénticos. Si se modifica uno, modificar el otro en el mismo cambio.
+
+## Organización de la raíz del repositorio
+
+- `index.html` debe ser el único archivo `.html` ubicado directamente en la raíz del repositorio.
+- Las páginas estáticas editoriales que no pertenezcan a `_posts/` deben vivir en `pages/`, conservando sus `permalink` públicos para no romper URLs, SEO, navegación ni progreso guardado.
+- No crear nuevas páginas HTML sueltas en la raíz. Antes de añadir una página estática, colocarla en `pages/`.
+- Los archivos y directorios técnicos que deban permanecer en la raíz por convención o por funcionamiento de las herramientas —por ejemplo `.github/`, `AGENTS.md`, `CLAUDE.md`, `Gemfile`, `_config.yml`, `_layouts/`, `_posts/` y `assets/`— pueden permanecer allí.
+- Esta regla de organización prevalece sobre cualquier referencia anterior de este documento que indique que `introduction*.html`, `argo-real-world-microservices*.html`, `commands.html` o páginas teóricas similares pueden vivir directamente en la raíz.
