@@ -1,0 +1,256 @@
+---
+layout: "article"
+title: "Essential Java and Spring annotations you should know"
+description: "A practical guide to the fundamental Java and Spring annotations: what they do, when to use them, common mistakes, and interview-oriented code examples."
+permalink: "/java-spring/essential-annotations/"
+lang: "en"
+lang_url: "/java-spring/essential-annotations/es/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Java Core", "Spring Core"]
+tags: ["java","annotations","spring","spring-boot","validation","transactions","testing","interviews"]
+date: "2026-09-11"
+reading_minutes: 16
+---
+<style>
+.java-annotations{--panel:var(--surface);--muted:var(--ink-soft);--line:var(--line);--notice:var(--accent-soft);--warn:#8b5a16;--warn-bg:#f7eddd;max-width:940px;margin:36px auto 96px;padding:0 24px}
+.java-annotations .titleblock,.java-annotations .card,.java-annotations .answer{background:var(--panel);border:1px solid var(--line)}
+.java-annotations .titleblock{position:relative;padding:32px;overflow:hidden}.java-annotations .back,.java-annotations .lang,.java-annotations .eyebrow,.java-annotations .num,.java-annotations .stamp dt,.java-annotations pre,.java-annotations code{font-family:"IBM Plex Mono",monospace}.java-annotations .back,.java-annotations .lang{font-size:.74rem}.java-annotations .lang{position:absolute;right:24px;top:20px}.java-annotations .eyebrow,.java-annotations .num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.java-annotations h1,.java-annotations h2,.java-annotations h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.java-annotations .titleblock h1{font-size:clamp(2.4rem,7vw,4rem);line-height:1}.java-annotations .lede{font-size:1.03rem;color:var(--muted);max-width:66ch}.java-annotations .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:16px}.java-annotations .stamp>div{padding:12px;background:var(--surface-2);border-radius:8px}.java-annotations .stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.java-annotations .stamp dd{margin:4px 0 0;font-weight:600}
+.java-annotations section{margin-top:64px}.java-annotations .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}.java-annotations h2{font-size:clamp(1.6rem,4vw,2rem)}.java-annotations h3{font-size:1.1rem}.java-annotations p,.java-annotations li{max-width:72ch;line-height:1.72}.java-annotations .answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem;border-radius:10px}.java-annotations .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.java-annotations .card{padding:17px;border-radius:10px}.java-annotations .card h3{margin-bottom:7px}.java-annotations .card p{font-size:.93rem;color:var(--muted);margin:0}.java-annotations pre{overflow:auto;background:var(--code-bg);color:var(--code-ink);border:0;padding:16px;border-radius:10px;line-height:1.55;font-size:.82rem}.java-annotations .ann{color:#8de5a5}.java-annotations .notice,.java-annotations .trap{padding:14px 18px;border-radius:10px}.java-annotations .notice{border-left:3px solid var(--accent);background:var(--notice)}.java-annotations .trap{border-left:3px solid var(--warn);background:var(--warn-bg)}.java-annotations table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.92rem}.java-annotations th,.java-annotations td{padding:11px 12px;border:1px solid var(--line);text-align:left;vertical-align:top}.java-annotations th{background:var(--surface-2)}.java-annotations footer{color:var(--muted);border-top:1px solid var(--line);margin-top:52px;padding-top:20px}
+@media(max-width:680px){.java-annotations{padding:0 16px}.java-annotations .grid,.java-annotations .stamp{grid-template-columns:1fr}.java-annotations .titleblock{padding:24px 20px}.java-annotations .lang{position:static}.java-annotations table{display:block;overflow-x:auto}}
+</style>
+<div class="sheet java-annotations">
+  <div class="titleblock">
+    <p class="back"><a href="../../">&larr; Back to the blog</a></p>
+    <p class="lang"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Java & Spring · Interview guide</p>
+    <h1>Essential Java and Spring annotations</h1>
+    <p class="lede">The annotations you should recognize immediately in a modern Java project: from <code>@Override</code> to <code>@Transactional</code>, with examples, nuances, and common mistakes.</p>
+    <dl class="stamp"><div><dt>Level</dt><dd>Foundations → Intermediate</dd></div><div><dt>Scope</dt><dd>Java + Spring</dd></div><div><dt>Reading</dt><dd>16 minutes</dd></div></dl>
+  </div>
+
+  <section id="mental-model"><div class="head"><span class="num">01</span><h2>First: what an annotation really is</h2></div>
+    <p class="answer"><strong>An annotation is metadata attached to code.</strong> It can be consumed by the compiler, build tools, frameworks through reflection, or annotation processors to validate code, generate code, or decide behavior.</p>
+    <pre><span class="ann">@Override</span>
+public String toString() {
+    return "Order";
+}</pre>
+    <p>An annotation is not a method call. By itself it does not “execute” anything. Its meaning depends on who interprets it: the compiler, Spring, Hibernate, JUnit, Jakarta Validation, and so on.</p>
+  </section>
+
+  <section id="java-core"><div class="head"><span class="num">02</span><h2>Core Java annotations</h2></div>
+    <div class="grid">
+      <article class="card"><h3>@Override</h3><p>Checks that a method actually overrides a superclass or interface method.</p></article>
+      <article class="card"><h3>@Deprecated</h3><p>Marks an API that should not be used in new code and may be removed later.</p></article>
+      <article class="card"><h3>@SuppressWarnings</h3><p>Suppresses specific compiler warnings when you have a justified reason.</p></article>
+      <article class="card"><h3>@FunctionalInterface</h3><p>Declares that an interface must remain a valid single-abstract-method interface.</p></article>
+    </div>
+    <pre><span class="ann">@FunctionalInterface</span>
+public interface PriceCalculator {
+    BigDecimal calculate(Order order);
+}</pre>
+    <p class="notice"><strong>Interview nuance:</strong> <code>@Override</code> is more than documentation; it lets the compiler catch mistakes such as using the wrong method signature.</p>
+  </section>
+
+  <section id="deprecated"><div class="head"><span class="num">03</span><h2>@Deprecated and @SuppressWarnings: use them intentionally</h2></div>
+    <pre><span class="ann">@Deprecated</span>(since = "3.2", forRemoval = true)
+public void oldCheckout() {
+    // temporary compatibility
+}</pre>
+    <p><code>since</code> documents when the API became deprecated and <code>forRemoval = true</code> communicates an actual intention to remove it.</p>
+    <pre><span class="ann">@SuppressWarnings</span>("unchecked")
+List&lt;Order&gt; orders = (List&lt;Order&gt;) legacyApi.load();</pre>
+    <p class="trap"><strong>Avoid</strong> adding <code>@SuppressWarnings("all")</code> to hide problems. Suppress only the warning you understand and at the smallest reasonable scope.</p>
+  </section>
+
+  <section id="safevarargs"><div class="head"><span class="num">04</span><h2>@SafeVarargs and generics</h2></div>
+    <p><code>@SafeVarargs</code> states that a method with generic varargs does not perform unsafe operations on those arguments.</p>
+    <pre><span class="ann">@SafeVarargs</span>
+static &lt;T&gt; List&lt;T&gt; concat(List&lt;T&gt;... lists) {
+    return Stream.of(lists)
+        .flatMap(Collection::stream)
+        .toList();
+}</pre>
+    <p>It is a promise from the programmer to the compiler. If the promise is false, you can hide heap-pollution problems.</p>
+  </section>
+
+  <section id="meta"><div class="head"><span class="num">05</span><h2>How to create your own annotations</h2></div>
+    <p>To understand frameworks such as Spring, you should know the meta-annotations that define how a custom annotation behaves.</p>
+    <table>
+      <thead><tr><th>Annotation</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td><code>@Target</code></td><td>Defines where it may be used: type, method, field, parameter, and so on.</td></tr>
+        <tr><td><code>@Retention</code></td><td>Defines how long it exists: SOURCE, CLASS, or RUNTIME.</td></tr>
+        <tr><td><code>@Documented</code></td><td>Makes it appear in generated Javadoc.</td></tr>
+        <tr><td><code>@Inherited</code></td><td>Allows a class annotation to be inherited under specific rules.</td></tr>
+        <tr><td><code>@Repeatable</code></td><td>Allows the same annotation to be used more than once on an element.</td></tr>
+      </tbody>
+    </table>
+    <pre><span class="ann">@Target</span>(ElementType.METHOD)
+<span class="ann">@Retention</span>(RetentionPolicy.RUNTIME)
+<span class="ann">@Documented</span>
+public @interface Audited {
+    String action();
+}</pre>
+    <pre><span class="ann">@Audited</span>(action = "CONFIRM_PAYMENT")
+public void confirmPayment(Long paymentId) {
+    // ...
+}</pre>
+  </section>
+
+  <section id="spring-stereotypes"><div class="head"><span class="num">06</span><h2>Spring stereotypes</h2></div>
+    <div class="grid">
+      <article class="card"><h3>@Component</h3><p>Generic component discovered through component scanning.</p></article>
+      <article class="card"><h3>@Service</h3><p>Semantic specialization for application or domain-service logic.</p></article>
+      <article class="card"><h3>@Repository</h3><p>Persistence component; it can participate in exception translation.</p></article>
+      <article class="card"><h3>@Controller / @RestController</h3><p>Spring MVC web boundary. <code>@RestController</code> combines controller behavior with <code>@ResponseBody</code>.</p></article>
+    </div>
+    <pre><span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>("/api/orders")
+public class OrderController {
+    private final OrderService service;
+
+    public OrderController(OrderService service) {
+        this.service = service;
+    }
+
+    <span class="ann">@GetMapping</span>("/{id}")
+    public OrderResponse find(<span class="ann">@PathVariable</span> Long id) {
+        return service.find(id);
+    }
+}</pre>
+    <p>For a deeper comparison, read <a href="{{ '/java-spring/spring-stereotypes/' | relative_url }}">Spring stereotype annotations</a>.</p>
+  </section>
+
+  <section id="configuration"><div class="head"><span class="num">07</span><h2>@Configuration and @Bean</h2></div>
+    <p><code>@Configuration</code> marks a configuration class. <code>@Bean</code> explicitly registers the object returned by a method in the container.</p>
+    <pre><span class="ann">@Configuration</span>
+public class AppConfig {
+
+    <span class="ann">@Bean</span>
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper()
+            .findAndRegisterModules();
+    }
+}</pre>
+    <p>This is particularly useful when you cannot annotate the target class, for example a third-party library type.</p>
+  </section>
+
+  <section id="injection"><div class="head"><span class="num">08</span><h2>@Autowired, @Qualifier and @Primary</h2></div>
+    <p>With a single constructor, Spring can inject dependencies without <code>@Autowired</code>. That is usually the preferred option.</p>
+    <pre><span class="ann">@Service</span>
+public class CheckoutService {
+    private final PaymentGateway gateway;
+
+    public CheckoutService(PaymentGateway gateway) {
+        this.gateway = gateway;
+    }
+}</pre>
+    <p>When several beans share the same type, <code>@Qualifier</code> selects a specific candidate and <code>@Primary</code> declares the preferred one.</p>
+    <pre>public CheckoutService(
+    <span class="ann">@Qualifier</span>("stripeGateway") PaymentGateway gateway
+) {
+    this.gateway = gateway;
+}</pre>
+  </section>
+
+  <section id="config-values"><div class="head"><span class="num">09</span><h2>@Value and @ConfigurationProperties</h2></div>
+    <p><code>@Value</code> is useful for small isolated values. For related configuration groups, <code>@ConfigurationProperties</code> usually scales better.</p>
+    <pre><span class="ann">@ConfigurationProperties</span>(prefix = "payments")
+public record PaymentProperties(
+    URI baseUrl,
+    Duration timeout,
+    int retries
+) {}</pre>
+    <p>This gives you clearer typing, grouping, and validation than scattering many <code>@Value("${...}")</code> expressions across the application.</p>
+  </section>
+
+  <section id="transactions"><div class="head"><span class="num">10</span><h2>@Transactional</h2></div>
+    <p><code>@Transactional</code> declares a transactional boundary that Spring normally applies through proxies.</p>
+    <pre><span class="ann">@Service</span>
+public class TransferService {
+
+    <span class="ann">@Transactional</span>
+    public void transfer(Long from, Long to, BigDecimal amount) {
+        debit(from, amount);
+        credit(to, amount);
+    }
+}</pre>
+    <p class="trap"><strong>Classic mistake:</strong> an internal call through <code>this.transfer(...)</code> can bypass the proxy and therefore the expected transactional interception.</p>
+  </section>
+
+  <section id="validation"><div class="head"><span class="num">11</span><h2>Validation: @Valid, @Validated and constraints</h2></div>
+    <pre>public record CreateUserRequest(
+    <span class="ann">@NotBlank</span> String name,
+    <span class="ann">@Email</span> String email,
+    <span class="ann">@Min</span>(18) int age
+) {}</pre>
+    <pre><span class="ann">@PostMapping</span>
+public ResponseEntity&lt;UserResponse&gt; create(
+    <span class="ann">@Valid</span> <span class="ann">@RequestBody</span> CreateUserRequest request
+) {
+    return ResponseEntity.ok(service.create(request));
+}</pre>
+    <p><code>@Valid</code> triggers validation of the annotated object in the appropriate context. <code>@Validated</code> is Spring's integration that also supports validation groups and method-level validation.</p>
+  </section>
+
+  <section id="web"><div class="head"><span class="num">12</span><h2>Web annotations you should recognize</h2></div>
+    <div class="grid">
+      <article class="card"><h3>@RequestMapping</h3><p>Defines base paths and common request conditions for a controller or method.</p></article>
+      <article class="card"><h3>@GetMapping / @PostMapping</h3><p>Specializations for concrete HTTP methods.</p></article>
+      <article class="card"><h3>@PathVariable</h3><p>Extracts values embedded in the URL path.</p></article>
+      <article class="card"><h3>@RequestParam / @RequestBody</h3><p>Reads query parameters or deserializes the HTTP request body.</p></article>
+    </div>
+  </section>
+
+  <section id="persistence"><div class="head"><span class="num">13</span><h2>JPA: the minimum annotations you will encounter</h2></div>
+    <pre><span class="ann">@Entity</span>
+<span class="ann">@Table</span>(name = "orders")
+public class OrderEntity {
+
+    <span class="ann">@Id</span>
+    <span class="ann">@GeneratedValue</span>(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    <span class="ann">@Column</span>(nullable = false)
+    private BigDecimal total;
+}</pre>
+    <p>You should also recognize relationships such as <code>@OneToMany</code>, <code>@ManyToOne</code>, and <code>@JoinColumn</code>, but do not memorize JPA as a list: understand ownership, fetch type, cascades, and the impact of generated queries.</p>
+  </section>
+
+  <section id="testing"><div class="head"><span class="num">14</span><h2>Testing: JUnit and Spring Test</h2></div>
+    <pre><span class="ann">@Test</span>
+void calculatesTotal() {
+    assertEquals(new BigDecimal("20.00"), service.total(order));
+}</pre>
+    <div class="grid">
+      <article class="card"><h3>@Test</h3><p>Marks a JUnit 5 test method.</p></article>
+      <article class="card"><h3>@BeforeEach</h3><p>Prepares state before every test.</p></article>
+      <article class="card"><h3>@SpringBootTest</h3><p>Starts the full context when you need to verify wiring or integration.</p></article>
+      <article class="card"><h3>@WebMvcTest / @DataJpaTest</h3><p>Cheaper slices for focused web or persistence tests.</p></article>
+    </div>
+  </section>
+
+  <section id="interview"><div class="head"><span class="num">15</span><h2>How to answer this in an interview</h2></div>
+    <p class="answer">“In Java, an annotation is metadata that can be interpreted by the compiler, a tool, or a framework. In core Java, the ones I use most are <code>@Override</code>, <code>@Deprecated</code>, <code>@SuppressWarnings</code>, and <code>@FunctionalInterface</code>. To build custom annotations I need to understand <code>@Target</code> and <code>@Retention</code>. In Spring, I consider stereotypes such as <code>@Service</code> and <code>@Repository</code>, bean registration with <code>@Configuration</code>/<code>@Bean</code>, resolution with <code>@Qualifier</code>/<code>@Primary</code>, configuration with <code>@ConfigurationProperties</code>, transactions with <code>@Transactional</code>, validation with <code>@Valid</code>, and web annotations such as <code>@GetMapping</code> and <code>@RequestBody</code> to be foundational. The important part is not memorizing names but knowing who processes each annotation and what behavior it enables.”</p>
+  </section>
+
+  <section id="summary"><div class="head"><span class="num">16</span><h2>Final mental map</h2></div>
+    <table>
+      <thead><tr><th>Area</th><th>Essential annotations</th></tr></thead>
+      <tbody>
+        <tr><td>Java</td><td><code>@Override</code>, <code>@Deprecated</code>, <code>@SuppressWarnings</code>, <code>@FunctionalInterface</code>, <code>@SafeVarargs</code></td></tr>
+        <tr><td>Meta-annotations</td><td><code>@Target</code>, <code>@Retention</code>, <code>@Documented</code>, <code>@Inherited</code>, <code>@Repeatable</code></td></tr>
+        <tr><td>Spring Core</td><td><code>@Component</code>, <code>@Service</code>, <code>@Repository</code>, <code>@Configuration</code>, <code>@Bean</code>, <code>@Qualifier</code>, <code>@Primary</code></td></tr>
+        <tr><td>Spring Boot</td><td><code>@SpringBootApplication</code>, <code>@ConfigurationProperties</code>, <code>@Value</code></td></tr>
+        <tr><td>Web</td><td><code>@RestController</code>, <code>@RequestMapping</code>, <code>@GetMapping</code>, <code>@PostMapping</code>, <code>@PathVariable</code>, <code>@RequestParam</code>, <code>@RequestBody</code></td></tr>
+        <tr><td>Data</td><td><code>@Entity</code>, <code>@Table</code>, <code>@Id</code>, <code>@GeneratedValue</code>, <code>@Column</code></td></tr>
+        <tr><td>Validation</td><td><code>@Valid</code>, <code>@Validated</code>, <code>@NotBlank</code>, <code>@Email</code>, <code>@Min</code></td></tr>
+        <tr><td>Testing</td><td><code>@Test</code>, <code>@BeforeEach</code>, <code>@SpringBootTest</code>, <code>@WebMvcTest</code>, <code>@DataJpaTest</code></td></tr>
+      </tbody>
+    </table>
+    <p>For a deeper look at how Spring turns annotated components into managed objects, continue with <a href="{{ '/java-spring/bean-interview-guide/' | relative_url }}">Spring Beans in depth</a>.</p>
+  </section>
+
+  <footer><p>Java & Spring Interview Notes · Annotations explained from the compiler to Spring Boot.</p></footer>
+</div>
