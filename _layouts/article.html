@@ -7,3 +7,13 @@ layout: default
   {% for tag in page.tags %}<a class="badge badge-tag" href="{{ '/' | relative_url }}?tag={{ tag | slugify }}">#{{ tag }}</a>{% endfor %}
 </div>
 {{ content }}
+{% if page.url == '/state-machines/es/' %}
+<section style="max-width:960px;margin:0 auto 96px;padding:0 24px;">
+  <div style="background:var(--surface,#fff);border:1px solid var(--line-strong,#9fb0ac);padding:22px 24px;box-shadow:var(--shadow,0 1px 2px rgba(20,32,43,.06));">
+    <p style="margin:0 0 8px;font-family:'IBM Plex Mono',monospace;font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--accent,#1d5c8a);">Ejemplo práctico</p>
+    <h2 style="margin:0 0 10px;">Proyecto Spring Boot</h2>
+    <p style="margin:0 0 16px;">Descarga el proyecto completo del ejemplo de la máquina de estados del pedido, con los estados Creado, Pagado, Enviado, Cancelado y Reembolsado.</p>
+    <p style="margin:0;"><a href="{{ '/assets/downloads/maquina-de-estados.zip' | relative_url }}" download style="display:inline-block;padding:10px 14px;border:1px solid var(--accent,#1d5c8a);text-decoration:none;font-family:'IBM Plex Mono',monospace;font-weight:600;">↓ Descargar maquina-de-estados.zip</a></p>
+  </div>
+</section>
+{% endif %}
