@@ -18,6 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
 <link rel="stylesheet" href="{{ '/assets/css/base.css' | relative_url }}" />
 <link rel="stylesheet" href="{{ '/assets/css/theme.css' | relative_url }}" />
+{% if page.layout == 'article' %}<link rel="stylesheet" href="{{ '/assets/css/article-discovery.css' | relative_url }}" />{% endif %}
 <link rel="canonical" href="{{ page.url | absolute_url }}" />
 {% feed_meta %}
 </head>
