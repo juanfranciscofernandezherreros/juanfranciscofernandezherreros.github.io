@@ -1,0 +1,299 @@
+---
+layout: "article"
+title: "Spring Boot REST API annotations: a complete practical guide"
+description: "A practical reference to the annotations used when building a REST API with Spring Boot: endpoints, request data, JSON, validation, errors, CORS, security and OpenAPI, with examples and common mistakes."
+permalink: "/java-spring/rest-api-annotations/"
+lang: "en"
+lang_url: "/java-spring/rest-api-annotations/es/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Spring Boot", "REST APIs"]
+tags: ["java","spring","spring-boot","rest","api","annotations","validation","spring-security","openapi","swagger"]
+date: "2026-09-14"
+reading_minutes: 25
+---
+<style>
+.rest-annotations{--panel:var(--surface);--muted:var(--ink-soft);--line:var(--line);--notice:var(--accent-soft);--warn:#8b5a16;--warn-bg:#f7eddd;max-width:940px;margin:36px auto 96px;padding:0 24px}.rest-annotations .titleblock,.rest-annotations .card,.rest-annotations .callout{background:var(--panel);border:1px solid var(--line)}.rest-annotations .titleblock{position:relative;padding:32px;overflow:hidden}.rest-annotations .back,.rest-annotations .lang,.rest-annotations .eyebrow,.rest-annotations .num,.rest-annotations .stamp dt,.rest-annotations pre,.rest-annotations code{font-family:"IBM Plex Mono",monospace}.rest-annotations .back,.rest-annotations .lang{font-size:.74rem}.rest-annotations .lang{position:absolute;right:24px;top:20px}.rest-annotations .eyebrow,.rest-annotations .num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.rest-annotations h1,.rest-annotations h2,.rest-annotations h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.rest-annotations .titleblock h1{font-size:clamp(2.35rem,7vw,4rem);line-height:1}.rest-annotations .lede{font-size:1.03rem;color:var(--muted);max-width:68ch}.rest-annotations .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:16px}.rest-annotations .stamp>div{padding:12px;background:var(--surface-2);border-radius:8px}.rest-annotations .stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.rest-annotations .stamp dd{margin:4px 0 0;font-weight:600}.rest-annotations section{margin-top:64px}.rest-annotations .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}.rest-annotations h2{font-size:clamp(1.6rem,4vw,2rem)}.rest-annotations h3{font-size:1.12rem;margin-top:30px}.rest-annotations p,.rest-annotations li{max-width:74ch;line-height:1.72}.rest-annotations .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.rest-annotations .card{padding:17px;border-radius:10px}.rest-annotations .card h3{margin:0 0 7px}.rest-annotations .card p{font-size:.93rem;color:var(--muted);margin:0}.rest-annotations pre{overflow:auto;background:var(--code-bg);color:var(--code-ink);border:0;padding:16px;border-radius:10px;line-height:1.55;font-size:.82rem}.rest-annotations .ann{color:#8de5a5}.rest-annotations .str{color:#ffd27d}.rest-annotations .notice,.rest-annotations .trap,.rest-annotations .callout{padding:15px 18px;border-radius:10px}.rest-annotations .notice{border-left:3px solid var(--accent);background:var(--notice)}.rest-annotations .trap{border-left:3px solid var(--warn);background:var(--warn-bg)}.rest-annotations .callout{border-left:4px solid var(--accent)}.rest-annotations table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.9rem}.rest-annotations th,.rest-annotations td{padding:10px 11px;border:1px solid var(--line);text-align:left;vertical-align:top}.rest-annotations th{background:var(--surface-2)}.rest-annotations .toc{columns:2;column-gap:28px}.rest-annotations .toc li{break-inside:avoid;margin:.35rem 0}.rest-annotations footer{color:var(--muted);border-top:1px solid var(--line);margin-top:52px;padding-top:20px}@media(max-width:680px){.rest-annotations{padding:0 16px}.rest-annotations .grid,.rest-annotations .stamp{grid-template-columns:1fr}.rest-annotations .titleblock{padding:24px 20px}.rest-annotations .lang{position:static}.rest-annotations table{display:block;overflow-x:auto}.rest-annotations .toc{columns:1}}
+</style>
+<div class="sheet rest-annotations">
+  <header class="titleblock">
+    <p class="back"><a href="../../">&larr; Back to the blog</a></p>
+    <p class="lang"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Java & Spring · REST API reference</p>
+    <h1>Spring Boot REST API annotations</h1>
+    <p class="lede">A REST controller can accumulate an unsettling number of <code>@Something</code> annotations. The useful way to learn them is not memorization: it is understanding <strong>which part of the HTTP contract each annotation controls</strong>, which framework interprets it, and when you should avoid it.</p>
+    <dl class="stamp"><div><dt>Level</dt><dd>Fundamentals → Advanced</dd></div><div><dt>Stack</dt><dd>Spring MVC + Jakarta</dd></div><div><dt>Reading</dt><dd>25 minutes</dd></div></dl>
+  </header>
+
+  <section id="scope"><div class="head"><span class="num">01</span><h2>What “all” means in a REST API</h2></div>
+    <p>Java has no universal list of “REST annotations”. An API may combine annotations from Spring MVC, Jakarta Validation, Spring Security, Jackson, OpenAPI, JPA, Lombok, and project-specific libraries. Enumerating the entire ecosystem would produce a huge list with little practical value.</p>
+    <p>This guide covers the annotations you are likely to encounter <strong>at the HTTP boundary of a Spring Boot REST API</strong>: annotations that define endpoints, read requests, build responses, validate data, translate failures, control CORS and authorization, serialize JSON, or document the contract.</p>
+    <p class="notice"><strong>Mental model:</strong> whenever you see an annotation, first ask “who interprets it?”. <code>@GetMapping</code> belongs to Spring MVC; <code>@NotBlank</code> to Jakarta Validation; <code>@JsonIgnore</code> to Jackson; <code>@PreAuthorize</code> to Spring Security; <code>@Operation</code> to OpenAPI/Swagger.</p>
+    <ol class="toc"><li><a href="#controller">Controllers</a></li><li><a href="#mapping">Routes and HTTP verbs</a></li><li><a href="#input">Request data</a></li><li><a href="#binding">Binding and formatting</a></li><li><a href="#validation">Validation</a></li><li><a href="#response">HTTP response</a></li><li><a href="#errors">Errors</a></li><li><a href="#cors">CORS</a></li><li><a href="#json">JSON/Jackson</a></li><li><a href="#security">Security</a></li><li><a href="#openapi">OpenAPI</a></li><li><a href="#complete">Complete example</a></li></ol>
+  </section>
+
+  <section id="controller"><div class="head"><span class="num">02</span><h2>@Controller, @ResponseBody and @RestController</h2></div>
+    <div class="grid"><article class="card"><h3>@Controller</h3><p>Declares an MVC component. It also supports server-rendered applications, where returning a <code>String</code> may mean “view name”.</p></article><article class="card"><h3>@ResponseBody</h3><p>Writes a method return value to the HTTP body through an <code>HttpMessageConverter</code>, for example as JSON.</p></article><article class="card"><h3>@RestController</h3><p>A composed annotation combining <code>@Controller</code> and <code>@ResponseBody</code> for every handler method.</p></article><article class="card"><h3>@RequestMapping</h3><p>Can be placed on a class to define a common base path and shared mapping rules.</p></article></div>
+    <pre><span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(path = <span class="str">"/api/orders"</span>, produces = MediaType.APPLICATION_JSON_VALUE)
+public class OrderController {
+    // every handler writes its return value to the HTTP response
+}</pre>
+    <p><code>@RestController</code> is normally the right choice for a JSON API. <code>@Controller</code> + <code>@ResponseBody</code> remains valid when you deliberately mix REST handlers and view rendering.</p>
+  </section>
+
+  <section id="mapping"><div class="head"><span class="num">03</span><h2>Routes and HTTP verbs</h2></div>
+    <p><code>@RequestMapping</code> is the general-purpose mapping annotation. <code>@GetMapping</code>, <code>@PostMapping</code>, <code>@PutMapping</code>, <code>@PatchMapping</code>, and <code>@DeleteMapping</code> are composed annotations that make the HTTP method explicit.</p>
+    <table><thead><tr><th>Annotation</th><th>Typical use</th><th>Example</th></tr></thead><tbody><tr><td><code>@GetMapping</code></td><td>Read one or more resources.</td><td><code>GET /api/orders/42</code></td></tr><tr><td><code>@PostMapping</code></td><td>Create a resource or trigger a non-idempotent operation.</td><td><code>POST /api/orders</code></td></tr><tr><td><code>@PutMapping</code></td><td>Replace resource state idempotently.</td><td><code>PUT /api/orders/42</code></td></tr><tr><td><code>@PatchMapping</code></td><td>Partially modify a resource.</td><td><code>PATCH /api/orders/42</code></td></tr><tr><td><code>@DeleteMapping</code></td><td>Delete a resource.</td><td><code>DELETE /api/orders/42</code></td></tr><tr><td><code>@RequestMapping</code></td><td>General mapping or more specific conditions.</td><td><code>method = RequestMethod.HEAD</code></td></tr></tbody></table>
+    <pre><span class="ann">@PostMapping</span>(
+    consumes = MediaType.APPLICATION_JSON_VALUE,
+    produces = MediaType.APPLICATION_JSON_VALUE
+)
+public ResponseEntity&lt;OrderResponse&gt; create(...) { ... }</pre>
+    <p>The important mapping attributes are <code>path</code>/<code>value</code>, <code>method</code>, <code>params</code>, <code>headers</code>, <code>consumes</code>, and <code>produces</code>. The latter four can select between handlers that otherwise share the same path.</p>
+    <pre><span class="ann">@GetMapping</span>(params = <span class="str">"status=PAID"</span>)
+public List&lt;OrderResponse&gt; paidOrders() { ... }
+
+<span class="ann">@GetMapping</span>(headers = <span class="str">"X-API-Version=2"</span>)
+public List&lt;OrderV2Response&gt; listV2() { ... }</pre>
+    <p class="trap"><strong>HTTP methods are not decoration.</strong> Choosing POST, PUT, or PATCH is part of the API contract and affects idempotency, retries, caching, proxies, and client expectations.</p>
+  </section>
+
+  <section id="input"><div class="head"><span class="num">04</span><h2>How data enters an endpoint</h2></div>
+    <p>An HTTP request has several data locations: path, query string, headers, cookies, body, and multipart parts. Spring provides a distinct annotation for each source.</p>
+    <table><thead><tr><th>Annotation</th><th>Reads</th><th>Example</th></tr></thead><tbody><tr><td><code>@PathVariable</code></td><td>Variable embedded in the path.</td><td><code>/orders/{id}</code></td></tr><tr><td><code>@RequestParam</code></td><td>Query parameter or form data.</td><td><code>?page=0&amp;size=20</code></td></tr><tr><td><code>@RequestHeader</code></td><td>HTTP header.</td><td><code>X-Correlation-Id</code></td></tr><tr><td><code>@CookieValue</code></td><td>A specific cookie.</td><td><code>SESSION</code></td></tr><tr><td><code>@RequestBody</code></td><td>Whole body, deserialized.</td><td>JSON → DTO</td></tr><tr><td><code>@RequestPart</code></td><td>One multipart part.</td><td>JSON + file</td></tr><tr><td><code>@ModelAttribute</code></td><td>Binding from parameters/form data into an object.</td><td>Complex filters</td></tr><tr><td><code>@RequestAttribute</code></td><td>Attribute previously placed on the request.</td><td>Filter/interceptor data</td></tr><tr><td><code>@SessionAttribute</code></td><td>Existing HTTP session attribute.</td><td>Session state</td></tr><tr><td><code>@MatrixVariable</code></td><td>Matrix parameter in a path segment.</td><td><code>/cars;color=red</code></td></tr></tbody></table>
+    <h3>@PathVariable</h3><pre><span class="ann">@GetMapping</span>(<span class="str">"/{id}"</span>)
+public OrderResponse find(<span class="ann">@PathVariable</span> Long id) {
+    return service.find(id);
+}</pre>
+    <h3>@RequestParam</h3><pre><span class="ann">@GetMapping</span>
+public Page&lt;OrderResponse&gt; search(
+    <span class="ann">@RequestParam</span>(defaultValue = <span class="str">"0"</span>) int page,
+    <span class="ann">@RequestParam</span>(defaultValue = <span class="str">"20"</span>) int size,
+    <span class="ann">@RequestParam</span>(required = false) OrderStatus status
+) { ... }</pre>
+    <p><code>required = false</code> makes the parameter optional. <code>defaultValue</code> provides a value and effectively makes the parameter optional too.</p>
+    <h3>@RequestHeader and @CookieValue</h3><pre>public OrderResponse find(
+    <span class="ann">@RequestHeader</span>(<span class="str">"X-Correlation-Id"</span>) String correlationId,
+    <span class="ann">@RequestHeader</span>(value = <span class="str">"Accept-Language"</span>, required = false) String language,
+    <span class="ann">@CookieValue</span>(value = <span class="str">"experiment"</span>, required = false) String experiment
+) { ... }</pre>
+    <h3>@RequestBody</h3><pre><span class="ann">@PostMapping</span>
+public ResponseEntity&lt;OrderResponse&gt; create(
+    <span class="ann">@Valid</span> <span class="ann">@RequestBody</span> CreateOrderRequest request
+) { ... }</pre>
+    <p>Spring delegates body reading to an <code>HttpMessageConverter</code>. With JSON, Jackson commonly turns the document into your DTO. <code>@RequestBody</code> is not “the JSON annotation”: it can work with other media types whenever a compatible converter exists.</p>
+    <p class="notice"><strong>Important detail:</strong> for traditional form data, prefer <code>@RequestParam</code> or <code>@ModelAttribute</code>. Spring's own documentation warns that form parameter access and subsequent <code>@RequestBody</code> reading can be unreliable with the Servlet API.</p>
+    <h3>@RequestPart for multipart</h3><pre><span class="ann">@PostMapping</span>(path = <span class="str">"/{id}/invoice"</span>, consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+public void uploadInvoice(
+    <span class="ann">@PathVariable</span> Long id,
+    <span class="ann">@Valid</span> <span class="ann">@RequestPart</span>(<span class="str">"metadata"</span>) InvoiceMetadata metadata,
+    <span class="ann">@RequestPart</span>(<span class="str">"file"</span>) MultipartFile file
+) { ... }</pre>
+  </section>
+
+  <section id="binding"><div class="head"><span class="num">05</span><h2>Binding, dates, numbers and conversion rules</h2></div>
+    <h3>@ModelAttribute</h3><p>Builds an object and binds request parameters to its properties. In REST APIs it is most useful for complex filters or form-based endpoints.</p>
+    <pre>public record OrderFilter(OrderStatus status, LocalDate from, LocalDate to) {}
+
+<span class="ann">@GetMapping</span>
+public List&lt;OrderResponse&gt; search(<span class="ann">@ModelAttribute</span> OrderFilter filter) { ... }</pre>
+    <h3>@DateTimeFormat and @NumberFormat</h3><pre>public List&lt;OrderResponse&gt; search(
+    <span class="ann">@RequestParam</span>
+    <span class="ann">@DateTimeFormat</span>(iso = DateTimeFormat.ISO.DATE)
+    LocalDate from
+) { ... }</pre>
+    <p>These annotations belong to Spring's conversion and formatting layer. They are useful for text arriving in paths, query parameters, or forms. Dates inside JSON are a different layer and are typically controlled by Jackson configuration such as <code>@JsonFormat</code>.</p>
+    <h3>@InitBinder</h3><p><code>@InitBinder</code> customizes a controller's <code>WebDataBinder</code>: conversion, editors, and allowed fields. It is powerful, although reusable converters are often easier to maintain than scattered controller-specific binding logic.</p>
+  </section>
+
+  <section id="validation"><div class="head"><span class="num">06</span><h2>@Valid, @Validated and Jakarta constraints</h2></div>
+    <p>Binding transforms data. Validation decides whether that data is acceptable. Those are different concerns.</p>
+    <h3>@Valid</h3><p><code>jakarta.validation.Valid</code> triggers cascaded validation. It is the usual choice on a request DTO.</p>
+    <pre>public record CreateOrderRequest(
+    <span class="ann">@NotBlank</span> String customerId,
+    <span class="ann">@NotEmpty</span> <span class="ann">@Valid</span> List&lt;OrderLineRequest&gt; lines,
+    <span class="ann">@Email</span> String contactEmail
+) {}
+
+public record OrderLineRequest(
+    <span class="ann">@NotBlank</span> String sku,
+    <span class="ann">@Positive</span> int quantity
+) {}</pre>
+    <h3>@Validated</h3><p><code>org.springframework.validation.annotation.Validated</code> integrates Bean Validation with Spring and adds validation-group support, useful when the same model has different rules for different use cases.</p>
+    <h3>Standard constraints worth recognizing</h3>
+    <table><thead><tr><th>Annotation</th><th>Checks</th></tr></thead><tbody><tr><td><code>@NotNull</code> / <code>@Null</code></td><td>Must be non-null / null.</td></tr><tr><td><code>@NotEmpty</code></td><td>Non-null and non-empty string, collection, map, or array.</td></tr><tr><td><code>@NotBlank</code></td><td>Non-null text containing at least one non-whitespace character.</td></tr><tr><td><code>@Size(min,max)</code></td><td>Size of text, collection, map, or array.</td></tr><tr><td><code>@Min</code> / <code>@Max</code></td><td>Integer numeric limits.</td></tr><tr><td><code>@DecimalMin</code> / <code>@DecimalMax</code></td><td>Decimal limits with inclusive/exclusive options.</td></tr><tr><td><code>@Positive</code> / <code>@PositiveOrZero</code></td><td>Positive / positive-or-zero values.</td></tr><tr><td><code>@Negative</code> / <code>@NegativeOrZero</code></td><td>Negative / negative-or-zero values.</td></tr><tr><td><code>@Digits</code></td><td>Maximum integer and fraction digits.</td></tr><tr><td><code>@Pattern</code></td><td>Text matches a regular expression.</td></tr><tr><td><code>@Email</code></td><td>Email syntax according to the validation provider.</td></tr><tr><td><code>@Past</code> / <code>@PastOrPresent</code></td><td>Past / past-or-present date.</td></tr><tr><td><code>@Future</code> / <code>@FutureOrPresent</code></td><td>Future / future-or-present date.</td></tr><tr><td><code>@AssertTrue</code> / <code>@AssertFalse</code></td><td>Expected boolean value.</td></tr></tbody></table>
+    <p class="trap"><strong><code>@NotNull</code> does not mean “non-empty text”.</strong> An empty string passes <code>@NotNull</code>. For required textual API input, <code>@NotBlank</code> often expresses the intent better.</p>
+    <h3>@Constraint for custom validation</h3><pre><span class="ann">@Target</span>({ ElementType.FIELD, ElementType.PARAMETER })
+<span class="ann">@Retention</span>(RetentionPolicy.RUNTIME)
+<span class="ann">@Constraint</span>(validatedBy = SkuValidator.class)
+public @interface ValidSku {
+    String message() default <span class="str">"invalid SKU"</span>;
+    Class&lt;?&gt;[] groups() default {};
+    Class&lt;? extends Payload&gt;[] payload() default {};
+}</pre>
+    <p>A custom constraint is useful when it expresses a reusable domain-format rule. If validation needs database access, permissions, or external state, it is usually application logic rather than a simple Bean Validation constraint.</p>
+  </section>
+
+  <section id="response"><div class="head"><span class="num">07</span><h2>Controlling the HTTP response</h2></div>
+    <h3>@ResponseStatus</h3><p>Sets an HTTP status on a handler method or exception.</p>
+    <pre><span class="ann">@PostMapping</span>
+<span class="ann">@ResponseStatus</span>(HttpStatus.CREATED)
+public OrderResponse create(<span class="ann">@Valid</span> <span class="ann">@RequestBody</span> CreateOrderRequest request) {
+    return service.create(request);
+}</pre>
+    <p>For dynamic responses —status, headers, or body varying by outcome— <code>ResponseEntity&lt;T&gt;</code> is usually more explicit.</p>
+    <p class="notice"><strong>ResponseEntity is not an annotation.</strong> It is a response type. Keep it mentally separate from <code>@ResponseStatus</code>: one builds a response at runtime; the other is declarative metadata.</p>
+  </section>
+
+  <section id="errors"><div class="head"><span class="num">08</span><h2>Errors: @ExceptionHandler and Advice</h2></div>
+    <h3>@ExceptionHandler</h3><p>Declares a method that translates one or more exceptions into an HTTP response. Inside a controller, it only affects that controller.</p>
+    <pre><span class="ann">@ExceptionHandler</span>(OrderNotFoundException.class)
+public ResponseEntity&lt;ProblemDetail&gt; handleNotFound(OrderNotFoundException ex) {
+    ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+        HttpStatus.NOT_FOUND, ex.getMessage());
+    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+}</pre>
+    <h3>@ControllerAdvice and @RestControllerAdvice</h3><p><code>@ControllerAdvice</code> applies methods such as <code>@ExceptionHandler</code>, <code>@InitBinder</code>, and <code>@ModelAttribute</code> across controllers. <code>@RestControllerAdvice</code> combines that with <code>@ResponseBody</code>, which makes it especially convenient for REST APIs.</p>
+    <pre><span class="ann">@RestControllerAdvice</span>
+public class ApiExceptionHandler {
+    <span class="ann">@ExceptionHandler</span>(OrderNotFoundException.class)
+    ResponseEntity&lt;ProblemDetail&gt; notFound(OrderNotFoundException ex) {
+        var problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
+        problem.setTitle(<span class="str">"Order not found"</span>);
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+    }
+}</pre>
+    <h3>@ResponseStatus on an exception</h3><p>It is concise, but couples an exception to HTTP. In larger applications it is often more flexible to keep domain exceptions transport-agnostic and translate them in an advice.</p>
+  </section>
+
+  <section id="cors"><div class="head"><span class="num">09</span><h2>@CrossOrigin and CORS</h2></div>
+    <p><code>@CrossOrigin</code> configures CORS at class or handler level.</p>
+    <pre><span class="ann">@CrossOrigin</span>(origins = <span class="str">"https://app.example.com"</span>)
+<span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(<span class="str">"/api/orders"</span>)
+public class OrderController { ... }</pre>
+    <p>It works well for local rules, but if the entire API shares one CORS policy, global configuration is usually easier to maintain, especially when Spring Security is present.</p>
+    <p class="trap"><strong>CORS is not authentication.</strong> It is a browser-enforced cross-origin policy. It does not replace JWT, sessions, OAuth 2.0, or server-side authorization.</p>
+  </section>
+
+  <section id="json"><div class="head"><span class="num">10</span><h2>Jackson annotations that change your JSON contract</h2></div>
+    <p>These are not Spring MVC annotations, but they are common on REST DTOs because Jackson usually serializes and deserializes JSON.</p>
+    <table><thead><tr><th>Annotation</th><th>Effect</th></tr></thead><tbody><tr><td><code>@JsonProperty</code></td><td>Renames a JSON property or controls its access.</td></tr><tr><td><code>@JsonIgnore</code></td><td>Excludes a property.</td></tr><tr><td><code>@JsonIgnoreProperties</code></td><td>Ignores several properties or unknown fields.</td></tr><tr><td><code>@JsonInclude</code></td><td>Controls inclusion of null, empty, or default values.</td></tr><tr><td><code>@JsonFormat</code></td><td>Controls date/time or number formatting.</td></tr><tr><td><code>@JsonCreator</code></td><td>Marks a constructor/factory for deserialization.</td></tr><tr><td><code>@JsonValue</code></td><td>Defines an object's or enum's JSON representation.</td></tr><tr><td><code>@JsonView</code></td><td>Defines serialization views.</td></tr><tr><td><code>@JsonTypeInfo</code> / <code>@JsonSubTypes</code></td><td>Support polymorphic payloads.</td></tr></tbody></table>
+    <p class="notice"><strong>Architecture decision:</strong> avoid exposing JPA entities directly as REST responses. Separate DTOs prevent persistence annotations, lazy loading, and bidirectional relationships from accidentally defining the public JSON contract.</p>
+  </section>
+
+  <section id="security"><div class="head"><span class="num">11</span><h2>Security annotations</h2></div>
+    <p>HTTP authorization can be configured by routes in <code>SecurityFilterChain</code> or by methods. Spring Security provides several method-security annotation families.</p>
+    <h3>@EnableMethodSecurity</h3><pre><span class="ann">@Configuration</span>
+<span class="ann">@EnableMethodSecurity</span>
+public class SecurityConfig { ... }</pre>
+    <p>It enables method-security infrastructure. Adding Spring Security's starter alone does not activate method-level authorization annotations.</p>
+    <h3>@PreAuthorize and @PostAuthorize</h3><pre><span class="ann">@PreAuthorize</span>(<span class="str">"hasAuthority('orders:write')"</span>)
+<span class="ann">@PostMapping</span>
+public OrderResponse create(...) { ... }
+
+<span class="ann">@PostAuthorize</span>(<span class="str">"returnObject.customerId() == authentication.name"</span>)
+<span class="ann">@GetMapping</span>(<span class="str">"/{id}"</span>)
+public OrderResponse find(<span class="ann">@PathVariable</span> Long id) { ... }</pre>
+    <p><code>@PreAuthorize</code> decides before invocation. <code>@PostAuthorize</code> decides afterwards and can inspect the returned object. In business APIs, protecting service methods as well as—or instead of—only controllers avoids making authorization dependent on a single entry point.</p>
+    <h3>@PreFilter and @PostFilter</h3><p>They filter input/output collections using authorization expressions. They are powerful but can hide data-access cost; for large collections, apply authorization in the query rather than loading data only to discard it afterwards.</p>
+    <h3>@Secured and JSR-250</h3><table><thead><tr><th>Annotation</th><th>Note</th></tr></thead><tbody><tr><td><code>@Secured</code></td><td>Legacy Spring Security option; explicitly enabled.</td></tr><tr><td><code>@RolesAllowed</code></td><td>Jakarta/JSR-250 standard role annotation.</td></tr><tr><td><code>@PermitAll</code></td><td>Allows access in the JSR-250 model.</td></tr><tr><td><code>@DenyAll</code></td><td>Denies access to the method.</td></tr></tbody></table>
+    <h3>@AuthenticationPrincipal</h3><pre><span class="ann">@GetMapping</span>(<span class="str">"/me/orders"</span>)
+public List&lt;OrderResponse&gt; mine(<span class="ann">@AuthenticationPrincipal</span> Jwt jwt) {
+    return service.findByCustomer(jwt.getSubject());
+}</pre>
+  </section>
+
+  <section id="openapi"><div class="head"><span class="num">12</span><h2>OpenAPI / Swagger annotations</h2></div>
+    <p>With springdoc-openapi, annotations under <code>io.swagger.v3.oas.annotations</code> enrich the generated API contract. They do not change how Spring executes a request; they change how the endpoint is described.</p>
+    <table><thead><tr><th>Annotation</th><th>Documents</th></tr></thead><tbody><tr><td><code>@Tag</code></td><td>Groups operations.</td></tr><tr><td><code>@Operation</code></td><td>Summary, description, operationId, security, and more.</td></tr><tr><td><code>@Parameter</code></td><td>Path/query/header/cookie parameter.</td></tr><tr><td><code>@ApiResponse</code></td><td>One possible HTTP response.</td></tr><tr><td><code>@ApiResponses</code></td><td>A set of responses.</td></tr><tr><td><code>@Content</code></td><td>Media type and schema for request/response content.</td></tr><tr><td><code>@Schema</code></td><td>Models, properties, examples, formats, constraints.</td></tr><tr><td><code>@ArraySchema</code></td><td>Array/collection schemas.</td></tr><tr><td><code>@ExampleObject</code></td><td>Explicit payload examples.</td></tr><tr><td><code>@SecurityRequirement</code></td><td>Security scheme required by an operation.</td></tr><tr><td><code>@Hidden</code></td><td>Hides an operation or schema from documentation.</td></tr></tbody></table>
+    <pre><span class="ann">@Operation</span>(summary = <span class="str">"Create an order"</span>)
+<span class="ann">@ApiResponses</span>({
+    <span class="ann">@ApiResponse</span>(responseCode = <span class="str">"201"</span>, description = <span class="str">"Order created"</span>),
+    <span class="ann">@ApiResponse</span>(responseCode = <span class="str">"400"</span>, description = <span class="str">"Invalid request"</span>)
+})
+<span class="ann">@PostMapping</span>
+public ResponseEntity&lt;OrderResponse&gt; create(...) { ... }</pre>
+    <p class="trap"><strong>Watch the duplicate name:</strong> Spring has <code>org.springframework.web.bind.annotation.RequestBody</code>, while OpenAPI has <code>io.swagger.v3.oas.annotations.parameters.RequestBody</code>. They are different annotations. Check imports and use a fully qualified name when that improves clarity.</p>
+  </section>
+
+  <section id="session"><div class="head"><span class="num">13</span><h2>Less common annotations in a REST API</h2></div>
+    <div class="grid"><article class="card"><h3>@SessionAttributes</h3><p>Promotes model attributes into an HTTP session during an MVC flow. In a stateless REST API, its presence should make you revisit the design.</p></article><article class="card"><h3>@ModelAttribute on methods</h3><p>Can preload model attributes before handlers execute. Common in MVC with views, less so in REST controllers.</p></article><article class="card"><h3>@CookieValue</h3><p>Useful when a cookie genuinely belongs to the contract; uncommon in machine-to-machine APIs.</p></article><article class="card"><h3>@MatrixVariable</h3><p>Supported by Spring, although matrix parameters are uncommon in modern public APIs.</p></article></div>
+    <p>Spring supporting an annotation does not mean you need it. A maintainable API usually uses a small and consistent subset.</p>
+  </section>
+
+  <section id="complete"><div class="head"><span class="num">14</span><h2>Complete example: a reasonable production controller</h2></div>
+    <p>This example combines the pieces without turning the controller into an annotation catalogue:</p>
+    <pre><span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(path = <span class="str">"/api/orders"</span>, produces = MediaType.APPLICATION_JSON_VALUE)
+<span class="ann">@Tag</span>(name = <span class="str">"Orders"</span>)
+public class OrderController {
+
+    private final OrderService service;
+
+    public OrderController(OrderService service) {
+        this.service = service;
+    }
+
+    <span class="ann">@Operation</span>(summary = <span class="str">"Get an order"</span>)
+    <span class="ann">@GetMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="ann">@PreAuthorize</span>(<span class="str">"hasAuthority('orders:read')"</span>)
+    public OrderResponse find(
+        <span class="ann">@PathVariable</span> <span class="ann">@Positive</span> Long id,
+        <span class="ann">@RequestHeader</span>(value = <span class="str">"X-Correlation-Id"</span>, required = false)
+        String correlationId
+    ) {
+        return service.find(id);
+    }
+
+    <span class="ann">@GetMapping</span>
+    public Page&lt;OrderResponse&gt; search(
+        <span class="ann">@RequestParam</span>(required = false) OrderStatus status,
+        <span class="ann">@RequestParam</span>(defaultValue = <span class="str">"0"</span>) <span class="ann">@PositiveOrZero</span> int page,
+        <span class="ann">@RequestParam</span>(defaultValue = <span class="str">"20"</span>) <span class="ann">@Min</span>(1) <span class="ann">@Max</span>(100) int size
+    ) {
+        return service.search(status, page, size);
+    }
+
+    <span class="ann">@Operation</span>(summary = <span class="str">"Create an order"</span>)
+    <span class="ann">@PostMapping</span>(consumes = MediaType.APPLICATION_JSON_VALUE)
+    <span class="ann">@PreAuthorize</span>(<span class="str">"hasAuthority('orders:write')"</span>)
+    public ResponseEntity&lt;OrderResponse&gt; create(
+        <span class="ann">@Valid</span> <span class="ann">@RequestBody</span> CreateOrderRequest request
+    ) {
+        OrderResponse created = service.create(request);
+        URI location = URI.create(<span class="str">"/api/orders/"</span> + created.id());
+        return ResponseEntity.created(location).body(created);
+    }
+
+    <span class="ann">@DeleteMapping</span>(<span class="str">"/{id}"</span>)
+    <span class="ann">@ResponseStatus</span>(HttpStatus.NO_CONTENT)
+    <span class="ann">@PreAuthorize</span>(<span class="str">"hasAuthority('orders:write')"</span>)
+    public void delete(<span class="ann">@PathVariable</span> Long id) {
+        service.delete(id);
+    }
+}</pre>
+    <p>Notice what is <em>not</em> in the controller: persistence, transactions, JPA entities, and business logic. A REST API may use many annotations, but the HTTP boundary should not absorb every layer's responsibilities.</p>
+  </section>
+
+  <section id="errors-common"><div class="head"><span class="num">15</span><h2>Mistakes seen in real projects</h2></div>
+    <div class="grid"><article class="card"><h3>JPA entities as DTOs</h3><p>Mixes <code>@Entity</code>, relationships, and Jackson in one object, exposing internals, cycles, or lazy-loading behavior.</p></article><article class="card"><h3>@RequestParam for everything</h3><p>A complex creation command is usually more stable as a <code>@RequestBody</code> DTO than as twelve query parameters.</p></article><article class="card"><h3>The wrong @NotNull</h3><p>For required text, <code>@NotBlank</code> normally describes the intent more accurately.</p></article><article class="card"><h3>@CrossOrigin("*") without a policy</h3><p>It quickly fixes a browser symptom while hiding the need for deliberate CORS design.</p></article><article class="card"><h3>Security only on controllers</h3><p>If a service is called by jobs, listeners, or another interface, the authorization rule can be bypassed.</p></article><article class="card"><h3>Swagger as a copy of code</h3><p>Manually duplicating every inferred type and status creates documentation that ages badly.</p></article></div>
+  </section>
+
+  <section id="cheatsheet"><div class="head"><span class="num">16</span><h2>Cheat sheet: which annotation solves which problem?</h2></div>
+    <table><thead><tr><th>I need to…</th><th>Main annotation</th></tr></thead><tbody><tr><td>Declare a JSON controller</td><td><code>@RestController</code></td></tr><tr><td>Define a shared route prefix</td><td><code>@RequestMapping</code></td></tr><tr><td>GET / POST / PUT / PATCH / DELETE</td><td><code>@GetMapping</code>, <code>@PostMapping</code>, <code>@PutMapping</code>, <code>@PatchMapping</code>, <code>@DeleteMapping</code></td></tr><tr><td>Read <code>/orders/{id}</code></td><td><code>@PathVariable</code></td></tr><tr><td>Read <code>?status=PAID</code></td><td><code>@RequestParam</code></td></tr><tr><td>Read a header</td><td><code>@RequestHeader</code></td></tr><tr><td>Read a cookie</td><td><code>@CookieValue</code></td></tr><tr><td>Convert JSON to a DTO</td><td><code>@RequestBody</code></td></tr><tr><td>Receive multipart data</td><td><code>@RequestPart</code></td></tr><tr><td>Validate a DTO</td><td><code>@Valid</code> + constraints</td></tr><tr><td>Use validation groups</td><td><code>@Validated</code></td></tr><tr><td>Set a fixed status</td><td><code>@ResponseStatus</code></td></tr><tr><td>Handle an exception</td><td><code>@ExceptionHandler</code></td></tr><tr><td>Handle REST errors globally</td><td><code>@RestControllerAdvice</code></td></tr><tr><td>Configure local CORS</td><td><code>@CrossOrigin</code></td></tr><tr><td>Authorize before execution</td><td><code>@PreAuthorize</code></td></tr><tr><td>Inject the authenticated user</td><td><code>@AuthenticationPrincipal</code></td></tr><tr><td>Document an operation</td><td><code>@Operation</code></td></tr><tr><td>Document responses</td><td><code>@ApiResponse</code> / <code>@ApiResponses</code></td></tr><tr><td>Document a DTO</td><td><code>@Schema</code></td></tr><tr><td>Change JSON mapping</td><td><code>@JsonProperty</code>, <code>@JsonIgnore</code>, <code>@JsonInclude</code>, etc.</td></tr></tbody></table>
+  </section>
+
+  <section id="decision"><div class="head"><span class="num">17</span><h2>The rule that saves you from memorizing 50 annotations</h2></div>
+    <div class="callout"><p><strong>Think about the request journey:</strong> mapping → data extraction → conversion → validation → authorization → application logic → serialization → status/headers → documentation.</p><p>A useful REST annotation almost always participates in one of those steps. If you know which step you are working on, you can usually infer which annotation family you need.</p></div>
+    <p>It also helps to separate contract from infrastructure. <code>@GetMapping</code>, <code>@RequestBody</code>, and <code>@ResponseStatus</code> clearly describe the HTTP boundary. <code>@Transactional</code>, <code>@Entity</code>, and <code>@Cacheable</code> may exist in the same application, but they are not REST annotations: they belong to other responsibilities.</p>
+    <p>To expand beyond the web layer, continue with <a href="{{ '/java-spring/essential-annotations/' | relative_url }}">Essential Java and Spring annotations</a> and <a href="{{ '/java-spring/spring-stereotypes/' | relative_url }}">Spring stereotype annotations</a>.</p>
+  </section>
+
+  <section id="sources"><div class="head"><span class="num">18</span><h2>Official references</h2></div>
+    <ul><li><a href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller.html">Spring Framework · Annotated Controllers</a></li><li><a href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods/requestbody.html">Spring Framework · @RequestBody</a></li><li><a href="https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-advice.html">Spring Framework · Controller Advice</a></li><li><a href="https://docs.spring.io/spring-security/reference/servlet/authorization/method-security.html">Spring Security · Method Security</a></li><li><a href="https://jakarta.ee/specifications/bean-validation/">Jakarta Validation</a></li><li><a href="https://springdoc.org/">springdoc-openapi</a></li></ul>
+  </section>
+
+  <footer><p>The goal is not to use more annotations. It is to make each annotation expose a clear HTTP-contract decision. When an annotation does not improve that clarity, it probably does not belong in the controller.</p></footer>
+</div>
