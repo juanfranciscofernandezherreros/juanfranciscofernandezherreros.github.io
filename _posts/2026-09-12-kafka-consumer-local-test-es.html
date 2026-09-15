@@ -1,0 +1,197 @@
+---
+layout: "article"
+title: "Probar un Kafka consumer en local: 5.000 filas, Avro y un bug invisible"
+description: "Una prueba end-to-end real de un consumer Spring Boot con Kafka, Schema Registry y PostgreSQL que descubrió por qué MapStruct podía guardar registros vacíos aunque todos los tests pasaban."
+permalink: "/java-spring/kafka-consumer-local-test/es/"
+lang: "es"
+lang_url: ""
+series: "Kafka & Spring Boot in Practice"
+categories: ["Java & Spring"]
+subcategories: ["Event Streaming"]
+tags: ["java","spring-boot","kafka","avro","postgresql","mapstruct","lombok","testing","docker"]
+date: "2026-09-12"
+reading_minutes: 11
+---
+<style>
+.kafka-local-test{--panel:var(--surface);--muted:var(--ink-soft);--line-local:var(--line);--code-local:var(--code-bg);--code-text-local:var(--code-ink);--success:#26734d;--success-bg:#e7f4ec;--danger:#a33a32;--danger-bg:#f9e9e7;max-width:940px;margin:36px auto 96px;padding:0 24px}
+.kafka-local-test .titleblock{background:var(--panel);border:1px solid var(--line-local);border-top:5px solid var(--accent);padding:clamp(28px,5vw,46px)}
+.kafka-local-test .back,.kafka-local-test .eyebrow,.kafka-local-test .num,.kafka-local-test .stamp dt,.kafka-local-test pre,.kafka-local-test code,.kafka-local-test .metric strong{font-family:"IBM Plex Mono",monospace}
+.kafka-local-test .back{font-size:.74rem}.kafka-local-test .eyebrow,.kafka-local-test .num{color:var(--accent);font-size:.76rem;text-transform:uppercase;letter-spacing:.08em}
+.kafka-local-test h1,.kafka-local-test h2,.kafka-local-test h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}
+.kafka-local-test .titleblock h1{font-size:clamp(2.45rem,7vw,4.2rem);line-height:.98;max-width:19ch}.kafka-local-test .lede{font-size:1.05rem;color:var(--muted);max-width:68ch;line-height:1.65}
+.kafka-local-test .stamp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border-top:1px solid var(--line-local);padding-top:18px;margin-top:24px}.kafka-local-test .stamp div{padding:12px;background:var(--surface-2)}.kafka-local-test .stamp dt{font-size:.66rem;color:var(--muted);text-transform:uppercase}.kafka-local-test .stamp dd{margin:4px 0 0;font-weight:650}
+.kafka-local-test section{margin-top:60px}.kafka-local-test .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:20px}.kafka-local-test h2{font-size:clamp(1.55rem,4vw,2rem)}.kafka-local-test h3{font-size:1.08rem}.kafka-local-test p,.kafka-local-test li{max-width:72ch;line-height:1.7}
+.kafka-local-test pre{overflow:auto;background:var(--code-local);color:var(--code-text-local);border:1px solid var(--line-local);padding:17px 18px;line-height:1.55;font-size:.82rem}
+.kafka-local-test .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:24px 0}.kafka-local-test .flow div{background:var(--panel);border:1px solid var(--line-local);padding:14px}.kafka-local-test .flow strong{display:block;color:var(--accent);font-size:.78rem;margin-bottom:7px}.kafka-local-test .flow p{font-size:.84rem;line-height:1.45;margin:0;text-align:left}
+.kafka-local-test .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}.kafka-local-test .metric{background:var(--panel);border:1px solid var(--line-local);padding:18px}.kafka-local-test .metric strong{display:block;font-size:1.35rem;color:var(--accent)}.kafka-local-test .metric span{font-size:.86rem;color:var(--muted)}
+.kafka-local-test .note,.kafka-local-test .failure,.kafka-local-test .success{padding:17px 20px;margin:22px 0;border-left:4px solid var(--accent);background:var(--surface-2)}.kafka-local-test .failure{border-left-color:var(--danger);background:var(--danger-bg)}.kafka-local-test .success{border-left-color:var(--success);background:var(--success-bg)}
+.kafka-local-test table{width:100%;border-collapse:collapse;margin:22px 0;font-size:.9rem}.kafka-local-test th,.kafka-local-test td{border:1px solid var(--line-local);padding:10px;text-align:left}.kafka-local-test th{background:var(--surface-2)}
+.kafka-local-test footer{color:var(--muted);border-top:1px solid var(--line-local);margin-top:54px;padding-top:22px}
+@media(prefers-color-scheme:dark){.kafka-local-test{--success:#79d4a4;--success-bg:#153126;--danger:#ff9a91;--danger-bg:#351d1b}}
+@media(max-width:760px){.kafka-local-test .flow{grid-template-columns:1fr}.kafka-local-test .metrics,.kafka-local-test .stamp{grid-template-columns:1fr}.kafka-local-test{padding:0 16px}.kafka-local-test .titleblock{padding:26px 20px}.kafka-local-test table{display:block;overflow-x:auto}}
+</style>
+
+<article class="sheet kafka-local-test">
+  <header class="titleblock">
+    <p class="back"><a href="../../../">&larr; Volver al blog</a></p>
+    <p class="eyebrow">Kafka · Spring Boot · Prueba end-to-end</p>
+    <h1>Un consumer que funcionaba y guardaba datos vacíos</h1>
+    <p class="lede">El mensaje llegaba, la transacción terminaba, los tests estaban verdes y PostgreSQL recibía una fila. Solo había un problema: las 23 columnas del jugador quedaban a <code>NULL</code>. Esta es la prueba local que lo hizo visible y la carga de 5.000 filas que demostró la corrección.</p>
+    <dl class="stamp"><div><dt>Runtime</dt><dd>Java 21</dd></div><div><dt>Carga final</dt><dd>5.000 filas</dd></div><div><dt>Resultado</dt><dd>0 nulos</dd></div></dl>
+  </header>
+
+  <section id="la-pregunta">
+    <div class="head"><span class="num">01</span><h2>Arrancar no significa funcionar</h2></div>
+    <p>El proyecto <a href="https://github.com/juanfranciscofernandezherreros/csv-stats-player-consumer"><code>csv-stats-player-consumer</code></a> recibe por Kafka un evento Avro que anuncia un CSV disponible. Si el tipo es <code>STATS_PLAYER</code>, abre el fichero, valida sus 23 columnas, transforma cada fila en una entidad JPA y la persiste en PostgreSQL.</p>
+    <p>La pregunta inicial parecía operativa: «¿puedo ejecutar este microservicio en mi Windows y consumir un evento real?». Sin embargo, una prueba útil debía responder algo más exigente: <strong>¿puedo demostrar que el contenido correcto recorrió todo el sistema y llegó intacto a la base de datos?</strong></p>
+    <div class="flow" aria-label="Recorrido end-to-end del evento y del fichero CSV">
+      <div><strong>01 · EVENTO</strong><p>Una key Avro identifica la ejecución.</p></div>
+      <div><strong>02 · KAFKA</strong><p><code>file.ready</code> entrega el mensaje.</p></div>
+      <div><strong>03 · CONSUMER</strong><p>Spring Kafka deserializa y valida el tipo.</p></div>
+      <div><strong>04 · CSV</strong><p>El parser emite bloques de 500 filas.</p></div>
+      <div><strong>05 · POSTGRES</strong><p>JPA persiste y registra idempotencia.</p></div>
+    </div>
+  </section>
+
+  <section id="entorno-local">
+    <div class="head"><span class="num">02</span><h2>Una plataforma local aislada</h2></div>
+    <p>El consumer no es autónomo. Necesita PostgreSQL, un broker Kafka y Schema Registry para resolver los esquemas Avro. La prueba utilizó contenedores con nombres y puertos propios para no interferir con otros entornos Docker del equipo.</p>
+    <table>
+      <thead><tr><th>Componente</th><th>Imagen</th><th>Puerto del host</th><th>Responsabilidad</th></tr></thead>
+      <tbody>
+        <tr><td>PostgreSQL</td><td><code>postgres:15-alpine</code></td><td><code>15432</code></td><td>Flyway, entidades e idempotencia</td></tr>
+        <tr><td>ZooKeeper</td><td><code>cp-zookeeper:7.4.4</code></td><td><code>12181</code></td><td>Coordinación de esta versión de Kafka</td></tr>
+        <tr><td>Kafka</td><td><code>cp-kafka:7.4.4</code></td><td><code>19092</code></td><td>Topic <code>file.ready</code></td></tr>
+        <tr><td>Schema Registry</td><td><code>cp-schema-registry:7.4.4</code></td><td><code>18081</code></td><td>Esquemas de key y value</td></tr>
+      </tbody>
+    </table>
+    <p>Desde el proceso Java del host, la configuración efectiva fue:</p>
+    <pre>$env:DB_URL='jdbc:postgresql://localhost:15432/csvstats'
+$env:DB_USER='csvstats'
+$env:DB_PASS='csvstats'
+$env:KAFKA_BOOTSTRAP_SERVERS='localhost:19092'
+$env:KAFKA_CONSUMER_GROUP_ID='csvstats-local-load-5000-logs'
+$env:KAFKA_AUTO_OFFSET_RESET='latest'
+$env:KAFKA_SCHEMA_REGISTRY_URL='http://localhost:18081'
+$env:KAFKA_SPECIFIC_AVRO_READER='true'
+
+mvn -B spring-boot:run</pre>
+    <p class="note"><strong>Por qué <code>latest</code>:</strong> el grupo era nuevo y solo debía observar el evento de esta prueba. Usar <code>earliest</code> habría reproducido eventos anteriores cuyos ficheros temporales ya no existían, mezclando ruido histórico con el experimento actual.</p>
+  </section>
+
+  <section id="contrato">
+    <div class="head"><span class="num">03</span><h2>El contrato que cruza Kafka</h2></div>
+    <p>La key no es decorativa. <code>uniqueId</code> termina como clave primaria de <code>processed_file_event</code>, de modo que reenviar el mismo evento no duplica el CSV. El value contiene el tipo y una ruta que debe ser accesible desde el proceso consumidor.</p>
+    <pre>{
+  "uniqueId": "local-load-5000-logs-20260912"
+}
+|
+{
+  "fileType": "STATS_PLAYER",
+  "filePath": "C:\\Develop\\csv-stats-player-consumer\\local-test-output\\stats-player-5000.csv"
+}</pre>
+    <p>La publicación se realizó con <code>KafkaAvroSerializer</code> y los tipos Java generados desde <code>FileEventKey.avsc</code> y <code>FileEventValue.avsc</code>. Esto importa: enviar JSON plano a un listener configurado con <code>KafkaAvroDeserializer</code> no prueba el mismo contrato.</p>
+  </section>
+
+  <section id="primer-hallazgo">
+    <div class="head"><span class="num">04</span><h2>La primera fila reveló el fallo</h2></div>
+    <p>Antes de generar 5.000 registros, ejecuté una prueba mínima con un solo jugador. Kafka entregó el mensaje y el servicio informó de una inserción correcta. La tabla de idempotencia también contenía el evento. Una comprobación SQL de contenido contó otra historia:</p>
+    <pre> id | name | team | pts | reb | ast
+----+------+------+-----+-----+-----
+  1 |      |      |     |     |
+(1 row)</pre>
+    <div class="failure"><strong>El sistema no había perdido el mensaje; había perdido el estado durante el mapeo.</strong> Esa diferencia dirige el diagnóstico. Kafka, Avro, el parser, la transacción y PostgreSQL estaban activos. El punto sospechoso era la conversión <code>StatsPlayerDTO → StatsPlayer</code>.</div>
+    <p>El fichero generado por MapStruct confirmó la causa. El método construía la entidad, pero no copiaba una sola propiedad:</p>
+    <pre>public StatsPlayer toEntity(StatsPlayerDTO dto) {
+    if (dto == null) {
+        return null;
+    }
+
+    StatsPlayer statsPlayer = new StatsPlayer();
+    return statsPlayer;
+}</pre>
+    <p>Los getters y setters procedían de Lombok. MapStruct ejecutaba su procesador sin la integración que le permite esperar a que Lombok complete el modelo del tipo. Para MapStruct, DTO y entidad parecían objetos sin propiedades.</p>
+  </section>
+
+  <section id="por-que-tests-verdes">
+    <div class="head"><span class="num">05</span><h2>Cómo podían pasar 19 tests</h2></div>
+    <p>La suite comprobaba el parser, el listener, la transacción, el manejo de errores, la configuración Kafka y la entidad. El servicio de importación utilizaba un mapper simulado, por lo que verificaba la coordinación entre colaboradores, no la implementación generada.</p>
+    <p>Esto no convierte esos tests en inútiles. Cada uno protegía una responsabilidad válida. El hueco era específico: <strong>nadie ejercitaba el código que MapStruct generaba durante la compilación</strong>. Un mock no puede descubrir que ese código está vacío.</p>
+    <div class="note"><strong>Regla reutilizable:</strong> si una herramienta genera código, incluye al menos una prueba sobre el artefacto generado real. Probar únicamente las interfaces que lo rodean protege el diseño, pero no la generación.</div>
+  </section>
+
+  <section id="correccion">
+    <div class="head"><span class="num">06</span><h2>Corregir el procesado de anotaciones</h2></div>
+    <p>La corrección añadió <code>lombok-mapstruct-binding</code> al <code>annotationProcessorPaths</code> del compilador Maven. No es una dependencia de runtime: solo coordina los procesadores durante la compilación.</p>
+    <pre>&lt;path&gt;
+  &lt;groupId&gt;org.projectlombok&lt;/groupId&gt;
+  &lt;artifactId&gt;lombok-mapstruct-binding&lt;/artifactId&gt;
+  &lt;version&gt;0.2.0&lt;/version&gt;
+&lt;/path&gt;</pre>
+    <p>Después de <code>mvn -B clean test</code>, <code>StatsPlayerMapperImpl</code> ya contenía las asignaciones de las 23 propiedades:</p>
+    <pre>statsPlayer.setName(dto.getName());
+statsPlayer.setTeam(dto.getTeam());
+statsPlayer.setPts(dto.getPts());
+statsPlayer.setReb(dto.getReb());
+statsPlayer.setAst(dto.getAst());
+// ... hasta tfs</pre>
+    <p>También se añadió <code>StatsPlayerMapperTest</code>. El test usa el mapper real, convierte DTO a entidad y vuelve a DTO. Así detecta tanto una generación vacía como una pérdida de datos en cualquiera de las dos direcciones.</p>
+  </section>
+
+  <section id="carga-5000">
+    <div class="head"><span class="num">07</span><h2>La prueba con 5.000 filas</h2></div>
+    <p>Con el defecto corregido, generé un CSV determinista de 5.000 jugadores. Cada fila tenía nombre, equipo y estadísticas numéricas reproducibles. El tamaño fue de 335.476 bytes y el fichero contenía 5.001 líneas: una cabecera y 5.000 registros.</p>
+    <p>El parser trabaja en bloques de 500. La carga ejercitó diez bloques completos, <code>saveAllAndFlush</code>, limpieza del contexto JPA entre bloques, secuencia de identificadores, batching JDBC e idempotencia del fichero entero.</p>
+    <pre>2026-09-12T15:17:33.194+02:00  INFO ... Mensaje recibido - Key: local-load-5000-logs-20260912, fileType: STATS_PLAYER, filePath: ...stats-player-5000.csv
+2026-09-12T15:17:33.194+02:00  INFO ... Procesando archivo STATS_PLAYER...
+2026-09-12T15:17:36.716+02:00  INFO ... Guardados 5000 jugadores del evento local-load-5000-logs-20260912</pre>
+    <p>Es salida real abreviada: entre esas líneas, el log completo conserva el SQL generado por Hibernate. El tiempo observado desde la recepción hasta el mensaje final fue de unos 3,5 segundos en este equipo local. No debe interpretarse como benchmark universal; depende del hardware, Docker Desktop, configuración de logging y almacenamiento.</p>
+    <div class="metrics">
+      <div class="metric"><strong>5.000</strong><span>filas de la ejecución</span></div>
+      <div class="metric"><strong>0</strong><span>filas con campos clave nulos</span></div>
+      <div class="metric"><strong>≈ 3,5 s</strong><span>tiempo observado, no benchmark</span></div>
+    </div>
+  </section>
+
+  <section id="evidencia-sql">
+    <div class="head"><span class="num">08</span><h2>La evidencia debe estar en la base de datos</h2></div>
+    <p>El mensaje «Guardados 5000» demuestra que el método llegó al final, pero no basta para validar contenido. La condición de aceptación combinó recuento, nulos, límites y muestras.</p>
+    <pre> imported_rows | rows_with_nulls | min_id | max_id
+---------------+-----------------+--------+--------
+          5000 |               0 |   5102 |  10101</pre>
+    <pre>  id   |     name     |  team   | pts | reb | ast | plus_minus
+-------+--------------+---------+-----+-----+-----+------------
+  5102 | Jugador 1    | TEAM-1  |   1 |   1 |   1 |         12
+  7601 | Jugador 2500 | TEAM-10 |   0 |   0 |  10 |         12
+ 10101 | Jugador 5000 | TEAM-20 |   0 |   0 |   5 |         12</pre>
+    <div class="success"><strong>Resultado:</strong> el evento Avro fue consumido una vez, los diez chunks se persistieron dentro de la transacción y las 5.000 filas conservaron sus valores. El fallo de mapeo ya no estaba presente.</div>
+  </section>
+
+  <section id="logs">
+    <div class="head"><span class="num">09</span><h2>Qué logs conservar en una prueba reproducible</h2></div>
+    <p>La ejecución exportó por separado el log completo del consumer y los logs de Kafka, Schema Registry, PostgreSQL y ZooKeeper. Separarlos permite investigar una capa sin confundir su reloj, nivel o formato con los de otra.</p>
+    <ul>
+      <li><strong>Consumer:</strong> arranque, configuración efectiva, asignación de partición, recepción, SQL y confirmación final.</li>
+      <li><strong>Kafka:</strong> creación y actividad del topic, coordinación del grupo y estado del broker.</li>
+      <li><strong>Schema Registry:</strong> acceso a los sujetos Avro y comunicación con Kafka.</li>
+      <li><strong>PostgreSQL:</strong> arranque, conexiones, checkpoints y posibles errores del motor.</li>
+      <li><strong>Informe SQL:</strong> evidencia compacta del resultado que no depende de interpretar miles de inserts.</li>
+    </ul>
+    <p>Activar <code>org.hibernate.SQL=DEBUG</code> hizo que el log del consumer superase los 7 MB. Es útil para una investigación puntual, pero demasiado ruido para operación normal. En producción conviene registrar identificador de evento, fichero, filas, duración y resultado, y reservar el SQL detallado para diagnósticos acotados.</p>
+  </section>
+
+  <section id="lecciones">
+    <div class="head"><span class="num">10</span><h2>Lecciones que sobreviven a este proyecto</h2></div>
+    <ol>
+      <li><strong>Valida estado, no actividad.</strong> Que haya logs, commits de offset e inserts no demuestra que los datos sean correctos.</li>
+      <li><strong>Empieza por una fila legible.</strong> La carga grande prueba volumen; la fila pequeña hace visible la semántica.</li>
+      <li><strong>Prueba el código generado.</strong> MapStruct, Lombok, Avro y otros generadores introducen comportamiento que los mocks no cubren.</li>
+      <li><strong>Usa identificadores de evento nuevos.</strong> La idempotencia correcta puede convertir una repetición en un no-op y ocultar que realmente no ejecutaste la ruta esperada.</li>
+      <li><strong>Consulta agregados y muestras.</strong> <code>COUNT</code>, nulos, límites y tres filas representativas ofrecen mejor evidencia que abrir 5.000 registros.</li>
+      <li><strong>Distingue validación de benchmark.</strong> Una duración local prueba que el flujo termina; no caracteriza el rendimiento del sistema bajo concurrencia.</li>
+    </ol>
+    <p>La mejor consecuencia de esta prueba no fue confirmar que Kafka funcionaba. Fue descubrir una frontera sin verificar entre dos objetos Java. El entorno end-to-end no sustituyó a los tests unitarios: señaló exactamente qué test unitario faltaba.</p>
+  </section>
+
+  <footer><p>Código y corrección reproducible en <a href="https://github.com/juanfranciscofernandezherreros/csv-stats-player-consumer">csv-stats-player-consumer</a>. La versión corregida es la 1.0.23.</p></footer>
+</article>
