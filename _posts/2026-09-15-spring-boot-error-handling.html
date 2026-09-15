@@ -1,0 +1,350 @@
+---
+layout: "article"
+title: "Error handling in Spring Boot: from exceptions to a consistent REST API"
+description: "Practical guide to designing REST errors in Spring Boot with @ExceptionHandler, @RestControllerAdvice, ProblemDetail, RFC 9457, validation, HTTP status codes, logging and a maintainable strategy."
+permalink: "/java-spring/spring-boot-error-handling/"
+lang: "en"
+lang_url: "/java-spring/spring-boot-error-handling/es/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Spring Boot", "REST APIs"]
+tags: ["java","spring","spring-boot","rest","api","error-handling","problemdetail","rfc-9457","validation","exceptions"]
+date: "2026-09-15"
+reading_minutes: 18
+---
+<style>
+.error-handling{--panel:var(--surface);--muted:var(--ink-soft);--line:var(--line);--notice:var(--accent-soft);--warn:#8b5a16;--warn-bg:#f7eddd;--bad:#a43832;--bad-bg:#f7e5e3;max-width:940px;margin:36px auto 96px;padding:0 24px}
+.error-handling .titleblock,.error-handling .card,.error-handling .answer,.error-handling .http-example{background:var(--panel);border:1px solid var(--line)}
+.error-handling .titleblock{position:relative;padding:32px;overflow:hidden}.error-handling .back,.error-handling .lang,.error-handling .eyebrow,.error-handling .num,.error-handling .stamp dt,.error-handling pre,.error-handling code,.error-handling .status{font-family:"IBM Plex Mono",monospace}.error-handling .back,.error-handling .lang{font-size:.74rem}.error-handling .lang{position:absolute;right:24px;top:20px}.error-handling .eyebrow,.error-handling .num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.error-handling h1,.error-handling h2,.error-handling h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.error-handling .titleblock h1{font-size:clamp(2.35rem,7vw,4rem);line-height:1;max-width:20ch}.error-handling .lede{font-size:1.03rem;color:var(--muted);max-width:68ch}.error-handling .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:16px}.error-handling .stamp>div{padding:12px;background:var(--surface-2);border-radius:8px}.error-handling .stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.error-handling .stamp dd{margin:4px 0 0;font-weight:600}
+.error-handling section{margin-top:64px}.error-handling .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}.error-handling h2{font-size:clamp(1.6rem,4vw,2rem)}.error-handling h3{font-size:1.12rem;margin-top:30px}.error-handling p,.error-handling li{max-width:74ch;line-height:1.72}.error-handling .answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem;border-radius:10px}.error-handling .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.error-handling .card{padding:17px;border-radius:10px}.error-handling .card h3{margin:0 0 7px}.error-handling .card p{font-size:.93rem;color:var(--muted);margin:0}.error-handling pre{overflow:auto;background:var(--code-bg);color:var(--code-ink);border:0;padding:16px;border-radius:10px;line-height:1.55;font-size:.82rem}.error-handling .ann{color:#8de5a5}.error-handling .type{color:#8dc7ff}.error-handling .str{color:#ffd27d}.error-handling .notice,.error-handling .trap,.error-handling .danger{padding:15px 18px;border-radius:10px}.error-handling .notice{border-left:3px solid var(--accent);background:var(--notice)}.error-handling .trap{border-left:3px solid var(--warn);background:var(--warn-bg)}.error-handling .danger{border-left:3px solid var(--bad);background:var(--bad-bg)}.error-handling table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.9rem}.error-handling th,.error-handling td{padding:10px 11px;border:1px solid var(--line);text-align:left;vertical-align:top}.error-handling th{background:var(--surface-2)}.error-handling .http-example{padding:16px 18px;border-radius:10px;margin:18px 0}.error-handling .status{font-size:.78rem;color:var(--accent);font-weight:700}.error-handling .small{font-size:.9rem;color:var(--muted)}.error-handling .toc{columns:2;column-gap:28px}.error-handling .toc li{break-inside:avoid;margin:.35rem 0}.error-handling footer{color:var(--muted);border-top:1px solid var(--line);margin-top:52px;padding-top:20px}
+@media(max-width:680px){.error-handling{padding:0 16px}.error-handling .grid,.error-handling .stamp{grid-template-columns:1fr}.error-handling .titleblock{padding:24px 20px}.error-handling .lang{position:static}.error-handling table{display:block;overflow-x:auto}.error-handling .toc{columns:1}.error-handling p,.error-handling li{text-align:left}}
+</style>
+<div class="sheet error-handling">
+  <div class="titleblock">
+    <p class="back"><a href="{{ '/java-spring/rest-api-annotations/' | relative_url }}">&larr; REST API annotations</a></p>
+    <p class="lang"><a href="es/">ES · Español</a></p>
+    <p class="eyebrow">Java & Spring · REST APIs</p>
+    <h1>Error handling in Spring Boot</h1>
+    <p class="lede">An API is not well designed just because its happy path returns <code>200 OK</code>. Quality shows up when something fails: which HTTP code is returned, what the client sees, what gets logged, and whether every controller follows the same contract.</p>
+    <dl class="stamp"><div><dt>Level</dt><dd>Intermediate</dd></div><div><dt>Scope</dt><dd>Spring MVC + REST</dd></div><div><dt>Goal</dt><dd>Predictable errors</dd></div></dl>
+  </div>
+
+  <section id="promise"><div class="head"><span class="num">00</span><h2>The real problem is not throwing exceptions</h2></div>
+    <p class="answer"><strong>The real problem is turning failures from different layers into a stable HTTP contract.</strong> A Java exception is an internal mechanism. A REST error is part of the public API. Mixing both concepts usually leads to endpoints that return <code>500</code> for everything, inconsistent messages, or implementation details that should never leave the process.</p>
+    <p>We will build a complete strategy around a small order domain: business errors, missing resources, conflicts, request validation, and unexpected failures. The goal is to keep controllers focused on the happy path while every error follows one consistent format.</p>
+    <ul class="toc">
+      <li><a href="#layers">Three error layers</a></li>
+      <li><a href="#status-codes">Choosing HTTP status codes</a></li>
+      <li><a href="#local-handler"><code>@ExceptionHandler</code></a></li>
+      <li><a href="#global-advice"><code>@RestControllerAdvice</code></a></li>
+      <li><a href="#problem-detail"><code>ProblemDetail</code> and RFC 9457</a></li>
+      <li><a href="#validation">Validation errors</a></li>
+      <li><a href="#unexpected">Unexpected failures and logging</a></li>
+      <li><a href="#complete-example">Complete example</a></li>
+      <li><a href="#mistakes">Common mistakes</a></li>
+    </ul>
+  </section>
+
+  <section id="layers"><div class="head"><span class="num">01</span><h2>Three error layers you should not mix</h2></div>
+    <div class="grid">
+      <article class="card"><h3>Domain</h3><p>Expresses what went wrong for the business: missing order, invalid transition, insufficient stock, or stale version.</p></article>
+      <article class="card"><h3>Application</h3><p>Knows which use case was running and propagates a meaningful failure rather than raw infrastructure details.</p></article>
+      <article class="card"><h3>HTTP</h3><p>Translates that failure into a status code, headers, and an external representation.</p></article>
+      <article class="card"><h3>Infrastructure</h3><p>Can raise SQL exceptions, timeouts, network failures or availability errors that should rarely be exposed literally.</p></article>
+    </div>
+    <pre><span class="ann">@Service</span>
+public class OrderService {
+
+    public Order findById(UUID id) {
+        return repository.findById(id)
+            .orElseThrow(() -&gt; new OrderNotFoundException(id));
+    }
+}</pre>
+    <p><code>OrderNotFoundException</code> does not need to know HTTP exists. That keeps the service reusable and avoids polluting business logic with <code>HttpStatus</code> or <code>ResponseEntity</code>.</p>
+    <p class="notice"><strong>Mental model:</strong> the service describes the failure; the web layer decides how to represent it outside the process.</p>
+  </section>
+
+  <section id="status-codes"><div class="head"><span class="num">02</span><h2>Choose the HTTP status before writing the handler</h2></div>
+    <table>
+      <thead><tr><th>Status</th><th>When it fits</th><th>Example</th></tr></thead>
+      <tbody>
+        <tr><td><code>400 Bad Request</code></td><td>The request cannot be interpreted or violates input constraints.</td><td>Malformed JSON or invalid parameter format.</td></tr>
+        <tr><td><code>401 Unauthorized</code></td><td>Valid authentication is missing.</td><td>Missing or invalid token.</td></tr>
+        <tr><td><code>403 Forbidden</code></td><td>The caller is authenticated but not allowed to perform the operation.</td><td>A regular user invokes an admin operation.</td></tr>
+        <tr><td><code>404 Not Found</code></td><td>The requested resource does not exist or must not be revealed.</td><td><code>GET /orders/{id}</code> with an unknown id.</td></tr>
+        <tr><td><code>409 Conflict</code></td><td>The request is valid but conflicts with current state.</td><td>Confirming a cancelled order, duplicate email, optimistic locking.</td></tr>
+        <tr><td><code>422 Unprocessable Content</code></td><td>The syntax is valid but the content cannot be processed semantically.</td><td>A business rule violation when you want to distinguish it from 400.</td></tr>
+        <tr><td><code>500 Internal Server Error</code></td><td>Unexpected server failure.</td><td>Bug or unclassified exception.</td></tr>
+        <tr><td><code>503 Service Unavailable</code></td><td>A critical dependency or service is temporarily unavailable.</td><td>A downstream outage explicitly translated by the API.</td></tr>
+      </tbody>
+    </table>
+    <p class="trap"><strong>Do not automatically map every business exception to 400.</strong> A missing resource is 404; a transition incompatible with current state is often better expressed as 409.</p>
+  </section>
+
+  <section id="local-handler"><div class="head"><span class="num">03</span><h2>@ExceptionHandler: handle one exception</h2></div>
+    <p><code>@ExceptionHandler</code> declares a method that can handle specific exceptions raised while processing a request. It can live inside one controller or inside global advice.</p>
+    <pre><span class="ann">@RestController</span>
+<span class="ann">@RequestMapping</span>(<span class="str">"/api/orders"</span>)
+public class OrderController {
+
+    <span class="ann">@ExceptionHandler</span>(OrderNotFoundException.class)
+    ResponseEntity&lt;ProblemDetail&gt; handleNotFound(OrderNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle(<span class="str">"Order not found"</span>);
+        problem.setDetail(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(problem);
+    }
+}</pre>
+    <p>This works, but if five controllers can raise the same exception, duplicating the HTTP translation five times is the wrong abstraction.</p>
+  </section>
+
+  <section id="global-advice"><div class="head"><span class="num">04</span><h2>@RestControllerAdvice: one global policy</h2></div>
+    <p><code>@RestControllerAdvice</code> combines the global scope of <code>@ControllerAdvice</code> with response-body semantics. Spring discovers the bean and can apply its <code>@ExceptionHandler</code> methods across controllers.</p>
+    <pre><span class="ann">@RestControllerAdvice</span>
+public class ApiExceptionHandler {
+
+    <span class="ann">@ExceptionHandler</span>(OrderNotFoundException.class)
+    ProblemDetail handleOrderNotFound(OrderNotFoundException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.NOT_FOUND);
+        problem.setTitle(<span class="str">"Order not found"</span>);
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+
+    <span class="ann">@ExceptionHandler</span>(OrderStateConflictException.class)
+    ProblemDetail handleConflict(OrderStateConflictException ex) {
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.CONFLICT);
+        problem.setTitle(<span class="str">"Order state conflict"</span>);
+        problem.setDetail(ex.getMessage());
+        return problem;
+    }
+}</pre>
+    <p>The controller goes back to describing the happy path, without repeated <code>try/catch</code> blocks.</p>
+  </section>
+
+  <section id="problem-detail"><div class="head"><span class="num">05</span><h2>ProblemDetail and RFC 9457</h2></div>
+    <p>Spring Framework includes <code>ProblemDetail</code> for the standardized <em>Problem Details for HTTP APIs</em> format defined by RFC 9457.</p>
+    <table>
+      <thead><tr><th>Field</th><th>Meaning</th></tr></thead>
+      <tbody>
+        <tr><td><code>type</code></td><td>URI identifying the problem type.</td></tr>
+        <tr><td><code>title</code></td><td>Short, stable problem title.</td></tr>
+        <tr><td><code>status</code></td><td>HTTP status code.</td></tr>
+        <tr><td><code>detail</code></td><td>Explanation specific to this occurrence.</td></tr>
+        <tr><td><code>instance</code></td><td>URI identifying the request or occurrence.</td></tr>
+      </tbody>
+    </table>
+    <pre>ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+    HttpStatus.NOT_FOUND,
+    <span class="str">"Order 7c... does not exist"</span>
+);
+problem.setTitle(<span class="str">"Order not found"</span>);
+problem.setType(URI.create(<span class="str">"https://example.com/problems/order-not-found"</span>));
+problem.setProperty(<span class="str">"errorCode"</span>, <span class="str">"ORDER_NOT_FOUND"</span>);
+</pre>
+    <div class="http-example"><div class="status">HTTP/1.1 404 Not Found · application/problem+json</div><pre>{
+  "type": "https://example.com/problems/order-not-found",
+  "title": "Order not found",
+  "status": 404,
+  "detail": "Order 7c... does not exist",
+  "instance": "/api/orders/7c...",
+  "errorCode": "ORDER_NOT_FOUND"
+}</pre></div>
+    <p class="notice">Spring can render <code>ProblemDetail</code> as <code>application/problem+json</code>. Spring MVC web exceptions also implement the <code>ErrorResponse</code> contract, which helps keep framework-generated errors consistent.</p>
+  </section>
+
+  <section id="business-errors"><div class="head"><span class="num">06</span><h2>Design stable error codes for clients</h2></div>
+    <p>The human-readable <code>detail</code> text may change or be translated. A frontend should not contain logic such as <code>if (message.equals("Order already cancelled"))</code>.</p>
+    <pre>public enum ApiErrorCode {
+    ORDER_NOT_FOUND,
+    ORDER_STATE_CONFLICT,
+    VALIDATION_FAILED
+}</pre>
+    <p>Expose a stable external code and keep implementation class names private.</p>
+  </section>
+
+  <section id="validation"><div class="head"><span class="num">07</span><h2>Validation: when @Valid fails</h2></div>
+    <pre>public record CreateOrderRequest(
+    <span class="ann">@NotBlank</span> String customerId,
+    <span class="ann">@NotEmpty</span> List&lt;<span class="ann">@Valid</span> OrderLineRequest&gt; lines
+) {}</pre>
+    <pre><span class="ann">@PostMapping</span>
+<span class="ann">@ResponseStatus</span>(HttpStatus.CREATED)
+public OrderResponse create(
+    <span class="ann">@Valid</span> <span class="ann">@RequestBody</span> CreateOrderRequest request
+) {
+    return mapper.toResponse(service.create(request));
+}</pre>
+    <p>For object binding errors, one important Spring MVC exception is <code>MethodArgumentNotValidException</code>. A useful API translates its field errors into an explicit list.</p>
+    <pre><span class="ann">@RestControllerAdvice</span>
+public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    <span class="ann">@Override</span>
+    protected ResponseEntity&lt;Object&gt; handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            HttpHeaders headers,
+            HttpStatusCode status,
+            WebRequest request) {
+
+        ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST);
+        problem.setTitle(<span class="str">"Validation failed"</span>);
+        problem.setDetail(<span class="str">"One or more request fields are invalid"</span>);
+        problem.setProperty(<span class="str">"errorCode"</span>, <span class="str">"VALIDATION_FAILED"</span>);
+
+        List&lt;Map&lt;String, String&gt;&gt; errors = ex.getBindingResult()
+            .getFieldErrors()
+            .stream()
+            .map(error -&gt; Map.of(
+                <span class="str">"field"</span>, error.getField(),
+                <span class="str">"message"</span>, Objects.requireNonNullElse(
+                    error.getDefaultMessage(), <span class="str">"Invalid value"</span>)
+            ))
+            .toList();
+
+        problem.setProperty(<span class="str">"errors"</span>, errors);
+        return handleExceptionInternal(ex, problem, headers, status, request);
+    }
+}</pre>
+    <p class="notice"><strong>Important nuance:</strong> method-level validation can raise <code>HandlerMethodValidationException</code>. Do not assume every MVC validation failure becomes <code>MethodArgumentNotValidException</code>.</p>
+  </section>
+
+  <section id="response-entity-handler"><div class="head"><span class="num">08</span><h2>ResponseEntityExceptionHandler: do not reinvent Spring MVC errors</h2></div>
+    <p><code>ResponseEntityExceptionHandler</code> is a convenient base class for global handling of Spring MVC exceptions. Extend it when you want one place for framework errors plus custom handlers for domain failures.</p>
+    <pre><span class="ann">@RestControllerAdvice</span>
+public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    <span class="ann">@ExceptionHandler</span>(OrderNotFoundException.class)
+    ProblemDetail handleOrderNotFound(OrderNotFoundException ex) {
+        return problem(
+            HttpStatus.NOT_FOUND,
+            <span class="str">"Order not found"</span>,
+            ex.getMessage(),
+            <span class="str">"ORDER_NOT_FOUND"</span>
+        );
+    }
+}</pre>
+  </section>
+
+  <section id="unexpected"><div class="head"><span class="num">09</span><h2>The Exception fallback must not leak the real cause</h2></div>
+    <pre>private static final Logger log = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
+<span class="ann">@ExceptionHandler</span>(Exception.class)
+ProblemDetail handleUnexpected(Exception ex, HttpServletRequest request) {
+    String errorId = UUID.randomUUID().toString();
+
+    log.error(<span class="str">"Unhandled API error id={} method={} path={}"</span>,
+        errorId, request.getMethod(), request.getRequestURI(), ex);
+
+    ProblemDetail problem = ProblemDetail.forStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+    problem.setTitle(<span class="str">"Internal server error"</span>);
+    problem.setDetail(<span class="str">"An unexpected error occurred"</span>);
+    problem.setProperty(<span class="str">"errorCode"</span>, <span class="str">"INTERNAL_ERROR"</span>);
+    problem.setProperty(<span class="str">"errorId"</span>, errorId);
+    return problem;
+}</pre>
+    <p>The client gets a correlation id. Server logs keep the stack trace and technical context.</p>
+    <div class="danger"><strong>Never expose</strong> stack traces, SQL, table names, filesystem paths, secrets, tokens, internal hostnames, or raw infrastructure exception messages without review.</div>
+  </section>
+
+  <section id="logging"><div class="head"><span class="num">10</span><h2>Not every error deserves ERROR-level logging</h2></div>
+    <table>
+      <thead><tr><th>Situation</th><th>Typical level</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr><td>Expected 404 for an unknown id</td><td><code>DEBUG</code> or none</td><td>Normal contract behavior.</td></tr>
+        <tr><td>400 validation failure</td><td>None or <code>DEBUG</code></td><td>The client can fix the request.</td></tr>
+        <tr><td>409 race/stale version</td><td><code>INFO</code>/<code>WARN</code></td><td>Potentially expected but worth measuring.</td></tr>
+        <tr><td>Dependency timeout</td><td><code>WARN</code> or <code>ERROR</code></td><td>Operational degradation exists.</td></tr>
+        <tr><td>Unexpected exception</td><td><code>ERROR</code></td><td>Needs investigation.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="complete-example"><div class="head"><span class="num">11</span><h2>Complete example: clean domain, consistent API</h2></div>
+    <pre>public class OrderNotFoundException extends RuntimeException {
+    public OrderNotFoundException(UUID id) {
+        super(<span class="str">"Order "</span> + id + <span class="str">" does not exist"</span>);
+    }
+}
+
+public class OrderStateConflictException extends RuntimeException {
+    public OrderStateConflictException(UUID id, OrderStatus status) {
+        super(<span class="str">"Order "</span> + id + <span class="str">" cannot be confirmed from "</span> + status);
+    }
+}</pre>
+    <pre><span class="ann">@Service</span>
+public class OrderService {
+    public Order findById(UUID id) {
+        return repository.findById(id)
+            .orElseThrow(() -&gt; new OrderNotFoundException(id));
+    }
+
+    <span class="ann">@Transactional</span>
+    public Order confirm(UUID id) {
+        Order order = findById(id);
+        if (order.getStatus() != OrderStatus.PENDING) {
+            throw new OrderStateConflictException(id, order.getStatus());
+        }
+        order.confirm();
+        return order;
+    }
+}</pre>
+    <pre><span class="ann">@RestControllerAdvice</span>
+public class ApiExceptionHandler extends ResponseEntityExceptionHandler {
+
+    <span class="ann">@ExceptionHandler</span>(OrderNotFoundException.class)
+    ProblemDetail handleNotFound(OrderNotFoundException ex) {
+        return problem(HttpStatus.NOT_FOUND,
+            <span class="str">"Order not found"</span>, ex.getMessage(), <span class="str">"ORDER_NOT_FOUND"</span>);
+    }
+
+    <span class="ann">@ExceptionHandler</span>(OrderStateConflictException.class)
+    ProblemDetail handleConflict(OrderStateConflictException ex) {
+        return problem(HttpStatus.CONFLICT,
+            <span class="str">"Order state conflict"</span>, ex.getMessage(), <span class="str">"ORDER_STATE_CONFLICT"</span>);
+    }
+}</pre>
+    <p>The key benefit is not fewer lines. Each layer answers a different question: domain code explains what failed, the service owns the use case, and the advice owns the HTTP contract.</p>
+  </section>
+
+  <section id="response-status"><div class="head"><span class="num">12</span><h2>What about @ResponseStatus?</h2></div>
+    <p>You can annotate an exception directly with <code>@ResponseStatus(HttpStatus.NOT_FOUND)</code>. It is convenient for small applications, but it couples the exception to HTTP. If the same exception later appears in Kafka, batch processing, or a CLI, that coupling becomes less attractive.</p>
+    <p class="notice"><strong>Practical rule:</strong> for small APIs it may be enough. For reusable domain layers or a rich consistent error contract, translating exceptions in advice scales better.</p>
+  </section>
+
+  <section id="mistakes"><div class="head"><span class="num">13</span><h2>Common mistakes</h2></div>
+    <div class="grid">
+      <article class="card"><h3>try/catch in every endpoint</h3><p>Duplicates HTTP policy and hides the happy path.</p></article>
+      <article class="card"><h3>200 with {"success": false}</h3><p>Breaks HTTP semantics and hurts clients, metrics and proxies.</p></article>
+      <article class="card"><h3>500 for every failure</h3><p>Makes client errors, business conflicts and server bugs indistinguishable.</p></article>
+      <article class="card"><h3>Messages as contract</h3><p>Human text changes; clients should depend on stable error codes.</p></article>
+      <article class="card"><h3>Leaking ex.getMessage()</h3><p>Technical exceptions may contain sensitive internal information.</p></article>
+      <article class="card"><h3>One error DTO per controller</h3><p>Forces consumers to learn multiple formats for one API.</p></article>
+    </div>
+  </section>
+
+  <section id="interview"><div class="head"><span class="num">14</span><h2>How I would explain it in an interview</h2></div>
+    <p class="answer">“In a Spring Boot API I separate domain exceptions from their HTTP representation. Controllers stay focused on the happy path, while a <code>@RestControllerAdvice</code> with <code>@ExceptionHandler</code> translates failures into consistent HTTP statuses. I prefer <code>ProblemDetail</code> for the response body because it follows RFC 9457, and I add stable error codes when clients need programmatic behavior. Validation, conflicts and missing resources are explicit, while a final 500 handler logs the stack trace without exposing implementation details.”</p>
+  </section>
+
+  <section id="checklist"><div class="head"><span class="num">15</span><h2>Production checklist</h2></div>
+    <ul>
+      <li>The same problem produces the same status and body shape across endpoints.</li>
+      <li>The error body uses a documented structure.</li>
+      <li>Clients depend on stable <code>errorCode</code> values, not human-readable messages.</li>
+      <li>Validation responses identify concrete fields when useful.</li>
+      <li>500 responses do not leak stack traces or infrastructure details.</li>
+      <li>Unexpected failures include a correlation id for investigation.</li>
+      <li>Logging severity distinguishes expected behavior from operational incidents.</li>
+      <li>Error paths are covered by integration/contract tests, not only happy paths.</li>
+    </ul>
+  </section>
+
+  <section id="next"><div class="head"><span class="num">16</span><h2>What to read next</h2></div>
+    <p>If you first want to review how data reaches a controller, read <a href="{{ '/java-spring/rest-api-annotations/' | relative_url }}">REST API annotations in Spring Boot</a>. The natural next step is testing this contract: asserting that missing resources return 404, validation returns 400 with the right fields, and conflicts return 409. That leads directly into <strong>MockMvc, @WebMvcTest, @SpringBootTest and Testcontainers</strong>.</p>
+  </section>
+
+  <footer>
+    <p><strong>Official references:</strong> Spring Framework — Error Responses, Controller Advice and Validation. Spring MVC supports <code>ProblemDetail</code> and <code>ErrorResponse</code> for RFC 9457-compatible error responses.</p>
+    <p class="small">This article focuses on Spring MVC. WebFlux offers equivalent concepts, but its reactive flow deserves separate treatment.</p>
+  </footer>
+</div>
