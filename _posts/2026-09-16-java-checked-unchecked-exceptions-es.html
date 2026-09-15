@@ -1,0 +1,94 @@
+---
+layout: "article"
+title: "Checked vs Unchecked Exceptions en Java: cómo elegir la excepción correcta"
+description: "Guía práctica sobre checked y unchecked exceptions en Java: jerarquía, reglas de compilación, throws, excepciones propias, aplicaciones Spring, errores frecuentes y preguntas de entrevista."
+permalink: "/java-spring/checked-unchecked-exceptions/es/"
+lang: "es"
+lang_url: "/java-spring/checked-unchecked-exceptions/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Java Core", "Exceptions"]
+tags: ["java","exceptions","checked-exceptions","unchecked-exceptions","runtimeexception","error-handling","interview"]
+date: "2026-09-16"
+reading_minutes: 12
+---
+<style>
+.exceptions-note{--panel:var(--surface);--muted:var(--ink-soft);--line:var(--line);--notice:var(--accent-soft);--warn:#8b5a16;--warn-bg:#f7eddd;max-width:940px;margin:36px auto 96px;padding:0 24px}.exceptions-note .titleblock,.exceptions-note .card,.exceptions-note .answer{background:var(--panel);border:1px solid var(--line)}.exceptions-note .titleblock{position:relative;padding:32px;overflow:hidden}.exceptions-note .back,.exceptions-note .lang,.exceptions-note .eyebrow,.exceptions-note .num,.exceptions-note .stamp dt,.exceptions-note pre,.exceptions-note code{font-family:"IBM Plex Mono",monospace}.exceptions-note .back,.exceptions-note .lang{font-size:.74rem}.exceptions-note .lang{position:absolute;right:24px;top:20px}.exceptions-note .eyebrow,.exceptions-note .num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.exceptions-note h1,.exceptions-note h2,.exceptions-note h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.exceptions-note .titleblock h1{font-size:clamp(2.35rem,7vw,4rem);line-height:1;max-width:20ch}.exceptions-note .lede{font-size:1.03rem;color:var(--muted);max-width:68ch}.exceptions-note .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:16px}.exceptions-note .stamp>div{padding:12px;background:var(--surface-2);border-radius:8px}.exceptions-note .stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.exceptions-note .stamp dd{margin:4px 0 0;font-weight:600}.exceptions-note section{margin-top:64px}.exceptions-note .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}.exceptions-note h2{font-size:clamp(1.6rem,4vw,2rem)}.exceptions-note h3{font-size:1.12rem;margin-top:30px}.exceptions-note p,.exceptions-note li{max-width:74ch;line-height:1.72}.exceptions-note .answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem;border-radius:10px}.exceptions-note .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.exceptions-note .card{padding:17px;border-radius:10px}.exceptions-note .card h3{margin:0 0 7px}.exceptions-note .card p{font-size:.93rem;color:var(--muted);margin:0}.exceptions-note pre{overflow:auto;background:var(--code-bg);color:var(--code-ink);padding:16px;border-radius:10px;line-height:1.55;font-size:.82rem}.exceptions-note .notice,.exceptions-note .trap{padding:15px 18px;border-radius:10px}.exceptions-note .notice{border-left:3px solid var(--accent);background:var(--notice)}.exceptions-note .trap{border-left:3px solid var(--warn);background:var(--warn-bg)}.exceptions-note table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.9rem}.exceptions-note th,.exceptions-note td{padding:10px 11px;border:1px solid var(--line);text-align:left;vertical-align:top}.exceptions-note th{background:var(--surface-2)}.exceptions-note footer{color:var(--muted);border-top:1px solid var(--line);margin-top:52px;padding-top:20px}@media(max-width:680px){.exceptions-note{padding:0 16px}.exceptions-note .grid,.exceptions-note .stamp{grid-template-columns:1fr}.exceptions-note .titleblock{padding:24px 20px}.exceptions-note .lang{position:static}.exceptions-note table{display:block;overflow-x:auto}}
+</style>
+<div class="sheet exceptions-note">
+<div class="titleblock">
+<p class="back"><a href="{{ '/java-spring/spring-boot-error-handling/es/' | relative_url }}">&larr; Manejo de errores en Spring Boot</a></p>
+<p class="lang"><a href="../">EN · English</a></p>
+<p class="eyebrow">Java & Spring · Java Core</p>
+<h1>Checked vs Unchecked Exceptions</h1>
+<p class="lede">La diferencia se memoriza rápido. Lo importante es saber qué significa una excepción para quien llama al método, en qué capa debe vivir y si obligar a manejarla en compilación mejora el contrato o simplemente añade ruido.</p>
+<dl class="stamp"><div><dt>Nivel</dt><dd>Intermedio</dd></div><div><dt>Ámbito</dt><dd>Java Core</dd></div><div><dt>Objetivo</dt><dd>Diseñar mejores fallos</dd></div></dl>
+</div>
+<section><div class="head"><span class="num">00</span><h2>La respuesta de entrevista</h2></div><p class="answer"><strong>Una checked exception debe capturarse o declararse con <code>throws</code>; una unchecked exception no tiene esa obligación en tiempo de compilación.</strong> Las checked son subclases de <code>Exception</code> excepto <code>RuntimeException</code>. <code>RuntimeException</code>, <code>Error</code> y sus subclases son unchecked.</p><p>La respuesta es correcta, pero una conversación de nivel senior empieza con la siguiente pregunta: <em>¿por qué elegirías una u otra?</em></p></section>
+<section><div class="head"><span class="num">01</span><h2>La jerarquía</h2></div><pre>Throwable
+├── Error                         // unchecked
+│   └── OutOfMemoryError
+└── Exception
+    ├── IOException               // checked
+    │   └── FileNotFoundException
+    ├── SQLException              // checked
+    └── RuntimeException          // unchecked
+        ├── NullPointerException
+        ├── IllegalArgumentException
+        └── IllegalStateException</pre><p>La clave está en la herencia, no en que escribamos o no una cláusula <code>throws</code>. Declarar una <code>RuntimeException</code> con <code>throws</code> no la convierte en checked.</p></section>
+<section><div class="head"><span class="num">02</span><h2>Checked exceptions</h2></div><p>El compilador de Java aplica la regla <em>catch or specify</em> a las checked exceptions. Si un método puede producir una, el código que lo llama debe manejarla o propagarla.</p><pre>public String readConfig(Path path) throws IOException {
+    return Files.readString(path);
+}
+
+try {
+    String config = readConfig(Path.of("app.conf"));
+} catch (IOException ex) {
+    // recuperar, traducir, reintentar o informar del fallo
+}</pre><p>Una checked exception hace visible el fallo en el contrato del método. Esto puede ser valioso cuando quien llama puede reaccionar razonablemente ante esa situación.</p><div class="grid"><article class="card"><h3>Buen encaje</h3><p>Una condición recuperable que el caller debería considerar conscientemente: no se puede leer un fichero, falta un recurso externo necesario o existe un camino alternativo.</p></article><article class="card"><h3>Coste</h3><p>Cada capa intermedia debe capturarla o declararla, lo que puede llenar las firmas de ruido cuando esas capas no pueden hacer nada útil.</p></article></div></section>
+<section><div class="head"><span class="num">03</span><h2>Unchecked exceptions</h2></div><p>Las unchecked exceptions no están obligadas por el compilador. Un método puede lanzar una <code>RuntimeException</code> sin declararla.</p><pre>public Order findOrder(UUID id) {
+    return repository.findById(id)
+        .orElseThrow(() -> new OrderNotFoundException(id));
+}
+
+public final class OrderNotFoundException extends RuntimeException {
+    public OrderNotFoundException(UUID id) {
+        super("Order " + id + " was not found");
+    }
+}</pre><p>Esto <strong>no</strong> significa que las unchecked deban ser invisibles o no documentarse. Significa que Java no obliga a cada caller a introducir código de manejo.</p><p class="notice"><strong>Uso habitual:</strong> errores de programación, precondiciones incumplidas, estados inválidos y fallos de aplicación o dominio para los que las capas intermedias no tienen una estrategia útil de recuperación.</p></section>
+<section><div class="head"><span class="num">04</span><h2>La diferencia práctica</h2></div><table><thead><tr><th>Pregunta</th><th>Checked</th><th>Unchecked</th></tr></thead><tbody><tr><td>¿El compilador obliga a manejarla?</td><td>Sí</td><td>No</td></tr><tr><td>Tipo base</td><td><code>Exception</code>, excepto <code>RuntimeException</code></td><td><code>RuntimeException</code> o <code>Error</code></td></tr><tr><td>¿Debe aparecer en <code>throws</code> al propagarse?</td><td>Sí</td><td>No</td></tr><tr><td>Intención habitual</td><td>El caller puede recuperarse</td><td>Bug, estado/precondición inválida o fallo no recuperable aquí</td></tr><tr><td>Impacto en API</td><td>Contrato explícito en compilación</td><td>Menor acoplamiento entre firmas</td></tr></tbody></table></section>
+<section><div class="head"><span class="num">05</span><h2>¿Capturar, propagar o traducir?</h2></div><p>La decisión importante muchas veces no es checked frente a unchecked, sino <strong>qué capa tiene suficiente contexto para actuar</strong>.</p><pre>public Invoice loadInvoice(UUID id) {
+    try {
+        return externalClient.fetch(id);
+    } catch (IOException ex) {
+        throw new InvoiceProviderException(
+            "Could not load invoice " + id,
+            ex
+        );
+    }
+}</pre><p>Aquí la aplicación traduce un fallo específico de infraestructura a una excepción que tiene sentido dentro de su propia abstracción y conserva la causa original.</p><p class="trap"><strong>No captures una excepción únicamente para escribir un log y volver a lanzarla en cada capa.</strong> Captura cuando puedas recuperar, añadir contexto útil, traducir abstracciones o realizar limpieza necesaria.</p></section>
+<section><div class="head"><span class="num">06</span><h2>Excepciones propias</h2></div><p>Extender <code>Exception</code> crea una checked exception:</p><pre>public class PaymentRejectedException extends Exception {
+    public PaymentRejectedException(String message) {
+        super(message);
+    }
+}</pre><p>Extender <code>RuntimeException</code> crea una unchecked exception:</p><pre>public class InvalidOrderStateException extends RuntimeException {
+    public InvalidOrderStateException(String message) {
+        super(message);
+    }
+}</pre><p>La elección debe depender del contrato que quieres ofrecer, no de qué versión te obliga a escribir menos líneas.</p></section>
+<section><div class="head"><span class="num">07</span><h2>¿Y en Spring?</h2></div><p>En aplicaciones Spring modernas es habitual utilizar excepciones unchecked de aplicación o dominio y traducirlas en los límites, por ejemplo con <code>@RestControllerAdvice</code>. Así controladores y servicios no arrastran checked exceptions por todas las firmas cuando esas capas no pueden recuperarse.</p><pre>@ExceptionHandler(OrderNotFoundException.class)
+ProblemDetail handleNotFound(OrderNotFoundException ex) {
+    return ProblemDetail.forStatusAndDetail(
+        HttpStatus.NOT_FOUND,
+        ex.getMessage()
+    );
+}</pre><p>También conviene recordar la semántica transaccional de Spring: por defecto, las runtime exceptions y los errors provocan rollback, mientras que las checked exceptions no lo hacen salvo que se configuren reglas de rollback. Ese comportamiento del framework es distinto de la clasificación de Java, pero importa al diseñar excepciones de la capa de servicio.</p></section>
+<section><div class="head"><span class="num">08</span><h2>Errores frecuentes</h2></div><div class="grid"><article class="card"><h3>Catch Exception</h3><p>Los catches demasiado amplios ocultan el modelo de fallos y pueden tragarse problemas que realmente no sabes manejar.</p></article><article class="card"><h3>Catch vacío</h3><p>Ignorar un fallo dificulta el diagnóstico y puede dejar la aplicación en un estado inválido.</p></article><article class="card"><h3>throws Exception</h3><p>Destruye información útil del contrato. Prefiere el tipo significativo más específico.</p></article><article class="card"><h3>RuntimeException para todo</h3><p>Unchecked no es un atajo para evitar diseñar. Las excepciones deben seguir expresando una semántica de fallo útil.</p></article></div><pre>// Mal
+try {
+    process();
+} catch (Exception ex) {
+    // ignorado
+}</pre></section>
+<section><div class="head"><span class="num">09</span><h2>Una regla de decisión que escala</h2></div><p class="answer"><strong>Pregúntate si se puede esperar razonablemente que quien llama se recupere de esa condición.</strong> Si recuperarse forma parte de su responsabilidad normal, una checked exception puede hacer explícito el contrato. Si el fallo representa un error de programación, una invariante rota, un estado inválido o algo que los callers intermedios no pueden arreglar, una unchecked suele encajar mejor.</p><p>Después añade la arquitectura a la decisión: no filtres <code>SQLException</code>, excepciones de clientes HTTP o errores específicos de un proveedor hacia tu dominio simplemente porque la infraestructura los lance.</p></section>
+<section><div class="head"><span class="num">10</span><h2>Preguntas de entrevista</h2></div><h3>¿Se puede capturar una unchecked exception?</h3><p>Sí. "Unchecked" solo significa que el compilador no obliga a capturarla o declararla.</p><h3>¿Puede una unchecked aparecer en una cláusula throws?</h3><p>Sí, pero no es obligatorio y no cambia su clasificación.</p><h3>¿Todas las subclases de Exception son checked?</h3><p>No. <code>RuntimeException</code> y todas sus subclases son unchecked.</p><h3>¿Error es una checked exception?</h3><p>No. <code>Error</code> y sus subclases son unchecked y normalmente representan condiciones graves de la JVM o del entorno que el código de aplicación no debería capturar de forma rutinaria.</p><h3>¿Todo error de negocio recuperable debería ser checked?</h3><p>No existe una regla universal para todas las arquitecturas. La cuestión es si obligar a todos los callers a reconocer esa condición mejora realmente la API. En muchas aplicaciones Spring, los fallos de dominio son unchecked y se manejan en un límite de la aplicación.</p></section>
+<footer><strong>Idea clave:</strong> checked frente a unchecked es una distinción de compilación, pero elegir entre ellas es una decisión de diseño de API y arquitectura. Diseña las excepciones pensando en quién puede recuperarse, conserva los límites entre abstracciones y no uses <code>RuntimeException</code> únicamente para silenciar al compilador.</footer>
+</div>
