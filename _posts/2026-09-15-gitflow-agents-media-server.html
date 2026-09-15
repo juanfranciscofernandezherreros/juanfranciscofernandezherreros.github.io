@@ -1,0 +1,215 @@
+---
+layout: "article"
+title: "Gitflow governed by AGENTS.md: from change to traceable release"
+description: "How media-server combines Gitflow, SemVer, AGENTS.md, pull requests, and GitHub Actions to promote changes from develop to main without bypassing controls."
+permalink: "/devops/gitflow-agents-media-server/"
+lang: "en"
+lang_url: "/devops/gitflow-agents-media-server/es/"
+series: "Microservices Delivery Notes"
+categories: ["GitOps & Kubernetes"]
+subcategories: ["Continuous Integration"]
+tags: ["git","gitflow","github-actions","semantic-versioning","pull-requests","automation"]
+date: "2026-09-15"
+reading_minutes: 9
+---
+<style>
+.gitflow-article{color-scheme:light dark;--gf-panel:#fff;--gf-text:#17212b;--gf-muted:#52616f;--gf-accent:#315ea8;--gf-accent-2:#b24c28;--gf-line:#c5d0dc;--gf-code:#101923;--gf-code-text:#e8f0f8;--gf-ok:#287447;max-width:920px;margin:48px auto 96px;padding:0 24px;color:var(--gf-text);font-family:"IBM Plex Sans","Segoe UI",sans-serif}
+@media(prefers-color-scheme:dark){.gitflow-article{--gf-panel:#151f2b;--gf-text:#e8eef5;--gf-muted:#a6b4c2;--gf-accent:#83aef2;--gf-accent-2:#f29a76;--gf-line:#334355;--gf-code:#091019;--gf-code-text:#edf4fb;--gf-ok:#7bd39c}}
+[data-theme="light"] .gitflow-article{--gf-panel:#fff;--gf-text:#17212b;--gf-muted:#52616f;--gf-accent:#315ea8;--gf-accent-2:#b24c28;--gf-line:#c5d0dc;--gf-code:#101923;--gf-code-text:#e8f0f8;--gf-ok:#287447}
+[data-theme="dark"] .gitflow-article{--gf-panel:#151f2b;--gf-text:#e8eef5;--gf-muted:#a6b4c2;--gf-accent:#83aef2;--gf-accent-2:#f29a76;--gf-line:#334355;--gf-code:#091019;--gf-code-text:#edf4fb;--gf-ok:#7bd39c}
+.gitflow-article,.gitflow-article *{box-sizing:border-box}
+.gitflow-article a{color:var(--gf-accent)}
+.gitflow-article h1,.gitflow-article h2,.gitflow-article h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}
+.gitflow-article .titleblock,.gitflow-article .card,.gitflow-article .rule,.gitflow-article .callout,.gitflow-article .timeline li{background:var(--gf-panel);border:1px solid var(--gf-line)}
+.gitflow-article .titleblock{position:relative;padding:30px 32px;border-top:5px solid var(--gf-accent)}
+.gitflow-article .back,.gitflow-article .lang,.gitflow-article .eyebrow,.gitflow-article .num,.gitflow-article .stamp dt,.gitflow-article .branch,.gitflow-article pre,.gitflow-article code{font-family:"IBM Plex Mono",monospace}
+.gitflow-article .back,.gitflow-article .lang{font-size:.74rem}
+.gitflow-article .lang{position:absolute;right:24px;top:20px}
+.gitflow-article .eyebrow,.gitflow-article .num{color:var(--gf-accent);font-size:.76rem;text-transform:uppercase}
+.gitflow-article .titleblock h1{font-size:clamp(2.25rem,6vw,3.65rem);line-height:1;max-width:20ch}
+.gitflow-article .lede{font-size:1.05rem;color:var(--gf-muted)}
+.gitflow-article .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;border-top:1px solid var(--gf-line);padding-top:16px}
+.gitflow-article .stamp dt{font-size:.67rem;color:var(--gf-muted);text-transform:uppercase}
+.gitflow-article .stamp dd{margin:4px 0 0;font-weight:600}
+.gitflow-article section{margin-top:52px}
+.gitflow-article .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--gf-line);padding-bottom:9px}
+.gitflow-article h2{font-size:1.65rem}
+.gitflow-article h3{font-size:1.08rem}
+.gitflow-article p,.gitflow-article li{max-width:70ch;line-height:1.65;text-align:justify;hyphens:auto;-webkit-hyphens:auto}
+.gitflow-article .answer{font-size:1.08rem}
+.gitflow-article .flow{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:22px 0}
+.gitflow-article .flow .node{background:var(--gf-panel);border:1px solid var(--gf-line);padding:14px 10px;text-align:center}
+.gitflow-article .flow b{display:block;color:var(--gf-accent);font-family:"IBM Plex Mono",monospace;font-size:.7rem;margin-bottom:6px}
+.gitflow-article .flow span{font-size:.88rem}
+.gitflow-article .grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:20px 0}
+.gitflow-article .card,.gitflow-article .rule{padding:18px}
+.gitflow-article .card h3,.gitflow-article .rule h3{margin-bottom:8px}
+.gitflow-article .card p,.gitflow-article .rule p{font-size:.92rem;color:var(--gf-muted);margin:0}
+.gitflow-article .branch{display:inline-block;margin-top:10px;color:var(--gf-accent-2);font-size:.74rem}
+.gitflow-article .timeline{list-style:none;padding:0;counter-reset:step;display:grid;gap:10px}
+.gitflow-article .timeline li{position:relative;padding:16px 18px 16px 58px;counter-increment:step}
+.gitflow-article .timeline li:before{content:counter(step,decimal-leading-zero);position:absolute;left:17px;top:16px;color:var(--gf-accent);font-family:"IBM Plex Mono",monospace;font-weight:700}
+.gitflow-article .timeline li p{margin:5px 0 0}
+.gitflow-article .table-wrap{overflow-x:auto;margin:20px 0}
+.gitflow-article table{width:100%;border-collapse:collapse;background:var(--gf-panel)}
+.gitflow-article th,.gitflow-article td{border:1px solid var(--gf-line);padding:11px 12px;text-align:left;vertical-align:top}
+.gitflow-article th{font-family:"IBM Plex Mono",monospace;font-size:.74rem;text-transform:uppercase;color:var(--gf-accent)}
+.gitflow-article td{font-size:.9rem}
+.gitflow-article pre{overflow:auto;background:var(--gf-code);color:var(--gf-code-text);border:1px solid var(--gf-line);padding:16px;line-height:1.55;font-size:.81rem}
+.gitflow-article code{font-size:.9em}
+.gitflow-article .callout{padding:18px 20px;border-left:4px solid var(--gf-accent-2)}
+.gitflow-article .callout.ok{border-left-color:var(--gf-ok)}
+.gitflow-article .callout p{margin:0}
+.gitflow-article .legend{font-size:.86rem;color:var(--gf-muted)}
+.gitflow-article .cta{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.gitflow-article .button{display:inline-block;padding:10px 16px;border:1px solid var(--gf-accent);font-family:"IBM Plex Mono",monospace;font-size:.8rem;text-decoration:none}
+.gitflow-article .button.primary{background:var(--gf-accent);color:var(--gf-panel);font-weight:600}
+.gitflow-article .button:hover,.gitflow-article .button:focus-visible{text-decoration:underline}
+.gitflow-article .button:focus-visible{outline:3px solid var(--gf-accent-2);outline-offset:3px}
+.gitflow-article footer{color:var(--gf-muted);border-top:1px solid var(--gf-line);margin-top:48px;padding-top:20px}
+@media(max-width:760px){.gitflow-article .flow{grid-template-columns:1fr}.gitflow-article .grid,.gitflow-article .stamp{grid-template-columns:1fr}.gitflow-article .titleblock{padding:26px 20px}.gitflow-article .lang{position:static}.gitflow-article{padding:0 16px}.gitflow-article p,.gitflow-article li{text-align:left}}
+</style>
+<article class="sheet gitflow-article">
+  <header class="titleblock">
+    <p class="back"><a href="../../">&larr; Back to the blog</a></p>
+    <p class="lang"><a href="es/">ES &middot; Español</a></p>
+    <p class="eyebrow">Microservices Delivery Notes</p>
+    <h1>Gitflow governed by AGENTS.md</h1>
+    <p class="lede">An explicit promotion model in which every change starts from the correct state, passes verifiable controls, and becomes a traceable release without turning temporary branches into permanent infrastructure.</p>
+    <dl class="stamp"><div><dt>Real project</dt><dd>media-server</dd></div><div><dt>Versioning</dt><dd>Semantic Versioning</dd></div><div><dt>Control</dt><dd>PR + GitHub Actions</dd></div></dl>
+  </header>
+
+  <section id="idea"><div class="head"><span class="num">01</span><h2>The essential idea</h2></div>
+    <p class="answer"><strong>Gitflow is not merely a collection of branch names.</strong> It is a movement policy: it defines where a change starts, which branch may receive it, when it is publishable, and what evidence remains afterwards. In <code>media-server</code>, that policy is documented in <code>AGENTS.md</code>, partially enforced by GitHub Actions, and executed through pull requests.</p>
+    <p>The model keeps two permanent branches. <code>main</code> represents published versions, while <code>develop</code> collects the next integrated state. The <code>feature/*</code>, <code>release/*</code>, and <code>hotfix/*</code> branches are temporary tools. They isolate a decision, make review possible, and produce understandable history; they disappear after fulfilling that purpose. This is not a theoretical scenario: it governs the repository that builds the <a href="/self-hosting/media-server/">self-hosted media platform described on this blog</a>.</p>
+    <div class="flow" aria-label="Summary flow from development to publication">
+      <div class="node"><b>01</b><span>develop</span></div><div class="node"><b>02</b><span>feature</span></div><div class="node"><b>03</b><span>develop</span></div><div class="node"><b>04</b><span>release</span></div><div class="node"><b>05</b><span>main + tag</span></div>
+    </div>
+    <p class="legend">The release also merges back into <code>develop</code>; the linear diagram highlights promotion direction rather than omitting that return merge.</p>
+  </section>
+
+  <section id="branches"><div class="head"><span class="num">02</span><h2>Responsibility of each branch</h2></div>
+    <div class="grid">
+      <article class="card"><h3>main</h3><p>Holds the published state. It receives only prepared releases or urgent hotfixes. Version tags are created on its commits.</p><span class="branch">PERMANENT</span></article>
+      <article class="card"><h3>develop</h3><p>Is the integration line. Features and releases start from it, and both types of change return to it.</p><span class="branch">PERMANENT</span></article>
+      <article class="card"><h3>feature/X.Y.Z-description</h3><p>Isolates a functional or documentation change. It always starts from synchronized <code>develop</code> and can only be promoted to <code>develop</code>.</p><span class="branch">TEMPORARY</span></article>
+      <article class="card"><h3>release/X.Y.Z</h3><p>Freezes the set to publish, prepares the changelog, and merges into both <code>main</code> and <code>develop</code>.</p><span class="branch">TEMPORARY</span></article>
+      <article class="card"><h3>hotfix/X.Y.Z-description</h3><p>Starts from <code>main</code> to correct production. It must return to both <code>main</code> and <code>develop</code> to prevent divergent lines.</p><span class="branch">TEMPORARY</span></article>
+      <article class="card"><h3>Tag vX.Y.Z</h3><p>Immutably identifies the commit published on <code>main</code>. The GitHub Release explains the contents of that version.</p><span class="branch">IMMUTABLE MILESTONE</span></article>
+    </div>
+  </section>
+
+  <section id="agents"><div class="head"><span class="num">03</span><h2>What AGENTS.md does</h2></div>
+    <p><code>AGENTS.md</code> is an operational contract for agents working in the repository. It neither replaces Git nor grants special permissions. Instead, it turns team decisions into instructions that apply before any edit. Its purpose is to prevent automation from inventing a version, working on an obsolete branch, or publishing from an incorrect origin.</p>
+    <ol class="timeline">
+      <li><strong>Request an exact version and type.</strong><p>Before editing, it requires <code>X.Y.Z</code> and an explicit choice of <code>major</code>, <code>minor</code>, or <code>patch</code>. The agent cannot calculate or correct the version independently.</p></li>
+      <li><strong>Check production.</strong><p>Switch to <code>main</code>, run <code>git fetch origin</code> and <code>git pull --ff-only origin main</code>, and stop if local changes or divergence exist.</p></li>
+      <li><strong>Prepare the development base.</strong><p>For a feature, switch to <code>develop</code>, synchronize it with <code>--ff-only</code>, and verify a clean worktree.</p></li>
+      <li><strong>Fix the origin.</strong><p>The feature must be created from synchronized <code>develop</code> HEAD, never from <code>main</code>, another feature, or a stale copy.</p></li>
+      <li><strong>Normalize names and routes.</strong><p>Require names such as <code>feature/2.1.1-create-features-from-develop</code>, lowercase kebab-case descriptions, and explicit destinations for each branch type.</p></li>
+      <li><strong>Control end of life.</strong><p>Do not delete a branch until GitHub confirms its merge, and never create a permanent <code>releases</code> branch.</p></li>
+      <li><strong>Bind version to publication.</strong><p>The release branch, <code>vX.Y.Z</code> tag, and GitHub Release use exactly the confirmed version and originate from <code>main</code>.</p></li>
+    </ol>
+    <div class="callout"><p><strong>Important boundary:</strong> a document guides a compliant agent but cannot block a manual push by itself. Critical rules therefore need workflows and branch protection as complementary controls.</p></div>
+  </section>
+
+  <section id="feature"><div class="head"><span class="num">04</span><h2>The complete feature flow</h2></div>
+    <p>The project checks <code>main</code> first because it is the published reference. It then deliberately switches to <code>develop</code>, the canonical base for ordinary work:</p>
+    <pre>git switch main
+git fetch origin
+git pull --ff-only origin main
+git status --short
+
+git switch develop
+git pull --ff-only origin develop
+git status --short
+
+git switch -c feature/2.1.1-create-features-from-develop</pre>
+    <p><code>--ff-only</code> is a small but useful barrier. It updates the branch only when Git can advance the pointer without inventing a local merge. A failure exposes divergence that must be understood before proceeding. Likewise, empty output from <code>git status --short</code> confirms that the new change will not be mixed with previous modifications.</p>
+    <p>After editing and validation, a cohesive commit is created, the feature is pushed, and a pull request targets <code>develop</code>. The branch is not removed when the PR is submitted. It is deleted locally and from <code>origin</code> only after GitHub reports the <em>MERGED</em> state.</p>
+    <pre>git add AGENTS.md
+git commit -m "docs: create feature branches from develop"
+git push -u origin feature/2.1.1-create-features-from-develop
+
+gh pr create --base develop \
+  --head feature/2.1.1-create-features-from-develop
+
+gh pr checks 26 --watch
+gh pr merge 26 --merge</pre>
+  </section>
+
+  <section id="release"><div class="head"><span class="num">05</span><h2>From develop to a release</h2></div>
+    <p>An integrated feature is not yet a published version. The <code>release/X.Y.Z</code> branch starts from <code>develop</code> and represents the exact set to promote. Release-only preparation, such as turning the changelog's <code>Unreleased</code> section into <code>2.1.1</code>, belongs there; new functionality does not.</p>
+    <div class="table-wrap"><table><thead><tr><th>Movement</th><th>Purpose</th><th>Result</th></tr></thead><tbody>
+      <tr><td><code>develop → release/2.1.1</code></td><td>Freeze and prepare the version.</td><td>Reviewable temporary branch.</td></tr>
+      <tr><td><code>release/2.1.1 → main</code></td><td>Publish the approved state.</td><td>Production commit.</td></tr>
+      <tr><td><code>release/2.1.1 → develop</code></td><td>Return changelog and release adjustments.</td><td>Consistent permanent branches.</td></tr>
+      <tr><td><code>main → v2.1.1</code></td><td>Mark the published commit.</td><td>Immutable reference and GitHub Release.</td></tr>
+    </tbody></table></div>
+    <pre>git switch develop
+git pull --ff-only origin develop
+git switch -c release/2.1.1
+
+# Prepare CHANGELOG.md, validate, commit, and push
+gh pr create --base main --head release/2.1.1
+gh pr create --base develop --head release/2.1.1
+
+git switch main
+git pull --ff-only origin main
+git tag -a v2.1.1 -m "Release v2.1.1"
+git push origin v2.1.1
+gh release create v2.1.1 --verify-tag</pre>
+    <p>Both PRs must be merged before the release branch is deleted. The tag is then created on <code>main</code>, not on the release branch or <code>develop</code>. The question “which code does <code>v2.1.1</code> represent?” therefore has one answer.</p>
+  </section>
+
+  <section id="hotfix"><div class="head"><span class="num">06</span><h2>The different hotfix path</h2></div>
+    <p>A hotfix addresses an urgent defect in an already published version. Its correct base is therefore <code>main</code>, not <code>develop</code>: it must start from the precise production state. Its pattern is <code>hotfix/X.Y.Z-description</code>.</p>
+    <p>Once validated, it merges into <code>main</code> to publish the correction and into <code>develop</code> so that the next release cannot reintroduce the defect. The confirmed tag follows, and the temporary branch is removed. Merging only to <code>main</code> would solve the immediate incident while leaving two functionally different histories.</p>
+  </section>
+
+  <section id="automation"><div class="head"><span class="num">07</span><h2>What GitHub Actions enforces</h2></div>
+    <p>The <code>source-branch.yml</code> workflow runs for pull requests targeting <code>main</code> or <code>develop</code>. Its <em>Source branch policy</em> job applies a small matrix:</p>
+    <div class="table-wrap"><table><thead><tr><th>Destination</th><th>Allowed origins</th><th>Rejected example</th></tr></thead><tbody>
+      <tr><td><code>main</code></td><td><code>release/*</code>, <code>hotfix/*</code></td><td><code>feature/* → main</code></td></tr>
+      <tr><td><code>develop</code></td><td><code>feature/*</code>, <code>release/*</code>, <code>hotfix/*</code></td><td><code>random-branch → develop</code></td></tr>
+    </tbody></table></div>
+    <p>The <code>validate.yml</code> workflow checks both Docker Compose files, validates the Grafana dashboard JSON, and searches for unresolved conflict markers. These jobs answer different questions: “Did the change follow an authorized route?” and “Is the configuration still structurally valid?”</p>
+    <div class="callout ok"><p><strong>Layered defense:</strong> <code>AGENTS.md</code> prevents errors before editing; PRs expose the decision; GitHub Actions validates route and configuration; branch protection should require those checks so that an incorrect merge cannot ignore them.</p></div>
+    <p>There is a deliberate limitation. The workflow recognizes branch prefixes, but it does not prove that a feature originally started at <code>develop</code> HEAD. That precondition is maintained by <code>AGENTS.md</code>, prior synchronization, and history review. A stricter compliance environment could add a dedicated common-ancestor check.</p>
+  </section>
+
+  <section id="real-case"><div class="head"><span class="num">08</span><h2>The real media-server 2.1.1 case</h2></div>
+    <p>Version <code>2.1.1</code> corrected the origin of feature branches. <code>feature/2.1.1-create-features-from-develop</code> started from synchronized <code>develop</code>. Its change turned that practice into an explicit <code>AGENTS.md</code> rule and corrected the diagram describing the model.</p>
+    <ol class="timeline">
+      <li><strong>PR #26: feature into develop.</strong><p>The <em>Source branch policy</em> and <em>validate</em> checks passed; GitHub confirmed the merge before the feature was deleted.</p></li>
+      <li><strong>release/2.1.1 branch.</strong><p>It started from the new <code>develop</code> state and added the corresponding changelog entry.</p></li>
+      <li><strong>PR #27: release into main.</strong><p>It promoted the correction into publishable history.</p></li>
+      <li><strong>PR #28: release into develop.</strong><p>It returned the changelog preparation to the integration line.</p></li>
+      <li><strong>Tag and GitHub Release.</strong><p><code>v2.1.1</code> was associated with the <code>main</code> merge, after which the release branch was removed.</p></li>
+    </ol>
+    <p>The final state keeps only <code>main</code> and <code>develop</code> as permanent branches. The history shows which PR integrated the change, which controls passed, which commit was published, and which version identifies it.</p>
+  </section>
+
+  <section id="semver"><div class="head"><span class="num">09</span><h2>SemVer as an explicit decision</h2></div>
+    <p>Semantic Versioning uses <code>MAJOR.MINOR.PATCH</code>. An incompatible change increments <code>MAJOR</code>; compatible functionality increments <code>MINOR</code>; a compatible correction increments <code>PATCH</code>. This repository does not delegate classification to the agent because the number communicates maintainer intent, not merely a mechanical property of a diff.</p>
+    <p>Enabling Tailscale kernel TUN mode was published as <code>2.1.0</code> because it introduced a relevant operational change. Correcting the feature-creation rules was then published as <code>2.1.1</code>. The lesson is not to memorize those examples, but to preserve the explicit decision and use the same value in branch, changelog, tag, and release.</p>
+  </section>
+
+  <section id="pitfalls"><div class="head"><span class="num">10</span><h2>Failures this model prevents</h2></div>
+    <div class="grid">
+      <article class="rule"><h3>Feature from main</h3><p>It omits work already integrated in <code>develop</code> and forces history reconciliation later. The new rule explicitly prohibits it.</p></article>
+      <article class="rule"><h3>Direct push to main</h3><p>It bypasses review, controls, and traceability. <code>main</code> receives only releases and hotfixes through approved routes.</p></article>
+      <article class="rule"><h3>Permanent release branch</h3><p>A <code>releases</code> branch accumulates ambiguous states. Every version gets a numbered temporary branch that is deleted afterwards.</p></article>
+      <article class="rule"><h3>Premature deletion</h3><p>Removing a branch before merge confirmation can discard the reference needed for review or recovery.</p></article>
+      <article class="rule"><h3>Tag on develop</h3><p>It confuses integration with publication. Tags belong exclusively to the corresponding <code>main</code> commit.</p></article>
+      <article class="rule"><h3>Invented version</h3><p>Automatic increments without confirmation may communicate incorrect compatibility. The user decides number and type.</p></article>
+    </div>
+  </section>
+
+  <section id="definition-of-done"><div class="head"><span class="num">11</span><h2>When the flow is actually complete</h2></div>
+    <p>Work does not end when code is written or when one merge button is pressed. For a regular version, done means: the feature is integrated into <code>develop</code>; checks are green; the release is integrated into both permanent branches; the tag points to the <code>main</code> commit; the GitHub Release is published; temporary branches are removed; local copies are synchronized; and the worktree is clean.</p>
+    <p>This disciplined closure removes implicit decisions. The next person—or the next agent—does not need to guess whether a branch is still active, whether a tag came from production, or whether a release adjustment returned to development. Git becomes more than commit storage: it becomes the verifiable record of how every decision was made and published.</p>
+    <div class="cta"><a class="button primary" href="https://github.com/juanfranciscofernandezherreros/media-server">View media-server &rarr;</a><a class="button" href="https://github.com/juanfranciscofernandezherreros/media-server/blob/main/AGENTS.md">Read AGENTS.md</a><a class="button" href="https://github.com/juanfranciscofernandezherreros/media-server/releases/tag/v2.1.1">Open v2.1.1</a></div>
+  </section>
+  <footer><p>Microservices Delivery Notes · A delivery flow is reliable when its policy is written, its routes are validated, and every version can be reconstructed from history.</p></footer>
+</article>
