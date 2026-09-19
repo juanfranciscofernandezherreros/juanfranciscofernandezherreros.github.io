@@ -127,12 +127,29 @@ I ≈ 0.0136 A = 13.6 mA</pre>
 </tbody>
 </table>
 
-<p>Conceptually, these are two identical circuits sharing the same board and ground reference:</p>
-<pre>PIN 8 ── resistor ──>|── GND
-                     red LED
+<p>Conceptually, these are two identical circuits sharing the same board and ground reference. This text diagram summarizes the complete build:</p>
+<pre>                          BREADBOARD
+                    ┌─────────────────────┐
+ARDUINO UNO         │                     │
+                    │   220–330 Ω         │
+DIGITAL PIN 8 ──────┼──[ RESISTOR ]──────>|────┐
+                    │                 RED LED   │
+                    │                           │
+                    │   220–330 Ω               │
+DIGITAL PIN 9 ──────┼──[ RESISTOR ]──────>|────┤
+                    │              YELLOW LED   │
+                    │                           │
+GND ────────────────┼───────────────────────────┘
+                    └─────────────────────┘
 
-PIN 9 ── resistor ──>|── GND
-                     yellow LED</pre>
+USB ──► Arduino
+       ├─ PIN 8 = red LED digital output
+       ├─ PIN 9 = yellow LED digital output
+       └─ GND   = common current return
+
+>| represents the LED:
+   anode (+) ──>|── cathode (-) ──► GND</pre>
+<p>The components do not need to be physically arranged in a straight line on the breadboard. The diagram shows <strong>electrical connectivity</strong>: every point joined by a line must ultimately be connected, even when separate breadboard rows and jumper wires are used.</p>
 
 <p>It does not matter whether the jumper wire itself is red, yellow, or black. Color helps organization, but electrically a jumper is just a conductor. What matters is <strong>where it starts and where it ends</strong>.</p>
 </section>
