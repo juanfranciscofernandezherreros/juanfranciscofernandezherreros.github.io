@@ -128,12 +128,29 @@ I ≈ 0,0136 A = 13,6 mA</pre>
 </tbody>
 </table>
 
-<p>Conceptualmente son dos circuitos iguales que comparten la misma placa y la misma referencia de masa:</p>
-<pre>PIN 8 ── resistencia ──>|── GND
-                        LED rojo
+<p>Conceptualmente son dos circuitos iguales que comparten la misma placa y la misma referencia de masa. Este diagrama de texto resume el montaje completo:</p>
+<pre>                         PROTOBOARD
+                    ┌─────────────────────┐
+ARDUINO UNO         │                     │
+                    │   220–330 Ω         │
+PIN DIGITAL 8 ──────┼──[ RESISTENCIA ]───>|────┐
+                    │                 LED ROJO  │
+                    │                           │
+                    │   220–330 Ω               │
+PIN DIGITAL 9 ──────┼──[ RESISTENCIA ]───>|────┤
+                    │              LED AMARILLO │
+                    │                           │
+GND ────────────────┼───────────────────────────┘
+                    └─────────────────────┘
 
-PIN 9 ── resistencia ──>|── GND
-                        LED amarillo</pre>
+USB ──► Arduino
+       ├─ PIN 8 = salida digital del LED rojo
+       ├─ PIN 9 = salida digital del LED amarillo
+       └─ GND   = retorno común de corriente
+
+>| representa el LED:
+   ánodo (+) ──>|── cátodo (-) ──► GND</pre>
+<p>En la protoboard no es necesario que los componentes estén físicamente en línea como en el dibujo. El diagrama representa <strong>conectividad eléctrica</strong>: cada punto unido por una línea debe acabar conectado, aunque usemos filas distintas y jumpers para llegar hasta él.</p>
 
 <p>No importa que los jumpers sean rojos, amarillos o negros. El color ayuda a organizarse, pero eléctricamente un cable jumper es un conductor. Lo que importa es <strong>dónde empieza y dónde termina</strong>.</p>
 </section>
