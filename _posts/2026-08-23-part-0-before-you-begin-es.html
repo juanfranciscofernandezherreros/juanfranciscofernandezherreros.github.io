@@ -315,28 +315,28 @@ reading_minutes: 4
     </div>
 
     <div class="cmd-group" style="margin-top:20px;">
-      <h4>Git</h4>
+      <h3>Git</h3>
       <pre><span class="c">winget</span> install Git.Git</pre>
     </div>
     <div class="cmd-group">
-      <h4>Docker Desktop</h4>
+      <h3>Docker Desktop</h3>
       <pre><span class="c">winget</span> install Docker.DockerDesktop</pre>
       <p class="why">Pide iniciar sesión la primera vez que lo abres (gratis para uso personal), y reiniciar en algunas máquinas. Arráncalo ahora — el resto de esta página asume que está corriendo.</p>
     </div>
     <div class="cmd-group">
-      <h4>kind</h4>
+      <h3>kind</h3>
       <pre><span class="c">winget</span> install Kubernetes.kind</pre>
     </div>
     <div class="cmd-group">
-      <h4>kubectl</h4>
+      <h3>kubectl</h3>
       <p class="why">Ya viene incluido con Docker Desktop en Windows — nada que instalar aparte. Si alguna vez falta: <code class="mono">winget install Kubernetes.kubectl</code>.</p>
     </div>
     <div class="cmd-group">
-      <h4>Java 21</h4>
+      <h3>Java 21</h3>
       <pre><span class="c">winget</span> install EclipseAdoptium.Temurin.21.JDK</pre>
     </div>
     <div class="cmd-group">
-      <h4>Maven</h4>
+      <h3>Maven</h3>
       <p class="why">No existe un paquete winget oficial para Apache Maven — <code class="mono">winget install Apache.Maven</code> falla con "No package found matching input criteria". Instálalo manualmente: descarga el binario oficial, verifica su checksum, descomprímelo y añádelo al <code class="mono">PATH</code> de tu usuario.</p>
       <pre><span class="c">Invoke-WebRequest</span> -Uri "https://dlcdn.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.zip" -OutFile "$env:TEMP\apache-maven-3.9.16-bin.zip"
 <span class="c">Get-FileHash</span> "$env:TEMP\apache-maven-3.9.16-bin.zip" -Algorithm SHA512   <span style="color:var(--ink-soft)"># compara con el .sha512 de la página de descarga</span>
