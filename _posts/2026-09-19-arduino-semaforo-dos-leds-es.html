@@ -51,23 +51,11 @@ reading_minutes: 10
 </header>
 
 <section>
-<div class="head"><span class="num">00</span><h2>El resultado</h2></div>
-<p>Este es el montaje real terminado. La placa compatible con Arduino Uno está conectada al ordenador por USB. Dos cables llevan las señales de control desde los pines digitales hasta la protoboard y cada LED tiene su resistencia limitadora.</p>
-
-<figure>
-<img src="{{ '/assets/media/arduino-semaforo/semaforo-montaje.jpg' | relative_url }}" alt="Montaje real de un Arduino Uno compatible conectado a una protoboard con un LED rojo y un LED amarillo, cada uno con su resistencia y cables jumper.">
-<figcaption>Montaje final. En la fotografía el LED amarillo está encendido y el rojo apagado: uno de los dos estados que genera el programa.</figcaption>
-</figure>
-
-<p>Y este es el circuito funcionando. El vídeo está comprimido para la web, pero conserva el experimento original: las dos luces cambian de estado siguiendo los tiempos definidos en el sketch.</p>
-
-<figure>
-<video controls playsinline preload="metadata" poster="{{ '/assets/media/arduino-semaforo/semaforo-montaje.jpg' | relative_url }}">
-  <source src="{{ '/assets/media/arduino-semaforo/semaforo-demo.mp4' | relative_url }}" type="video/mp4">
-  Tu navegador no puede reproducir este vídeo. <a href="{{ '/assets/media/arduino-semaforo/semaforo-demo.mp4' | relative_url }}">Descargar el MP4</a>.
-</video>
-<figcaption>Prueba real del semáforo de dos LEDs alternando desde Arduino.</figcaption>
-</figure>
+<div class="head"><span class="num">00</span><h2>El montaje real que tengo ahora</h2></div>
+<p>Este artículo documenta <strong>el circuito tal como lo tengo montado de verdad</strong>, no una versión idealizada. Uso tres LEDs —rojo, amarillo y verde— controlados por los pines digitales 8, 9 y 10. Cada LED tiene su propia resistencia y, además, <strong>cada rama vuelve a GND con su propio cable</strong>.</p>
+<p>Eso significa que no estoy usando un único carril negativo de la protoboard como masa común. Tengo tres retornos separados: uno para el LED rojo, otro para el amarillo y otro para el verde. Los tres terminan en masa.</p>
+<div class="callout"><strong>Importante:</strong> si esos tres cables terminan realmente en pines <code>GND</code> de la misma placa, eléctricamente todos pertenecen al mismo nodo de masa. No es una conexión “incorrecta” en el sentido de que el circuito no pueda funcionar; simplemente es <strong>redundante, menos ordenada y menos escalable</strong> que llevar un solo GND a la protoboard y repartirlo desde allí.</div>
+<p>La placa se alimenta y programa por USB. El comportamiento actual es: verde 5 segundos, amarillo 2 segundos y rojo 5 segundos. Al terminar, <code>loop()</code> empieza de nuevo.</p>
 </section>
 
 <section>
@@ -114,52 +102,49 @@ I ≈ 0,0136 A = 13,6 mA</pre>
 </section>
 
 <section>
-<div class="head"><span class="num">05</span><h2>El cableado que usamos</h2></div>
-<p>En la versión actual usamos <strong>tres salidas digitales independientes</strong>: el LED rojo está en el <strong>pin 8</strong>, el amarillo en el <strong>pin 9</strong> y el verde en el <strong>pin 10</strong>. Las tres ramas terminan en <strong>GND</strong>, que actúa como referencia común de 0 V.</p>
+<div class="head"><span class="num">05</span><h2>El cableado real: tres señales y tres retornos a GND</h2></div>
+<p>La versión actual usa <strong>tres salidas digitales independientes</strong>: rojo en el <strong>pin 8</strong>, amarillo en el <strong>pin 9</strong> y verde en el <strong>pin 10</strong>. Cada salida alimenta su propia rama LED + resistencia.</p>
+<p>La particularidad de mi montaje actual es el retorno: en lugar de unir los tres cátodos a un único carril de masa de la protoboard, <strong>cada LED tiene su propio cable de vuelta a GND</strong>. Por tanto hay tres caminos de retorno separados físicamente, aunque eléctricamente terminan siendo la misma referencia de masa dentro del Arduino.</p>
 
 <table>
-<thead><tr><th>Elemento</th><th>Conexión</th><th>Función</th></tr></thead>
+<thead><tr><th>Rama</th><th>Salida</th><th>Camino eléctrico real</th></tr></thead>
 <tbody>
-<tr><td>Pin 8</td><td>Resistencia → LED rojo → GND</td><td>Controla la luz roja.</td></tr>
-<tr><td>Pin 9</td><td>Resistencia → LED amarillo → GND</td><td>Controla la luz amarilla.</td></tr>
-<tr><td>Pin 10</td><td>Resistencia → LED verde → GND</td><td>Controla la luz verde.</td></tr>
-<tr><td>Resistencia roja</td><td>En serie con el LED rojo</td><td>Limita la corriente de esa rama.</td></tr>
-<tr><td>Resistencia amarilla</td><td>En serie con el LED amarillo</td><td>Limita la corriente de esa rama.</td></tr>
-<tr><td>Resistencia verde</td><td>En serie con el LED verde</td><td>Limita la corriente de esa rama.</td></tr>
-<tr><td>GND</td><td>Retorno común de los tres LEDs</td><td>Cierra el circuito eléctrico.</td></tr>
+<tr><td>Rojo</td><td>Pin 8</td><td>Pin 8 → resistencia → LED rojo → cable propio → GND</td></tr>
+<tr><td>Amarillo</td><td>Pin 9</td><td>Pin 9 → resistencia → LED amarillo → cable propio → GND</td></tr>
+<tr><td>Verde</td><td>Pin 10</td><td>Pin 10 → resistencia → LED verde → cable propio → GND</td></tr>
 </tbody>
 </table>
 
-<p>Conceptualmente son dos circuitos iguales que comparten la misma placa y la misma referencia de masa. Este diagrama de texto resume el montaje completo:</p>
-<pre>                         PROTOBOARD
-                    ┌─────────────────────┐
-ARDUINO UNO         │                     │
-                    │   220–330 Ω         │
-PIN DIGITAL 8 ──────┼──[ RESISTENCIA ]───>|────┐
-                    │                 LED ROJO  │
-                    │                           │
-                    │   220–330 Ω               │
-PIN DIGITAL 9 ──────┼──[ RESISTENCIA ]───>|────┤
-                    │              LED AMARILLO │
-                    │                           │
-                    │   220–330 Ω               │
-PIN DIGITAL 10 ─────┼──[ RESISTENCIA ]───>|────┤
-                    │                 LED VERDE │
-                    │                           │
-GND ────────────────┼───────────────────────────┘
-                    └─────────────────────┘
+<p>Este diagrama refleja <strong>lo que tengo montado ahora</strong>:</p>
+<pre>                           PROTOBOARD
+                      ┌──────────────────────┐
+ARDUINO UNO           │                      │
+                      │   220–330 Ω          │
+PIN DIGITAL 8 ────────┼──[ RESISTENCIA ]───>|──── cable 1 ───► GND
+                      │                  LED ROJO
+                      │
+                      │   220–330 Ω
+PIN DIGITAL 9 ────────┼──[ RESISTENCIA ]───>|──── cable 2 ───► GND
+                      │               LED AMARILLO
+                      │
+                      │   220–330 Ω
+PIN DIGITAL 10 ───────┼──[ RESISTENCIA ]───>|──── cable 3 ───► GND
+                      │                 LED VERDE
+                      └──────────────────────┘
 
 USB ──► Arduino
-       ├─ PIN 8  = salida digital del LED rojo
-       ├─ PIN 9  = salida digital del LED amarillo
-       ├─ PIN 10 = salida digital del LED verde
-       └─ GND    = retorno común de corriente
+       ├─ PIN 8  = señal del LED rojo
+       ├─ PIN 9  = señal del LED amarillo
+       ├─ PIN 10 = señal del LED verde
+       └─ GND    = referencia común, alcanzada por tres cables separados
 
 >| representa el LED:
    ánodo (+) ──>|── cátodo (-) ──► GND</pre>
-<p>En la protoboard no es necesario que los componentes estén físicamente en línea como en el dibujo. El diagrama representa <strong>conectividad eléctrica</strong>: cada punto unido por una línea debe acabar conectado, aunque usemos filas distintas y jumpers para llegar hasta él.</p>
 
-<p>No importa que los jumpers sean rojos, amarillos o negros. El color ayuda a organizarse, pero eléctricamente un cable jumper es un conductor. Lo que importa es <strong>dónde empieza y dónde termina</strong>.</p>
+<h3>¿Está mal usar tres cables de GND?</h3>
+<p>No necesariamente. En una placa Arduino Uno los puntos marcados como <code>GND</code> están conectados eléctricamente entre sí. Si cada uno de tus tres retornos termina realmente en GND, los LEDs comparten la misma referencia aunque hayas llegado a ella con tres cables.</p>
+<p>Lo que sí es mejorable es la <strong>organización del circuito</strong>. Una solución más limpia sería conectar un solo cable desde GND al carril negativo de la protoboard y hacer que los tres LEDs vuelvan a ese carril. El resultado eléctrico sería equivalente para este ejercicio, pero usarías menos cables y te resultaría más fácil añadir botones, sensores o más LEDs después.</p>
+<div class="callout"><strong>Lo que no debemos hacer:</strong> conectar una rama a un pin digital creyendo que es GND, eliminar la resistencia de un LED, o unir directamente una salida digital a GND. Aquí hablamos de tres <em>retornos a masa</em>, no de cortocircuitar los pines 8, 9 o 10.</div>
 </section>
 
 <section>
@@ -232,7 +217,7 @@ void loop() {
 <div class="grid">
 <article class="card"><h3>LED al revés</h3><p>Si ánodo y cátodo están invertidos, el LED normalmente no se encenderá. Darle la vuelta suele ser la primera prueba.</p></article>
 <article class="card"><h3>Fila equivocada</h3><p>Una pata o jumper desplazado un agujero puede dejar el circuito abierto porque ya no comparte la conexión interna esperada.</p></article>
-<article class="card"><h3>Sin GND común</h3><p>Una salida necesita un camino de retorno. Sin masa, la rama no queda cerrada correctamente.</p></article>
+<article class="card"><h3>Retorno a GND</h3><p>Cada LED necesita un camino de vuelta a masa. En mi montaje ese retorno se hace con tres cables separados; funciona porque todos llegan a GND, aunque un carril común sería más limpio.</p></article>
 <article class="card"><h3>Pin distinto al código</h3><p>Si el cable está en el 9 pero el sketch escribe sobre el 8, Arduino controlará otra salida. Hardware y software deben coincidir.</p></article>
 <article class="card"><h3>Sin resistencia</h3><p>Puede circular demasiada corriente. Cada LED debe tener una resistencia limitadora en serie.</p></article>
 <article class="card"><h3>Confundir compilar con subir</h3><p>Compilar comprueba y genera el programa; subirlo lo transfiere realmente al microcontrolador.</p></article>
@@ -242,7 +227,7 @@ void loop() {
 <section>
 <div class="head"><span class="num">10</span><h2>Qué hemos aprendido realmente</h2></div>
 <p>El objetivo no era fabricar un semáforo real, sino construir un modelo mental. Con tres LEDs utilizamos <strong>tres salidas digitales independientes</strong>, hemos convertido <code>HIGH</code> y <code>LOW</code> en un efecto físico visible y hemos visto que el tiempo forma parte del comportamiento del sistema.</p>
-<p>También hemos separado por primera vez las responsabilidades del montaje: el Arduino decide el estado lógico; la resistencia limita la corriente; el LED transforma esa corriente en luz; la protoboard proporciona las conexiones; y GND cierra el camino eléctrico.</p>
+<p>También hemos separado las responsabilidades del montaje: el Arduino decide el estado lógico; la resistencia limita la corriente; el LED transforma esa corriente en luz; la protoboard proporciona las conexiones; y GND cierra cada rama. En mi montaje actual ese retorno a GND está duplicado físicamente tres veces, una por LED.</p>
 <p>El siguiente salto interesante es añadir un <strong>pulsador</strong> para peatones. En ese momento Arduino deja de ejecutar únicamente una secuencia temporal y empieza a reaccionar a una entrada externa; después podemos sustituir <code>delay()</code> por <code>millis()</code> para que el programa siga atendiendo entradas mientras controla los tiempos.</p>
 </section>
 
