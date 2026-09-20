@@ -490,7 +490,7 @@ reading_minutes: 5
         <div class="shot"><img src="{{ '/assets/img/part-3/01-terminal-output-of-generate-crud-py-with-the-minimal.png' | relative_url }}" alt="Salida de terminal de generate_crud.py con la arquitectura minimal" /></div>
         <div>
           <p class="step-idx">1 — generarlo</p>
-          <h4>generate_crud.py GodbyeMicroservices "id:int" --architecture minimal</h4>
+          <h3>generate_crud.py GodbyeMicroservices "id:int" --architecture minimal</h3>
           <p>Un solo comando. Los campos (<code class="mono">id:int</code>) solo están para cumplir la sintaxis del CLI — esta arquitectura nunca los lee.</p>
         </div>
       </div>
@@ -498,7 +498,7 @@ reading_minutes: 5
         <div class="shot"><img src="{{ '/assets/img/part-3/02-file-tree-of-the-generated-crud-godbyemicroservices.png' | relative_url }}" alt="Árbol de ficheros del proyecto crud-godbyemicroservices-minimal generado" /></div>
         <div>
           <p class="step-idx">2 — lo que salió</p>
-          <h4>8 ficheros, todos bajo app/</h4>
+          <h3>8 ficheros, todos bajo app/</h3>
           <p>La misma forma que <span class="inline-file">hello-world-argocd</span>: <code class="mono">pom.xml</code>, una clase Application, un Controller, un test, un Dockerfile. Nada más.</p>
         </div>
       </div>
@@ -506,7 +506,7 @@ reading_minutes: 5
         <div class="shot"><img src="{{ '/assets/img/part-3/03-terminal-output-of-mvn-test-on-the-generated-project.png' | relative_url }}" alt="Salida de terminal de mvn test sobre el proyecto generado" /></div>
         <div>
           <p class="step-idx">3 — compila y pasa de verdad</p>
-          <h4>mvn test</h4>
+          <h3>mvn test</h3>
           <p>El código generado no vale nada si no compila. El contexto de Spring arranca, el único test del controller pasa, código de salida 0.</p>
         </div>
       </div>
@@ -514,7 +514,7 @@ reading_minutes: 5
         <div class="shot"><img src="{{ '/assets/img/part-3/04-terminal-output-of-docker-build-for-the-new-service.png' | relative_url }}" alt="Salida de terminal de docker build para el servicio nuevo" /></div>
         <div>
           <p class="step-idx">4 — construir la imagen</p>
-          <h4>docker build -t godbyemicroservices:local app</h4>
+          <h3>docker build -t godbyemicroservices:local app</h3>
           <p>El mismo paso que la Parte 1, sección 05 — solo cambia el nombre de la imagen.</p>
         </div>
       </div>
@@ -522,7 +522,7 @@ reading_minutes: 5
         <div class="shot"><img src="{{ '/assets/img/part-3/05-terminal-output-of-kind-load-docker-image-for-the-new.png' | relative_url }}" alt="Salida de terminal de kind load docker-image para el servicio nuevo" /></div>
         <div>
           <p class="step-idx">5 — meterla en el clúster</p>
-          <h4>kind load docker-image godbyemicroservices:local --name hello-world</h4>
+          <h3>kind load docker-image godbyemicroservices:local --name hello-world</h3>
           <p>El mismo clúster que <span class="inline-file">hello-world</span> — un único clúster de <code class="mono">kind</code> corriendo felizmente dos servicios independientes.</p>
         </div>
       </div>
@@ -530,7 +530,7 @@ reading_minutes: 5
         <div class="shot"><img src="{{ '/assets/img/part-3/06-terminal-output-publishing-the-new-repo-to-github.png' | relative_url }}" alt="Salida de terminal publicando el repo nuevo en GitHub" /></div>
         <div>
           <p class="step-idx">6 — publicar el repo de código</p>
-          <h4>crud_generator.github_repo.push_to_github(...)</h4>
+          <h3>crud_generator.github_repo.push_to_github(...)</h3>
           <p>La misma función que llama <code class="mono">--github</code> en el CLI, ejecutada directamente porque el proyecto ya existía: <code class="mono">git init</code> + commit + <code class="mono">gh repo create --push</code>, más el arreglo de permisos de Actions del repo nuevo.</p>
         </div>
       </div>
@@ -538,7 +538,7 @@ reading_minutes: 5
         <div class="shot"><img src="{{ '/assets/img/part-3/07-terminal-output-registering-the-application-with-argocd.png' | relative_url }}" alt="Salida de terminal registrando el Application en ArgoCD" /></div>
         <div>
           <p class="step-idx">7 — registrarlo en Argo</p>
-          <h4>kubectl apply -f applications/godbyemicroservices.yaml</h4>
+          <h3>kubectl apply -f applications/godbyemicroservices.yaml</h3>
           <p>Exactamente el patrón de la Parte 2, sección 04: una copia de <span class="inline-file">manifests/hello-world/</span> y <span class="inline-file">applications/hello-world.yaml</span>, tres campos cambiados. <code class="mono">Synced</code> y <code class="mono">Healthy</code> en segundos.</p>
         </div>
       </div>
@@ -546,7 +546,7 @@ reading_minutes: 5
         <div class="shot"><img src="{{ '/assets/img/part-3/08-terminal-output-of-the-final-pod-and-curl-verification.png' | relative_url }}" alt="Salida de terminal de la verificación final con pod y curl" /></div>
         <div>
           <p class="step-idx">8 — prueba final</p>
-          <h4>kubectl get pods + curl</h4>
+          <h3>kubectl get pods + curl</h3>
           <p>El pod está <code class="mono">Running</code>, y el endpoint generado responde con el propio nombre de la entidad incrustado — prueba de que esto no es una copia de <span class="inline-file">hello-world</span>, es un servicio generado distinto.</p>
         </div>
       </div>
