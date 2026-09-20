@@ -51,3 +51,19 @@ Cuando cambies una regla canónica, busca wording duplicado o contradictorio en 
 AGENTS.md y CLAUDE.md deben ser idénticos byte por byte. Ambos son launchers mínimos hacia este directorio; las reglas reales viven aquí.
 
 Si uno cambia, el otro debe recibir exactamente el mismo contenido en el mismo commit.
+
+## Comprobación de sincronización
+
+Antes de dar por terminado un cambio que toque `AGENTS.md` o `CLAUDE.md`, verifica que ambos archivos siguen siendo idénticos:
+
+```bash
+cmp -s AGENTS.md CLAUDE.md
+```
+
+Si necesitas ver cualquier diferencia:
+
+```bash
+diff -u AGENTS.md CLAUDE.md
+```
+
+La validación correcta es que `cmp` termine sin diferencias y que `diff` no produzca salida.
