@@ -1,7 +1,7 @@
 ---
 layout: "article"
-title: "My first Arduino traffic light: two LEDs, a breadboard, and code control"
-description: "A real step-by-step two-light Arduino traffic signal build: how the breadboard works, where the resistors go, how pins 8 and 9 are wired, and why the code alternates the LEDs."
+title: "My first Arduino traffic light: from two LEDs to a three-light sequence"
+description: "A real step-by-step Arduino traffic light with red, yellow, and green LEDs: breadboard wiring, resistors, pins 8, 9, and 10, text diagram, and a 5-2-5 second sequence."
 permalink: "/arduino/semaforo-dos-leds/"
 lang: "en"
 lang_url: "/arduino/semaforo-dos-leds/es/"
@@ -46,7 +46,7 @@ reading_minutes: 10
 <header class="hero">
 <p class="eyebrow">Arduino from scratch · real experiment</p>
 <h1>My first Arduino traffic light</h1>
-<p class="lede">I started by blinking a single LED. The next step was wiring two LEDs on a breadboard and making Arduino alternate them: red on while yellow is off, then the opposite. It looks like a tiny exercise, but it forces you to understand almost every basic idea behind a digital circuit: power, ground, polarity, current limiting, breadboard rows, and output pins.</p>
+<p class="lede">I started by blinking one LED and then built a two-light version with red and yellow. The current circuit now has the complete logic of a simple <strong>three-LED traffic light</strong>: green for 5 seconds, yellow for 2, and red for 5. That extra LED adds a third digital output and turns the exercise into a small timed state machine.</p>
 </header>
 
 <section>
@@ -74,8 +74,8 @@ reading_minutes: 10
 <div class="grid">
 <article class="card"><h3>Arduino</h3><p>An Arduino Uno-compatible board connected over USB. USB powers the board and lets Arduino IDE upload the program.</p></article>
 <article class="card"><h3>Breadboard</h3><p>It lets us build the circuit without soldering. The holes are not individually isolated: they are internally connected in groups.</p></article>
-<article class="card"><h3>Two LEDs</h3><p>One red and one yellow. LEDs are polarized components: anode and cathode are not interchangeable.</p></article>
-<article class="card"><h3>Two resistors</h3><p>One per LED, typically 220 Ω or 330 Ω, to limit current and protect both the LED and the microcontroller pin.</p></article>
+<article class="card"><h3>Three LEDs</h3><p>Red, yellow, and green. LEDs are polarized components: anode and cathode are not interchangeable.</p></article>
+<article class="card"><h3>Three resistors</h3><p>One per LED, typically 220 Ω or 330 Ω, to limit current and protect each LED and the microcontroller pin.</p></article>
 <article class="card"><h3>Jumper wires</h3><p>Male-to-male jumpers connect the Arduino headers to the breadboard holes.</p></article>
 <article class="card"><h3>Arduino IDE</h3><p>It compiles the sketch and uploads it to the microcontroller. After upload, the computer no longer decides when each LED changes: the board does.</p></article>
 </div>
@@ -114,16 +114,18 @@ I ≈ 0.0136 A = 13.6 mA</pre>
 
 <section>
 <div class="head"><span class="num">05</span><h2>The wiring we used</h2></div>
-<p>For this experiment we used two independent digital outputs. The red LED is controlled from <strong>pin 8</strong> and the yellow LED from <strong>pin 9</strong>. Both circuits end at <strong>GND</strong>, the shared 0 V reference.</p>
+<p>The current version uses <strong>three independent digital outputs</strong>: red on <strong>pin 8</strong>, yellow on <strong>pin 9</strong>, and green on <strong>pin 10</strong>. All three branches end at <strong>GND</strong>, the shared 0 V reference.</p>
 
 <table>
 <thead><tr><th>Element</th><th>Connection</th><th>Purpose</th></tr></thead>
 <tbody>
 <tr><td>Pin 8</td><td>Resistor → red LED → GND</td><td>Controls the red light.</td></tr>
 <tr><td>Pin 9</td><td>Resistor → yellow LED → GND</td><td>Controls the yellow light.</td></tr>
+<tr><td>Pin 10</td><td>Resistor → green LED → GND</td><td>Controls the green light.</td></tr>
 <tr><td>Red resistor</td><td>In series with the red LED</td><td>Limits current in that branch.</td></tr>
 <tr><td>Yellow resistor</td><td>In series with the yellow LED</td><td>Limits current in that branch.</td></tr>
-<tr><td>GND</td><td>Shared return path for both LEDs</td><td>Closes the electrical circuit.</td></tr>
+<tr><td>Green resistor</td><td>In series with the green LED</td><td>Limits current in that branch.</td></tr>
+<tr><td>GND</td><td>Shared return path for all three LEDs</td><td>Closes the electrical circuit.</td></tr>
 </tbody>
 </table>
 
@@ -139,13 +141,18 @@ DIGITAL PIN 8 ──────┼──[ RESISTOR ]──────>|──�
 DIGITAL PIN 9 ──────┼──[ RESISTOR ]──────>|────┤
                     │              YELLOW LED   │
                     │                           │
+                    │   220–330 Ω               │
+DIGITAL PIN 10 ─────┼──[ RESISTOR ]──────>|────┤
+                    │               GREEN LED   │
+                    │                           │
 GND ────────────────┼───────────────────────────┘
                     └─────────────────────┘
 
 USB ──► Arduino
-       ├─ PIN 8 = red LED digital output
-       ├─ PIN 9 = yellow LED digital output
-       └─ GND   = common current return
+       ├─ PIN 8  = red LED digital output
+       ├─ PIN 9  = yellow LED digital output
+       ├─ PIN 10 = green LED digital output
+       └─ GND    = common current return
 
 >| represents the LED:
    anode (+) ──>|── cathode (-) ──► GND</pre>
@@ -160,50 +167,63 @@ USB ──► Arduino
 
 <pre><code>const int red = 8;
 const int yellow = 9;
+const int green = 10;
 
 void setup() {
   pinMode(red, OUTPUT);
   pinMode(yellow, OUTPUT);
+  pinMode(green, OUTPUT);
 }
 
 void loop() {
-  digitalWrite(red, HIGH);
+  // 🟢 GREEN
+  digitalWrite(red, LOW);
   digitalWrite(yellow, LOW);
-  delay(1000);
+  digitalWrite(green, HIGH);
+  delay(5000);
 
+  // 🟡 YELLOW
   digitalWrite(red, LOW);
   digitalWrite(yellow, HIGH);
-  delay(1000);
+  digitalWrite(green, LOW);
+  delay(2000);
+
+  // 🔴 RED
+  digitalWrite(red, HIGH);
+  digitalWrite(yellow, LOW);
+  digitalWrite(green, LOW);
+  delay(5000);
 }</code></pre>
 
-<h3>The two constants</h3>
-<p><code>const int red = 8;</code> and <code>const int yellow = 9;</code> give names to the pin numbers. We could write <code>8</code> and <code>9</code> everywhere, but names make the circuit read like intent instead of a collection of numbers.</p>
+<h3>The three constants</h3>
+<p><code>red</code>, <code>yellow</code>, and <code>green</code> give names to pins 8, 9, and 10. That makes the sketch express the circuit intent instead of forcing us to remember what each number means.</p>
 
 <h3>setup(): configure pin direction</h3>
 <p><code>setup()</code> runs once after startup or reset. With <code>pinMode(..., OUTPUT)</code> we tell Arduino that these pins will drive electrical signals outward.</p>
 
 <h3>loop(): the sequence that never ends</h3>
-<p><code>loop()</code> repeats continuously while the board has power. First we set red to <code>HIGH</code> and yellow to <code>LOW</code>, then wait one second. After that we invert both states and wait again.</p>
+<p><code>loop()</code> repeats continuously while the board has power. The sequence starts with green for 5 seconds, moves to yellow for 2 seconds, and then red for 5 seconds. After that it automatically returns to green.</p>
 </section>
 
 <section>
 <div class="head"><span class="num">07</span><h2>What HIGH, LOW, and delay mean</h2></div>
 <p><code>digitalWrite(pin, HIGH)</code> drives a digital output to the high logic state; <code>LOW</code> drives it low. In our build, the high state creates the electrical conditions that let current flow through that branch and turn the LED on. The low state removes that difference and the LED turns off.</p>
-<p><code>delay(1000)</code> pauses sketch execution for approximately 1000 milliseconds, or one second. That is why each state remains visible for a full second.</p>
-<div class="callout"><strong>Important idea:</strong> Arduino does not “know” what a traffic light is. It only executes instructions on two pins. The meaning of “red” and “yellow” is something we create through wiring and code.</div>
+<p><code>delay(5000)</code> holds a state for 5 seconds, while <code>delay(2000)</code> holds it for 2. In this sketch, timing is part of the logic: green and red last 5 seconds; yellow lasts 2.</p>
+<div class="callout"><strong>Important idea:</strong> Arduino does not “know” what a traffic light is. It only executes instructions on three pins. The meaning of “green”, “yellow”, and “red” comes from the wiring, the state order, and the timing we define.</div>
 </section>
 
 <section>
 <div class="head"><span class="num">08</span><h2>What physically happens in each state</h2></div>
 <table>
-<thead><tr><th>Time</th><th>Pin 8 / red</th><th>Pin 9 / yellow</th><th>Result</th></tr></thead>
+<thead><tr><th>Time</th><th>Pin 8 / red</th><th>Pin 9 / yellow</th><th>Pin 10 / green</th><th>Result</th></tr></thead>
 <tbody>
-<tr><td>0–1 s</td><td><code>HIGH</code></td><td><code>LOW</code></td><td>Red on, yellow off.</td></tr>
-<tr><td>1–2 s</td><td><code>LOW</code></td><td><code>HIGH</code></td><td>Red off, yellow on.</td></tr>
-<tr><td>2–3 s</td><td><code>HIGH</code></td><td><code>LOW</code></td><td>The cycle starts again.</td></tr>
+<tr><td>0–5 s</td><td><code>LOW</code></td><td><code>LOW</code></td><td><code>HIGH</code></td><td>Green on.</td></tr>
+<tr><td>5–7 s</td><td><code>LOW</code></td><td><code>HIGH</code></td><td><code>LOW</code></td><td>Yellow on.</td></tr>
+<tr><td>7–12 s</td><td><code>HIGH</code></td><td><code>LOW</code></td><td><code>LOW</code></td><td>Red on.</td></tr>
+<tr><td>12 s</td><td><code>LOW</code></td><td><code>LOW</code></td><td><code>HIGH</code></td><td>The cycle starts again.</td></tr>
 </tbody>
 </table>
-<p>The interesting part is that the two outputs are not connected to each other. The software is what guarantees they are not on at the same time. With a different program, we could turn both on, turn both off, or change the speed without changing the circuit.</p>
+<p>The three outputs are independent. The software is what guarantees that only one light is on in each phase. The complete cycle lasts <strong>12 seconds</strong>: 5 + 2 + 5.</p>
 </section>
 
 <section>
@@ -220,10 +240,10 @@ void loop() {
 
 <section>
 <div class="head"><span class="num">10</span><h2>What we actually learned</h2></div>
-<p>The goal was not to build a real traffic light. It was to build a mental model. With two LEDs we used <strong>two independent digital outputs</strong>, turned <code>HIGH</code> and <code>LOW</code> into a visible physical effect, and saw that timing is part of system behavior.</p>
+<p>The goal was not to build a real traffic light. It was to build a mental model. With three LEDs we use <strong>three independent digital outputs</strong>, turned <code>HIGH</code> and <code>LOW</code> into a visible physical effect, and saw that timing is part of system behavior.</p>
 <p>We also separated the responsibilities of the hardware for the first time: Arduino chooses the logic state; the resistor limits current; the LED converts current into light; the breadboard provides the connections; and GND closes the electrical path.</p>
-<p>The natural next step is to add a <strong>third green LED</strong> and turn the alternating pattern into a more realistic traffic-light sequence. After that, the interesting jump is adding a <strong>push button</strong>: at that point Arduino stops running only a timed sequence and starts reacting to an external input.</p>
+<p>The next interesting step is adding a <strong>pedestrian push button</strong>. At that point Arduino stops running only a timed sequence and starts reacting to an external input; after that we can replace <code>delay()</code> with <code>millis()</code> so the program can keep handling inputs while timing the lights.</p>
 </section>
 
-<footer><strong>Key idea:</strong> this small circuit already contains the basic structure of many embedded projects: inputs or program rules → logic → physical outputs. Understanding these two LEDs is more valuable than memorizing a sketch, because the same idea comes back when LEDs are replaced by relays, motors, displays, or other actuators.</footer>
+<footer><strong>Key idea:</strong> this small circuit already contains the basic structure of many embedded projects: inputs or program rules → logic → physical outputs. Understanding these three outputs is more valuable than memorizing a sketch, because the same idea comes back when LEDs are replaced by relays, motors, displays, or other actuators.</footer>
 </article>
