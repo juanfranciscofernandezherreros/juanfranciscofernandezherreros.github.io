@@ -1,0 +1,86 @@
+name: Preview unpublished articles
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-preview:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.3"
+          bundler-cache: true
+
+      - name: Build unpublished and future posts
+        run: bundle exec jekyll build --unpublished --future --baseurl ""
+        env:
+          JEKYLL_ENV: development
+
+      - name: Verify CSV consumer draft was rendered
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -f "_site/java-spring/csv-stats-player-consumer/es/index.html"
+
+      - name: Prepare private preview package
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p preview-package/site
+          cp -a _site/. preview-package/site/
+          cat > preview-package/README.txt <<'EOF'
+          PRIVATE JEKYLL PREVIEW
+
+          This package was built with:
+            bundle exec jekyll build --unpublished --future
+
+          It includes unpublished and future-dated posts but is NOT deployed to GitHub Pages.
+
+          To preview it locally after downloading and extracting the artifact:
+
+            python3 -m http.server 4000 -d site
+
+          Then open:
+
+            http://localhost:4000/java-spring/csv-stats-player-consumer/es/
+
+          Stop the server with Ctrl+C.
+          EOF
+
+      - name: Upload private preview artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: jekyll-unpublished-preview
+          path: preview-package
+          retention-days: 3
+          if-no-files-found: error
+
+      - name: Preview instructions
+        shell: bash
+        run: |
+          {
+            echo "## Unpublished article preview ready"
+            echo
+            echo "Download the artifact **jekyll-unpublished-preview** from this workflow run."
+            echo
+            echo "After extracting it, run:"
+            echo
+            echo '\`\`\`bash'
+            echo 'python3 -m http.server 4000 -d site'
+            echo '\`\`\`'
+            echo
+            echo "Then open:"
+            echo
+            echo '\`http://localhost:4000/java-spring/csv-stats-player-consumer/es/\`'
+            echo
+            echo "This workflow does not deploy the preview to GitHub Pages."
+          } >> "$GITHUB_STEP_SUMMARY"
