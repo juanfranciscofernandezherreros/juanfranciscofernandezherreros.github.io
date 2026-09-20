@@ -1,0 +1,258 @@
+---
+layout: "article"
+title: "De un evento Kafka a PostgreSQL: anatomía de csv-stats-player-consumer"
+description: "Cómo funciona un consumer Spring Boot que recibe eventos Avro por Kafka, valida un CSV de estadísticas, procesa por chunks, evita duplicados y persiste en PostgreSQL con transacciones, Flyway, DLT y tests reales."
+permalink: "/java-spring/csv-stats-player-consumer/es/"
+lang: "es"
+lang_url: ""
+series: "Kafka & Spring Boot in Practice"
+categories: ["Java & Spring"]
+subcategories: ["Event Streaming"]
+tags: ["java","spring-boot","kafka","avro","postgresql","jpa","flyway","csv","mapstruct","testcontainers","event-driven"]
+date: "2026-09-21"
+reading_minutes: 15
+published: false
+---
+<style>
+.csv-consumer{--panel:var(--surface);--panel2:var(--surface-2);--line-local:var(--line);--muted:var(--ink-soft);--code-local:var(--code-bg);--code-ink-local:var(--code-ink);max-width:940px;margin:36px auto 96px;padding:0 24px}
+.csv-consumer .hero,.csv-consumer .card,.csv-consumer .callout{background:var(--panel);border:1px solid var(--line-local)}
+.csv-consumer .hero{padding:clamp(26px,5vw,46px);border-top:5px solid var(--accent)}
+.csv-consumer .eyebrow,.csv-consumer .num,.csv-consumer pre,.csv-consumer code,.csv-consumer .metric strong{font-family:"IBM Plex Mono",monospace}
+.csv-consumer .eyebrow,.csv-consumer .num{color:var(--accent);font-size:.76rem;text-transform:uppercase;letter-spacing:.08em}
+.csv-consumer h1,.csv-consumer h2,.csv-consumer h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em}
+.csv-consumer h1{font-size:clamp(2.45rem,7vw,4.15rem);line-height:.98;max-width:20ch;margin:.2em 0}
+.csv-consumer h2{font-size:clamp(1.55rem,4vw,2rem);margin:0}.csv-consumer h3{font-size:1.08rem;margin:0 0 8px}
+.csv-consumer p,.csv-consumer li{max-width:72ch;line-height:1.72}
+.csv-consumer .lede{font-size:1.06rem;color:var(--muted);max-width:68ch}
+.csv-consumer section{margin-top:60px}.csv-consumer .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:20px}
+.csv-consumer .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:24px 0}
+.csv-consumer .flow .card{padding:14px}.csv-consumer .flow strong{display:block;color:var(--accent);font-size:.78rem;margin-bottom:7px}.csv-consumer .flow p{font-size:.84rem;line-height:1.45;margin:0;text-align:left}
+.csv-consumer .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0}.csv-consumer .card{padding:18px}.csv-consumer .card p{margin-bottom:0;color:var(--muted)}
+.csv-consumer .callout{padding:17px 20px;margin:22px 0;border-left:4px solid var(--accent);background:var(--panel2)}
+.csv-consumer pre{overflow:auto;background:var(--code-local);color:var(--code-ink-local);border:1px solid var(--line-local);padding:17px 18px;line-height:1.55;font-size:.82rem}
+.csv-consumer table{width:100%;border-collapse:collapse;margin:22px 0;font-size:.9rem}.csv-consumer th,.csv-consumer td{border:1px solid var(--line-local);padding:10px;text-align:left;vertical-align:top}.csv-consumer th{background:var(--panel2)}
+.csv-consumer .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}.csv-consumer .metric{background:var(--panel);border:1px solid var(--line-local);padding:18px}.csv-consumer .metric strong{display:block;color:var(--accent);font-size:1.25rem}.csv-consumer .metric span{color:var(--muted);font-size:.86rem}
+.csv-consumer footer{margin-top:54px;padding-top:22px;border-top:1px solid var(--line-local);color:var(--muted)}
+@media(max-width:760px){.csv-consumer{padding:0 16px}.csv-consumer .flow,.csv-consumer .grid,.csv-consumer .metrics{grid-template-columns:1fr}.csv-consumer table{display:block;overflow-x:auto}.csv-consumer .hero{padding:26px 20px}}
+</style>
+
+<article class="sheet csv-consumer">
+<header class="hero">
+<p class="eyebrow">Kafka · Spring Boot · Avro · PostgreSQL</p>
+<h1>De un evento Kafka a 23 estadísticas persistidas</h1>
+<p class="lede">Este proyecto no envía miles de filas por Kafka. Envía algo mucho más pequeño: un evento que dice «el fichero ya está disponible». A partir de ahí, el consumer decide si debe procesarlo, abre el CSV, valida sus 23 columnas, transforma cada jugador en una entidad JPA y lo guarda en PostgreSQL. Lo interesante está en todo lo que ocurre cuando algo falla, el mismo evento llega dos veces o el fichero contiene miles de filas.</p>
+</header>
+
+<section id="problema">
+<div class="head"><span class="num">01</span><h2>El problema que resuelve</h2></div>
+<p><code>csv-stats-player-consumer</code> es un microservicio Spring Boot orientado a eventos. Su responsabilidad empieza cuando otro componente ya ha detectado o generado un fichero de estadísticas de jugadores. En vez de transportar el CSV completo dentro del mensaje Kafka, el productor publica un evento Avro con dos datos de negocio: qué tipo de fichero está listo y dónde puede encontrarlo el consumidor.</p>
+<p>El consumer solo acepta eventos cuyo <code>fileType</code> sea <code>STATS_PLAYER</code>. Si recibe otro tipo, lo ignora. Cuando sí coincide, delega la importación a un servicio transaccional.</p>
+<div class="flow" aria-label="Flujo principal del csv-stats-player-consumer">
+<div class="card"><strong>01 · EVENTO</strong><p>Avro identifica el fichero y la ejecución.</p></div>
+<div class="card"><strong>02 · KAFKA</strong><p><code>file.ready</code> entrega la notificación.</p></div>
+<div class="card"><strong>03 · CSV</strong><p>El parser valida 23 columnas y tipos.</p></div>
+<div class="card"><strong>04 · JPA</strong><p>Se persiste por bloques de 500 filas.</p></div>
+<div class="card"><strong>05 · POSTGRES</strong><p>Se guardan jugadores e idempotencia.</p></div>
+</div>
+<p>Esta arquitectura desacopla la notificación del contenido pesado. Kafka transporta el hecho de que existe trabajo pendiente; el fichero sigue siendo la fuente de las filas que hay que importar.</p>
+</section>
+
+<section id="contrato-avro">
+<div class="head"><span class="num">02</span><h2>El contrato Avro: una key para la idempotencia</h2></div>
+<p>El mensaje utiliza dos esquemas Avro. La key contiene un <code>uniqueId</code> y el value contiene <code>fileType</code> y <code>filePath</code>.</p>
+<pre>FileEventKey
+└── uniqueId: string
+
+FileEventValue
+├── fileType: string
+└── filePath: string</pre>
+<p>El <code>uniqueId</code> no es un identificador decorativo. Más adelante se guarda como clave primaria de <code>processed_file_event</code>. Esa decisión conecta el contrato de mensajería con la garantía de idempotencia de la base de datos.</p>
+<p>La configuración usa <code>KafkaAvroDeserializer</code> para key y value, <code>specific.avro.reader</code> externalizado y Schema Registry mediante <code>KAFKA_SCHEMA_REGISTRY_URL</code>. Los tipos Java se generan durante la build desde los ficheros <code>.avsc</code> con <code>avro-maven-plugin</code>.</p>
+<div class="callout"><strong>Consecuencia importante:</strong> el <code>filePath</code> debe ser accesible desde el proceso consumidor. Si productor y consumidor viven en máquinas o contenedores distintos, una ruta local del productor no sirve por sí sola. El diseño necesita un filesystem compartido, un volumen común o sustituir la ruta por una ubicación remota accesible.</div>
+</section>
+
+<section id="listener">
+<div class="head"><span class="num">03</span><h2>El listener hace poco, y eso es una virtud</h2></div>
+<p><code>FileReadyConsumer</code> tiene una responsabilidad deliberadamente pequeña. Recibe un <code>ConsumerRecord&lt;FileEventKey, FileEventValue&gt;</code>, registra el identificador, tipo y ruta, filtra eventos ajenos a <code>STATS_PLAYER</code> y delega el trabajo real.</p>
+<pre>@KafkaListener(
+    topics = "${app.kafka.topics.file-ready}",
+    groupId = "${spring.kafka.consumer.group-id}")
+public void listen(ConsumerRecord&lt;FileEventKey, FileEventValue&gt; record) {
+    if (!"STATS_PLAYER".equalsIgnoreCase(record.value().getFileType())) {
+        return;
+    }
+
+    importService.importFile(
+        record.key().getUniqueId(),
+        record.value().getFilePath());
+}</pre>
+<p>Topic y consumer group no están codificados dentro del Java: salen de configuración. El topic tiene <code>file.ready</code> como valor por defecto, mientras que el group id se inyecta desde el entorno.</p>
+<p>Separar listener e importación permite probar la decisión «¿este evento me pertenece?» sin mezclarla con parsing, JPA o filesystem.</p>
+</section>
+
+<section id="transaccion">
+<div class="head"><span class="num">04</span><h2>Una transacción para todo el fichero</h2></div>
+<p>La pieza central es <code>StatsPlayerImportService.importFile()</code>, anotado con <code>@Transactional</code>. Antes de abrir el CSV pregunta si el <code>eventId</code> ya existe en <code>processed_file_event</code>. Si existe, termina inmediatamente.</p>
+<pre>if (processedEventRepository.existsById(eventId)) {
+    return;
+}</pre>
+<p>Si es un evento nuevo, procesa el fichero. Solo después de terminar correctamente guarda:</p>
+<pre>new ProcessedFileEvent(eventId, Instant.now())</pre>
+<p>Eso produce una propiedad útil: jugadores e identificador de evento participan en la misma transacción. Si el parser falla en la fila 800, si una escritura JPA lanza una excepción o si cualquier paso rompe la importación, la excepción se propaga y Spring puede hacer rollback de la operación.</p>
+<div class="callout"><strong>Matiz:</strong> procesar en chunks reduce el tamaño del contexto JPA y permite hacer flush periódicamente, pero no convierte cada chunk en una transacción independiente. El método completo sigue siendo una única transacción por fichero. Es una decisión coherente con «todo o nada», aunque una importación muy grande mantiene la transacción abierta durante más tiempo.</div>
+</section>
+
+<section id="csv">
+<div class="head"><span class="num">05</span><h2>El CSV se trata como datos, no como texto separado por comas</h2></div>
+<p>El parser usa Apache Commons CSV. Eso evita un error clásico: hacer <code>split(",")</code> y romper nombres o campos que contienen comas entrecomilladas.</p>
+<p>Cada fila debe contener exactamente <strong>23 columnas</strong>. El parser mapea:</p>
+<table>
+<thead><tr><th>Grupo</th><th>Campos</th></tr></thead>
+<tbody>
+<tr><td>Identidad</td><td><code>Name</code>, <code>Team</code></td></tr>
+<tr><td>Resumen</td><td><code>PTS</code>, <code>REB</code>, <code>AST</code>, <code>MIN</code></td></tr>
+<tr><td>Tiro</td><td><code>FGM</code>, <code>FGA</code>, <code>2PM</code>, <code>2PA</code>, <code>3PM</code>, <code>3PA</code>, <code>FTM</code>, <code>FTA</code></td></tr>
+<tr><td>Impacto y rebote</td><td><code>+/-</code>, <code>OR</code>, <code>DR</code></td></tr>
+<tr><td>Defensa y pérdidas</td><td><code>PF</code>, <code>ST</code>, <code>TO</code>, <code>BS</code>, <code>BA</code>, <code>TFS</code></td></tr>
+</tbody>
+</table>
+<p>Excepto <code>name</code>, <code>team</code> y <code>min</code>, las estadísticas cuantitativas se convierten a <code>Integer</code>. Si una fila contiene <code>ten</code> en <code>PTS</code>, no se deja pasar silenciosamente: se lanza una excepción que incluye número de fila, columna y valor problemático.</p>
+<p>Ese fallo termina llegando al servicio, que lo envuelve en <code>IllegalStateException</code>. Como el listener no lo absorbe, Spring Kafka puede aplicar la política de reintentos.</p>
+</section>
+
+<section id="chunks">
+<div class="head"><span class="num">06</span><h2>Chunks de 500 y batching JDBC de 100</h2></div>
+<p>El parser no necesita materializar todo el fichero en memoria. <code>parseInChunks()</code> acumula como máximo 500 DTOs y entrega cada bloque al servicio.</p>
+<p>Para cada chunk ocurre esta secuencia:</p>
+<pre>CSVRecord
+   ↓
+StatsPlayerDTO
+   ↓ MapStruct
+StatsPlayer
+   ↓
+saveAllAndFlush(500)
+   ↓
+EntityManager.clear()</pre>
+<p><code>saveAllAndFlush()</code> fuerza la sincronización con la base de datos y <code>EntityManager.clear()</code> evita que miles de entidades ya procesadas sigan gestionadas por el contexto de persistencia.</p>
+<p>Además, Hibernate configura <code>hibernate.jdbc.batch_size=100</code> y <code>order_inserts=true</code>. La entidad usa una secuencia con <code>allocationSize=100</code>, alineada con la estrategia de batching para no depender de un identificador generado por cada insert individual.</p>
+<div class="metrics">
+<div class="metric"><strong>500</strong><span>filas por chunk de aplicación</span></div>
+<div class="metric"><strong>100</strong><span>tamaño de batch JDBC</span></div>
+<div class="metric"><strong>23</strong><span>columnas esperadas por fila</span></div>
+</div>
+</section>
+
+<section id="mapstruct">
+<div class="head"><span class="num">07</span><h2>MapStruct y Lombok: código generado que también necesita pruebas</h2></div>
+<p>El proyecto separa el formato leído del modelo persistente mediante <code>StatsPlayerDTO</code> y <code>StatsPlayer</code>. <code>StatsPlayerMapper</code> usa MapStruct para generar las conversiones en compilación.</p>
+<p>Hay un detalle histórico importante: el proyecto necesitó <code>lombok-mapstruct-binding</code> en los annotation processors para que MapStruct vea correctamente las propiedades generadas por Lombok. Sin esa coordinación, el mapper podía compilar y, aun así, construir entidades sin copiar los valores.</p>
+<p>Ese fallo ya tiene una prueba específica sobre el mapper real. Lo documenté con una ejecución end-to-end en <a href="{{ '/java-spring/kafka-consumer-local-test/es/' | relative_url }}">Probar un Kafka consumer en local: 5.000 filas, Avro y un bug invisible</a>.</p>
+<div class="callout"><strong>Lección general:</strong> si una parte esencial de tu aplicación la genera una herramienta durante compilación, no basta con mockear su interfaz. Al menos una prueba debe ejercitar el código generado real.</div>
+</section>
+
+<section id="postgres">
+<div class="head"><span class="num">08</span><h2>PostgreSQL: Flyway manda, Hibernate valida</h2></div>
+<p>La aplicación no deja que Hibernate improvise el esquema en cada arranque. Flyway gestiona la evolución y Hibernate usa <code>ddl-auto: validate</code> para comprobar que las entidades siguen siendo compatibles con la base existente.</p>
+<p>La migración crea tres piezas clave:</p>
+<pre>stats_player_seq
+stats_player
+processed_file_event</pre>
+<p><code>stats_player</code> conserva las 23 propiedades del jugador más su identificador. <code>processed_file_event</code> tiene <code>event_id</code> como primary key y <code>processed_at</code> como timestamp con zona horaria.</p>
+<p>La migración también normaliza a <code>INTEGER</code> las estadísticas numéricas y cita explícitamente columnas como <code>"or"</code> y <code>"to"</code>, cuyos nombres pueden ser problemáticos en SQL. Al final realinea la secuencia con el mayor identificador existente.</p>
+<p>La configuración de conexión no contiene credenciales fijas: <code>DB_URL</code>, <code>DB_USER</code> y <code>DB_PASS</code> llegan por variables de entorno.</p>
+</section>
+
+<section id="errores">
+<div class="head"><span class="num">09</span><h2>Cuando el fichero falla: retry y Dead Letter Topic</h2></div>
+<p><code>KafkaConsumerConfig</code> configura un <code>DefaultErrorHandler</code> con <code>FixedBackOff(2000, 2)</code>. En términos operativos, después del intento inicial puede haber <strong>dos reintentos adicionales</strong>, separados por 2 segundos.</p>
+<p>Si sigue fallando, <code>DeadLetterPublishingRecoverer</code> publica el registro en un topic con sufijo <code>.DLT</code> y conserva el número de partición:</p>
+<pre>file.ready partition 3
+        │
+        ├── intento inicial
+        ├── retry +2 s
+        ├── retry +2 s
+        └──► file.ready.DLT partition 3</pre>
+<p>El servicio no marca el evento como procesado si la importación termina con error. Esto permite que un retry vuelva a recorrer la lógica en lugar de encontrarse un falso positivo de idempotencia.</p>
+</section>
+
+<section id="idempotencia">
+<div class="head"><span class="num">10</span><h2>Qué garantiza realmente la idempotencia</h2></div>
+<p>Si Kafka vuelve a entregar un evento ya completado, <code>existsById(eventId)</code> evita volver a abrir el fichero y duplicar jugadores. Es una protección sencilla y explícita.</p>
+<p>Hay un matiz de concurrencia interesante. La comprobación <code>existsById</code> y el posterior insert del marcador no forman una única operación atómica de «claim». Dos consumidores concurrentes podrían comprobar a la vez que el identificador aún no existe y empezar a procesar. La primary key de <code>processed_file_event</code> impide que ambos commits terminen correctamente y, al estar todo dentro de la transacción, el perdedor debería revertir también sus jugadores. Aun así, habría hecho trabajo duplicado antes de chocar.</p>
+<p>Si el sistema necesitase mucha concurrencia sobre el mismo evento, sería razonable evolucionar hacia una estrategia de claim atómico o bloqueo. Para el contrato actual, la combinación de marcador persistente y transacción proporciona una semántica clara y fácil de auditar.</p>
+</section>
+
+<section id="testing">
+<div class="head"><span class="num">11</span><h2>Tests rápidos sin Docker y una frontera de integración real</h2></div>
+<p>La suite separa intencionadamente dos niveles. <code>mvn clean test</code> ejecuta tests unitarios y de configuración sin requerir Docker. Allí se comprueba el filtro del listener, el contrato del parser, los chunks, la idempotencia, la transacción, el mapper y la política Kafka de retry/DLT.</p>
+<p>La integración con PostgreSQL real vive en <code>PostgreSqlMigrationIT</code>, con naming de Maven Failsafe. Se ejecuta mediante:</p>
+<pre>mvn clean verify -Pintegration</pre>
+<p>Ese test arranca <code>postgres:15-alpine</code> con Testcontainers, ejecuta Flyway y consulta <code>information_schema</code> para comprobar tablas, secuencia y tipos de columnas.</p>
+<div class="callout"><strong>Decisión práctica:</strong> un desarrollador puede ejecutar la suite normal aunque no tenga Docker. CI, en cambio, ejecuta <code>mvn -B verify -Pintegration</code> y añade la validación del PostgreSQL real.</div>
+</section>
+
+<section id="operacion">
+<div class="head"><span class="num">12</span><h2>Configuración y ejecución</h2></div>
+<p>Las variables principales son:</p>
+<table>
+<thead><tr><th>Variable</th><th>Responsabilidad</th></tr></thead>
+<tbody>
+<tr><td><code>DB_URL</code>, <code>DB_USER</code>, <code>DB_PASS</code></td><td>Conexión PostgreSQL.</td></tr>
+<tr><td><code>KAFKA_BOOTSTRAP_SERVERS</code></td><td>Broker o cluster Kafka.</td></tr>
+<tr><td><code>KAFKA_CONSUMER_GROUP_ID</code></td><td>Grupo del consumer.</td></tr>
+<tr><td><code>KAFKA_AUTO_OFFSET_RESET</code></td><td>Política de offset inicial.</td></tr>
+<tr><td><code>KAFKA_SCHEMA_REGISTRY_URL</code></td><td>Registro de esquemas Avro.</td></tr>
+<tr><td><code>KAFKA_SPECIFIC_AVRO_READER</code></td><td>Lectura en tipos Avro específicos.</td></tr>
+<tr><td><code>KAFKA_FILE_READY_TOPIC</code></td><td>Topic de entrada; por defecto <code>file.ready</code>.</td></tr>
+</tbody>
+</table>
+<p>El artefacto Maven se genera como <code>target/app.jar</code>. El Dockerfile de runtime es deliberadamente pequeño: usa <code>eclipse-temurin:21-jre</code>, copia ese JAR y ejecuta <code>java -jar app.jar</code>.</p>
+</section>
+
+<section id="evolucion">
+<div class="head"><span class="num">13</span><h2>Lo interesante está también en cómo evolucionó</h2></div>
+<p>El changelog cuenta una historia técnica bastante clara. El consumer no nació con todas estas garantías: se fueron añadiendo como respuestas a fallos o límites concretos.</p>
+<div class="grid">
+<div class="card"><h3>Parsing</h3><p>El <code>split(",")</code> inicial se sustituyó por Apache Commons CSV y validación de 23 columnas.</p></div>
+<div class="card"><h3>Tipos</h3><p>Las estadísticas pasaron de texto a <code>Integer</code> con validación explícita de valores no numéricos.</p></div>
+<div class="card"><h3>Resiliencia</h3><p>Se incorporaron retries, backoff y DLT en vez de limitarse a registrar el error.</p></div>
+<div class="card"><h3>Consistencia</h3><p>La importación se movió a un servicio transaccional y se añadió idempotencia por evento.</p></div>
+<div class="card"><h3>Volumen</h3><p>Llegaron batching JDBC, secuencia optimizada, chunks de 500 y limpieza del persistence context.</p></div>
+<div class="card"><h3>Esquema y pruebas</h3><p>Flyway, <code>ddl-auto: validate</code>, Testcontainers y pruebas del mapper real cerraron fronteras que antes quedaban implícitas.</p></div>
+</div>
+<p>La versión actual es <strong>1.0.25</strong>, sobre Java 21 y Spring Boot 3.1.12.</p>
+</section>
+
+<section id="gobierno">
+<div class="head"><span class="num">14</span><h2>El repositorio también automatiza cómo se cambia</h2></div>
+<p>Hay una segunda parte del proyecto que no ejecuta negocio pero sí protege su mantenimiento. <code>AGENTS.md</code> define una política específica para cambios realizados por agentes de IA: rama dedicada, incremento de versión, sincronización de <code>pom.xml</code>/<code>README.md</code>/<code>CHANGELOG.md</code>, tests y Pull Request obligatorio.</p>
+<p>GitHub Actions refuerza esa política:</p>
+<table>
+<thead><tr><th>Workflow</th><th>Qué protege</th></tr></thead>
+<tbody>
+<tr><td><code>documentation-policy</code></td><td>Versión Maven, README, changelog y formato del mensaje de commit.</td></tr>
+<tr><td><code>test</code></td><td>Suite completa con perfil de integración.</td></tr>
+<tr><td><code>master-guard</code></td><td>Detecta commits directos no-merge que lleguen a <code>master</code>.</td></tr>
+<tr><td><code>cleanup-merged-branch</code></td><td>Elimina la rama origen tras un merge correcto.</td></tr>
+</tbody>
+</table>
+<p>La protección real frente a pushes directos depende además del Branch Protection/Ruleset configurado en GitHub; el workflow sirve como segunda red y como evidencia visible de la política.</p>
+</section>
+
+<section id="modelo-mental">
+<div class="head"><span class="num">15</span><h2>El modelo mental que me quedo</h2></div>
+<p>Este consumer puede resumirse como una tubería con cuatro fronteras que conviene proteger por separado:</p>
+<pre>MENSAJE              FICHERO                DOMINIO              BASE DE DATOS
+Avro/Kafka    ───►   CSV validado   ───►   DTO / Mapper   ───►  JPA / Flyway
+    │                    │                     │                     │
+    ├─ filtro            ├─ 23 columnas       ├─ tipos              ├─ transacción
+    ├─ retry/DLT         ├─ numericidad       ├─ código generado    ├─ idempotencia
+    └─ eventId           └─ chunks            └─ entidad            └─ esquema real</pre>
+<p>El valor del proyecto no está en una clase aislada. Está en cómo esas fronteras se conectan: un identificador Avro termina protegiendo la persistencia, una excepción del parser activa la política Kafka, el tamaño de chunk condiciona JPA y una migración real se comprueba contra PostgreSQL real.</p>
+<p>Ese es el detalle que convierte «leer un CSV y hacer inserts» en un consumer mantenible: cada decisión importante tiene una responsabilidad concreta y, en la mayoría de los casos, una prueba que la protege.</p>
+</section>
+
+<footer>
+<p>Este artículo describe el estado de <code>csv-stats-player-consumer</code> en la versión 1.0.25. El repositorio de implementación es privado actualmente, por lo que el enlace de GitHub solo es accesible a usuarios autorizados.</p>
+</footer>
+</article>
