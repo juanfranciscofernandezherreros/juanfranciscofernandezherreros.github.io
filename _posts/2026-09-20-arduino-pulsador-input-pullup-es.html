@@ -1,0 +1,118 @@
+---
+layout: "article"
+title: "Arduino: controlar un LED con un pulsador usando INPUT_PULLUP"
+description: "Aprende a conectar un pulsador a Arduino, detectar cuándo se pulsa y se suelta con digitalRead() e INPUT_PULLUP, y controlar un LED paso a paso."
+permalink: "/arduino/pulsador-input-pullup/es/"
+lang: "es"
+series: "Arduino desde cero"
+categories: ["Arduino & Electronics"]
+subcategories: ["Arduino", "Fundamentos"]
+tags: ["arduino","pulsador","input-pullup","digitalread","led","protoboard","principiantes"]
+date: "2026-09-20"
+reading_minutes: 8
+---
+
+<article class="sheet">
+<header>
+<p><strong>Arduino desde cero · entradas digitales</strong></p>
+<h1>Controlar un LED con un pulsador usando INPUT_PULLUP</h1>
+<p>Después de aprender a encender LEDs desde las salidas digitales de Arduino, el siguiente paso es hacer que Arduino reciba información del exterior. En esta práctica utilizaremos un pulsador para encender un LED mientras lo mantenemos pulsado y apagarlo al soltarlo.</p>
+</header>
+
+<h2>Objetivo</h2>
+<pre><code>Pulsador sin pulsar → LED apagado
+Pulsador pulsado    → LED encendido
+Soltar pulsador     → LED apagado</code></pre>
+<p>Hasta ahora Arduino daba órdenes mediante <code>digitalWrite()</code>. Aquí aprenderemos también a leer una entrada mediante <code>digitalRead()</code>.</p>
+
+<h2>Material necesario</h2>
+<ul>
+<li>Arduino Uno o compatible.</li>
+<li>Protoboard.</li>
+<li>Un pulsador de cuatro patas.</li>
+<li>Un LED.</li>
+<li>Una resistencia de 220 Ω o 330 Ω para el LED.</li>
+<li>Cables jumper.</li>
+<li>Cable USB.</li>
+</ul>
+
+<h2>Cómo funciona el pulsador</h2>
+<p>Un pulsador típico de cuatro patas no tiene cuatro conexiones independientes. Sus patas están conectadas internamente por parejas. Cuando no lo pulsamos, ambos lados están separados; cuando lo presionamos, el pulsador une eléctricamente los dos lados.</p>
+<pre><code>Sin pulsar:
+
+A ─── A       B ─── B
+
+Al pulsar:
+
+A ─── A ───── B ─── B</code></pre>
+<p>Por eso conviene colocarlo atravesando la separación central de la protoboard.</p>
+
+<h2>Conexiones</h2>
+<p>En este ejemplo reutilizamos el LED rojo en el pin digital 8 y conectamos el pulsador al pin digital 2.</p>
+<pre><code>LED rojo → D8
+Pulsador → D2
+GND      → GND común
+
+D8 → resistencia → LED → GND común
+
+D2 → pulsador → GND común
+                   │
+Arduino GND ───────┘</code></pre>
+<p>El LED necesita su resistencia limitadora de corriente. Para el pulsador no necesitamos añadir una resistencia externa porque utilizaremos la resistencia pull-up interna del Arduino.</p>
+
+<h2>¿Qué es INPUT_PULLUP?</h2>
+<p>Una entrada digital no debe quedar flotante. Con <code>INPUT_PULLUP</code>, Arduino activa internamente una resistencia que mantiene el pin en un estado definido cuando el botón está suelto.</p>
+<pre><code>pinMode(boton, INPUT_PULLUP);</code></pre>
+<p>Esto produce una lógica que al principio puede parecer invertida:</p>
+<pre><code>Pulsador suelto  → HIGH
+Pulsador pulsado → LOW</code></pre>
+<p>Al pulsar, el pin D2 queda conectado a GND y por eso <code>digitalRead()</code> devuelve <code>LOW</code>.</p>
+
+<h2>Programa completo</h2>
+<pre><code>const int rojo = 8;
+const int boton = 2;
+
+void setup() {
+  pinMode(rojo, OUTPUT);
+  pinMode(boton, INPUT_PULLUP);
+
+  digitalWrite(rojo, LOW);
+}
+
+void loop() {
+  int estadoBoton = digitalRead(boton);
+
+  if (estadoBoton == LOW) {
+    // Pulsado: encendemos el LED
+    digitalWrite(rojo, HIGH);
+  } else {
+    // Suelto: apagamos el LED
+    digitalWrite(rojo, LOW);
+  }
+}</code></pre>
+
+<h2>Qué ocurre al pulsar y soltar</h2>
+<p>Arduino ejecuta <code>loop()</code> continuamente. En cada vuelta lee el pin D2. Si detecta <code>LOW</code>, significa que el botón está pulsado y enciende el LED. Al soltarlo, D2 vuelve a <code>HIGH</code> y Arduino apaga el LED.</p>
+<pre><code>Arduino lee D2
+      │
+      ▼
+¿Está pulsado?
+   /       \
+ SÍ         NO
+ │           │
+LOW         HIGH
+ │           │
+ ▼           ▼
+LED ON     LED OFF
+   \         /
+    └── repetir ──┘</code></pre>
+
+<h2>Qué hemos aprendido</h2>
+<p><code>digitalWrite()</code> sirve para controlar una salida, como un LED. <code>digitalRead()</code> sirve para leer una entrada, como un pulsador. <code>INPUT_PULLUP</code> permite mantener la entrada en un estado estable utilizando una resistencia interna del microcontrolador.</p>
+<pre><code>OUTPUT: Arduino ─────→ componente
+INPUT:  componente ──→ Arduino</code></pre>
+<p>El resultado final es sencillo: con el botón suelto el LED permanece apagado; al pulsar se enciende; al soltar vuelve a apagarse. Arduino ya no se limita a ejecutar una secuencia fija: ahora puede reaccionar a una acción del usuario.</p>
+
+<h2>Siguiente paso</h2>
+<p>La siguiente práctica consiste en detectar una pulsación completa para cambiar de estado: pulsar una vez para encender el LED y volver a pulsar para apagarlo. Eso introduce el concepto de estado y, después, el rebote mecánico del pulsador.</p>
+</article>
