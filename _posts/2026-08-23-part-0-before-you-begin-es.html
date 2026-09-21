@@ -1,16 +1,14 @@
 ---
 layout: "article"
 title: "Antes de empezar"
-description: "Qué instalar antes de la Parte 1: Git, Docker Desktop, kind, kubectl, Java, Maven y la CLI de ArgoCD — con los comandos exactos y cómo comprobar que cada uno funciona."
-og_title: "Antes de empezar — Argo Real World Microservices"
-og_description: "Qué instalar antes de la Parte 1: Git, Docker Desktop, kind, kubectl, Java, Maven y la CLI de ArgoCD — con los comandos exactos y cómo comprobar que cada uno funciona."
-twitter_title: "Antes de empezar — Argo Real World Microservices"
-twitter_description: "Qué instalar antes de la Parte 1, con los comandos exactos y cómo comprobar cada uno."
+description: "Qué instalar antes de la el artículo Hello World con ArgoCD: Git, Docker Desktop, kind, kubectl, Java, Maven y la CLI de ArgoCD — con los comandos exactos y cómo comprobar que cada uno funciona."
+og_title: "Antes de empezar"
+og_description: "Qué instalar antes de la el artículo Hello World con ArgoCD: Git, Docker Desktop, kind, kubectl, Java, Maven y la CLI de ArgoCD — con los comandos exactos y cómo comprobar que cada uno funciona."
+twitter_title: "Antes de empezar"
+twitter_description: "Qué instalar antes de la el artículo Hello World con ArgoCD, con los comandos exactos y cómo comprobar cada uno."
 permalink: "/argo-real-world-microservices/part-0/before-you-begin/es/"
 lang: "es"
 lang_url: "/argo-real-world-microservices/part-0/before-you-begin/"
-series: "Argo Real World Microservices"
-part: 0
 categories: ["Setup & Tooling"]
 subcategories: ["Local Development Environment"]
 tags: ["docker","kubernetes","kind","kubectl","java","maven","argocd-cli","windows"]
@@ -254,16 +252,15 @@ reading_minutes: 4
 <div class="sheet">
 
   <div class="titleblock">
-    <p class="back-link"><a href="../../../introduction/es/">← Introducción — La teoría detrás de esta serie</a></p>
+    <p class="back-link"><a href="../../../introduction/es/">← Introducción — Teoría y conceptos</a></p>
     <p class="lang-switch"><a href="../">EN · English</a></p>
-    <p class="eyebrow">Argo Real World Microservices — Parte 0 de la serie</p>
     <h1>Antes de empezar</h1>
-    <p class="lede">La Parte 1 recorre cómo desplegar un microservicio con ArgoCD, y asume que ocho cosas ya están instaladas en tu máquina. Esta es la parte donde de verdad las instalas — qué es cada una, el comando exacto, y cómo comprobar que funcionó.</p>
+    <p class="lede">La el artículo Hello World con ArgoCD recorre cómo desplegar un microservicio con ArgoCD, y asume que ocho cosas ya están instaladas en tu máquina. Esta es la parte donde de verdad las instalas — qué es cada una, el comando exacto, y cómo comprobar que funcionó.</p>
   </div>
 
   <section id="what">
     <div class="section-head"><span class="num">00</span><h2>Lo que tendrás al terminar</h2></div>
-    <p class="muted">Una máquina capaz de compilar una app Java pequeña, empaquetarla como contenedor, levantar un clúster de Kubernetes local, y hablar con él — todo lo que necesita <a href="../../../part-1/hello-world-argocd/es/">Parte 1 — Hello World con ArgoCD</a>. Unos 20-30 minutos, la mayoría descargas.</p>
+    <p class="muted">Una máquina capaz de compilar una app Java pequeña, empaquetarla como contenedor, levantar un clúster de Kubernetes local, y hablar con él — todo lo que necesita <a href="../../../part-1/hello-world-argocd/es/">el artículo Hello World con ArgoCD — Hello World con ArgoCD</a>. Unos 20-30 minutos, la mayoría descargas.</p>
     <div class="note" style="margin-top:20px;">
       <h4>¿Primera vez con alguna de estas herramientas?</h4>
       <p>Esta página es solo instalación — no explica qué es realmente un contenedor, un clúster de Kubernetes, o GitOps. Lee primero la <a href="../../../introduction/es/">Introducción</a> para la teoría, sin ningún comando de por medio.</p>
@@ -276,7 +273,7 @@ reading_minutes: 4
     <dl class="glossary-grid" style="margin-top:20px;">
       <div class="term-card">
         <dt>Git</dt>
-        <dd>Descarga los dos repos que usa la Parte 1 (<code class="mono">hello-world-argocd</code>, <code class="mono">gitops-config</code>) y te deja subirles cambios.</dd>
+        <dd>Descarga los dos repos que usa la el artículo Hello World con ArgoCD (<code class="mono">hello-world-argocd</code>, <code class="mono">gitops-config</code>) y te deja subirles cambios.</dd>
       </div>
       <div class="term-card">
         <dt>Una cuenta de GitHub</dt>
@@ -292,11 +289,11 @@ reading_minutes: 4
       </div>
       <div class="term-card">
         <dt>kubectl</dt>
-        <dd>Habla con el clúster que creó <code class="mono">kind</code> — todos los comandos que empiezan por <code class="mono">kubectl</code> en la Parte 1 necesitan esto.</dd>
+        <dd>Habla con el clúster que creó <code class="mono">kind</code> — todos los comandos que empiezan por <code class="mono">kubectl</code> en la el artículo Hello World con ArgoCD necesitan esto.</dd>
       </div>
       <div class="term-card">
         <dt>Java 21 + Maven</dt>
-        <dd>Compila el microservicio de ejemplo. Específico de que este ejemplo en concreto sea una app Spring Boot — un ejemplo distinto en la Parte 1 necesitaría otro lenguaje en su lugar.</dd>
+        <dd>Compila el microservicio de ejemplo. Específico de que este ejemplo en concreto sea una app Spring Boot — un ejemplo distinto en la el artículo Hello World con ArgoCD necesitaría otro lenguaje en su lugar.</dd>
       </div>
       <div class="term-card">
         <dt>CLI de ArgoCD</dt>
@@ -386,7 +383,7 @@ reading_minutes: 4
       <div class="next-item">
         <span class="mark">→</span>
         <div>
-          <h4>Continúa con la Parte 1</h4>
+          <h4>Continúa con la el artículo Hello World con ArgoCD</h4>
           <p><a href="../../../part-1/hello-world-argocd/es/">Hello World con ArgoCD</a> — el glosario, la arquitectura, y el recorrido completo, empezando por <code class="mono">git clone</code>.</p>
         </div>
       </div>
