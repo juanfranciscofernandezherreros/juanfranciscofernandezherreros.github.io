@@ -1,14 +1,14 @@
 ---
 layout: "article"
-title: "Hello World with ArgoCD"
-description: "A beginner's guide to deploying a microservice with ArgoCD over a local Kubernetes cluster — glossary, architecture, and real screenshots of the whole thing working."
-og_title: "Hello World with ArgoCD"
-og_description: "A beginner's guide to deploying a microservice with ArgoCD over a local Kubernetes cluster — glossary, architecture, and real screenshots of the whole thing working."
-twitter_title: "Hello World with ArgoCD"
-twitter_description: "A beginner's guide to deploying a microservice with ArgoCD over a local Kubernetes cluster."
-permalink: "/argo-real-world-microservices/part-1/hello-world-argocd/"
-lang: "en"
-lang_url: "/argo-real-world-microservices/part-1/hello-world-argocd/es/"
+title: "Hello World con ArgoCD"
+description: "Una guía para principiantes sobre cómo desplegar un microservicio con ArgoCD sobre un clúster local de Kubernetes — glosario, arquitectura, y capturas reales de todo funcionando."
+og_title: "Hello World con ArgoCD"
+og_description: "Una guía para principiantes sobre cómo desplegar un microservicio con ArgoCD sobre un clúster local de Kubernetes — glosario, arquitectura, y capturas reales de todo funcionando."
+twitter_title: "Hello World con ArgoCD"
+twitter_description: "Una guía para principiantes sobre cómo desplegar un microservicio con ArgoCD sobre un clúster local de Kubernetes."
+permalink: "/gitops/hello-world-argocd/es/"
+lang: "es"
+lang_url: "/gitops/hello-world-argocd/"
 categories: ["GitOps & Kubernetes"]
 subcategories: ["Application Deployment"]
 tags: ["argocd","kubernetes","gitops","kind","tutorial","spring-boot"]
@@ -622,284 +622,284 @@ reading_minutes: 13
 <div class="sheet">
 
   <div class="titleblock">
-    <p class="back-link"><a href="../../part-0/before-you-begin/">← Before You Begin</a></p>
-    <p class="lang-switch"><a href="es/">ES · Español</a></p>
-    <h1>Hello World with ArgoCD</h1>
-    <p class="lede">You edit one file, push it to GitHub, and a few seconds later a real app is running on a real cluster — nobody typed a deploy command. This first part explains exactly how, assuming you've never touched Kubernetes before. Later parts pick up the two gaps this one leaves open.</p>
-    <p class="muted" style="margin-top:10px; font-size:.88rem;">Nothing installed yet? Start with <a href="../../part-0/before-you-begin/">Before You Begin</a>.</p>
+    <p class="back-link"><a href="/gitops/environment-setup/es/">← Antes de empezar</a></p>
+    <p class="lang-switch"><a href="../">EN · English</a></p>
+    <h1>Hello World con ArgoCD</h1>
+    <p class="lede">Editas un fichero, lo subes a GitHub, y unos segundos después una app real está corriendo en un clúster real — nadie escribió un comando de despliegue. Esta primera parte explica exactamente cómo, asumiendo que nunca has tocado Kubernetes. Las siguientes partes recogen los dos huecos que esta deja abiertos.</p>
+    <p class="muted" style="margin-top:10px; font-size:.88rem;">¿Todavía no tienes nada instalado? Empieza por <a href="/gitops/environment-setup/es/">Antes de empezar</a>.</p>
     <dl class="stamp">
       <div>
-        <dt>Code repo</dt>
+        <dt>Repo de código</dt>
         <dd class="mono">hello-world-argocd</dd>
       </div>
       <div>
-        <dt>Config repo</dt>
+        <dt>Repo de configuración</dt>
         <dd class="mono">gitops-config</dd>
       </div>
       <div>
-        <dt>Cluster</dt>
+        <dt>Clúster</dt>
         <dd class="mono">kind-hello-world</dd>
       </div>
       <div>
-        <dt>Verified state</dt>
+        <dt>Estado verificado</dt>
         <dd class="pill"><span class="dot"></span>Synced · Healthy</dd>
       </div>
     </dl>
   </div>
 
   <div class="live">
-    <p class="eyebrow" style="margin-bottom:8px;">Live locally — on the author's machine</p>
+    <p class="eyebrow" style="margin-bottom:8px;">En local — en la máquina del autor</p>
     <div class="live-grid">
       <div class="live-item">
         <span class="pill"><span class="dot"></span>hello-world</span>
         <a class="mono" href="http://localhost:8080/hello">http://localhost:8080/hello</a>
-        <p>Responds <code class="mono">{"message":"Hello World desde ArgoCD"}</code>.</p>
+        <p>Responde <code class="mono">{"message":"Hello World desde ArgoCD"}</code>.</p>
       </div>
       <div class="live-item">
         <span class="pill"><span class="dot"></span>ArgoCD UI</span>
         <a class="mono" href="https://localhost:8081">https://localhost:8081</a>
-        <p>Username <code class="mono">admin</code>. Initial password:</p>
+        <p>Usuario <code class="mono">admin</code>. Password inicial:</p>
         <pre class="live-cmd"><span class="c">kubectl</span> -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | base64 -d</pre>
       </div>
     </div>
-    <p class="live-note">Heads up if you're reading this on GitHub Pages: those two links only work on the computer where the cluster is actually running — <code class="mono">localhost</code> means "this machine," not "the internet." Follow section 04 to spin up your own copy and get your own working links.</p>
+    <p class="live-note">Aviso si estás leyendo esto en GitHub Pages: esos dos enlaces solo funcionan en el ordenador donde el clúster está realmente corriendo — <code class="mono">localhost</code> significa "esta máquina", no "internet". Sigue la sección 04 para montar tu propia copia y tener tus propios enlaces funcionando.</p>
   </div>
 
   <section id="mental-model">
-    <div class="section-head"><span class="num">00</span><h2>The 60-second mental model</h2></div>
-    <p class="analogy-line">Think of it like a restaurant kitchen that never stops checking its own recipe book.</p>
-    <p class="muted">No jargon yet — just the shape of the idea. Every technical term below maps to one of these three things.</p>
+    <div class="section-head"><span class="num">00</span><h2>El modelo mental de 60 segundos</h2></div>
+    <p class="analogy-line">Piénsalo como la cocina de un restaurante que nunca deja de revisar su propio recetario.</p>
+    <p class="muted">Todavía sin jerga — solo la forma de la idea. Cada término técnico de más abajo corresponde a una de estas tres cosas.</p>
     <div class="analogy-grid">
       <div class="analogy-card">
-        <span class="tag">The recipe book</span>
-        <h3>What should exist</h3>
-        <p>A written, versioned description of the dish — ingredients, quantities, steps. Anyone can read it and know exactly what's supposed to be cooking.</p>
-        <span class="real">in real life: the Git repo</span>
+        <span class="tag">El recetario</span>
+        <h3>Lo que debería existir</h3>
+        <p>Una descripción escrita y versionada del plato — ingredientes, cantidades, pasos. Cualquiera puede leerla y saber exactamente qué se supone que se está cocinando.</p>
+        <span class="real">en la vida real: el repo de Git</span>
       </div>
       <div class="analogy-card">
-        <span class="tag">The head chef</span>
-        <h3>Keeps checking</h3>
-        <p>Walks past the recipe book every few minutes. If the kitchen doesn't match the book, fixes it — no exceptions, no "close enough."</p>
-        <span class="real">in real life: ArgoCD</span>
+        <span class="tag">El chef principal</span>
+        <h3>No deja de comprobar</h3>
+        <p>Pasa por el recetario cada pocos minutos. Si la cocina no coincide con el libro, lo arregla — sin excepciones, sin "más o menos vale".</p>
+        <span class="real">en la vida real: ArgoCD</span>
       </div>
       <div class="analogy-card">
-        <span class="tag">The kitchen</span>
-        <h3>Where it actually cooks</h3>
-        <p>Stoves, prep stations, plates. The physical place where the dish gets made and kept warm, ready to serve.</p>
-        <span class="real">in real life: the Kubernetes cluster</span>
+        <span class="tag">La cocina</span>
+        <h3>Donde de verdad se cocina</h3>
+        <p>Fogones, zonas de preparación, platos. El lugar físico donde el plato se hace y se mantiene caliente, listo para servir.</p>
+        <span class="real">en la vida real: el clúster de Kubernetes</span>
       </div>
     </div>
-    <p class="muted" style="margin-top:20px;">That's the whole idea. You never walk into the kitchen and cook by hand — you edit the recipe book, and the chef makes sure the kitchen catches up. Section 03 gives this loop its real name and its real behavior.</p>
+    <p class="muted" style="margin-top:20px;">Esa es toda la idea. Nunca entras en la cocina a cocinar a mano — editas el recetario, y el chef se asegura de que la cocina se ponga al día. La sección 03 le da a este bucle su nombre real y su comportamiento real.</p>
   </section>
 
   <section id="glossary">
-    <div class="section-head"><span class="num">01</span><h2>Meet the pieces</h2></div>
-    <p class="muted">Same ideas as above, now with their real names — in the order you'll actually run into them.</p>
+    <div class="section-head"><span class="num">01</span><h2>Conoce las piezas</h2></div>
+    <p class="muted">Las mismas ideas de arriba, ahora con sus nombres reales — en el orden en que realmente te las vas a encontrar.</p>
 
     <div style="margin-top:22px;">
       <div class="glossary-group">
-        <h3>Where your code lives</h3>
+        <h3>Dónde vive tu código</h3>
         <dl class="glossary-grid">
           <div class="term-card">
             <dt>Git</dt>
-            <dd>A tool that saves a history of every change to your files. Each saved change is a <code class="mono">commit</code> — you can always go back to an earlier one.</dd>
+            <dd>Una herramienta que guarda un historial de cada cambio en tus ficheros. Cada cambio guardado es un <code class="mono">commit</code> — siempre puedes volver a uno anterior.</dd>
           </div>
           <div class="term-card">
-            <dt>Repository (repo)</dt>
-            <dd>A folder of code tracked by Git, with its own history. This project uses two: <code class="mono">hello-world-argocd</code> and <code class="mono">gitops-config</code>.</dd>
+            <dt>Repositorio (repo)</dt>
+            <dd>Una carpeta de código controlada por Git, con su propio historial. Este proyecto usa dos: <code class="mono">hello-world-argocd</code> y <code class="mono">gitops-config</code>.</dd>
           </div>
           <div class="term-card">
             <dt>GitHub</dt>
-            <dd>A website that hosts the "official" copy of a repo in the cloud. <code class="mono">git push</code> uploads your commits there; <code class="mono">git pull</code> downloads them.</dd>
+            <dd>Una web que aloja la copia "oficial" de un repo en la nube. <code class="mono">git push</code> sube tus commits ahí; <code class="mono">git pull</code> los baja.</dd>
           </div>
           <div class="term-card">
             <dt>Commit</dt>
-            <dd>A snapshot of your changes, with a message explaining what and why. It's the smallest unit of history in Git.</dd>
+            <dd>Una foto fija de tus cambios, con un mensaje explicando qué y por qué. Es la unidad más pequeña de historial en Git.</dd>
           </div>
         </dl>
       </div>
 
       <div class="glossary-group">
-        <h3>Packaging the app</h3>
+        <h3>Empaquetar la app</h3>
         <dl class="glossary-grid">
           <div class="term-card">
-            <dt>Microservice</dt>
-            <dd>A small, self-contained app that does one thing — here, replying <code class="mono">Hello World</code> — and gets deployed on its own.</dd>
+            <dt>Microservicio</dt>
+            <dd>Una app pequeña e independiente que hace una sola cosa — aquí, responder <code class="mono">Hello World</code> — y se despliega por separado.</dd>
           </div>
           <div class="term-card">
             <dt>Docker</dt>
-            <dd>Packages an app together with everything it needs to run (Java, libraries) into one sealed box that behaves the same on any machine.</dd>
+            <dd>Empaqueta una app junto con todo lo que necesita para correr (Java, librerías) en una caja cerrada que se comporta igual en cualquier máquina.</dd>
           </div>
           <div class="term-card">
-            <dt>Docker image</dt>
-            <dd>The packaged, frozen "template" (<code class="mono">hello-world:local</code> here). Built once with <code class="mono">docker build</code>.</dd>
+            <dt>Imagen de Docker</dt>
+            <dd>La "plantilla" empaquetada y congelada (<code class="mono">hello-world:local</code> en este caso). Se construye una vez con <code class="mono">docker build</code>.</dd>
           </div>
           <div class="term-card">
-            <dt>Container</dt>
-            <dd>A Docker image that's actually running. You can start several containers from the same image.</dd>
+            <dt>Contenedor</dt>
+            <dd>Una imagen de Docker que está corriendo de verdad. Puedes arrancar varios contenedores desde la misma imagen.</dd>
           </div>
         </dl>
       </div>
 
       <div class="glossary-group">
-        <h3>Running it in Kubernetes (the kitchen)</h3>
+        <h3>Ejecutarlo en Kubernetes (la cocina)</h3>
         <dl class="glossary-grid">
           <div class="term-card">
             <dt>Kubernetes (k8s)</dt>
-            <dd>A system that keeps many containers alive: if one crashes, it restarts it; if you ask for 3 copies, it watches that there are always 3.</dd>
+            <dd>Un sistema que mantiene vivos muchos contenedores: si uno se cae, lo reinicia; si pides 3 copias, vigila que siempre haya 3.</dd>
           </div>
           <div class="term-card">
-            <dt>Cluster</dt>
-            <dd>The set of machines (nodes) Kubernetes runs on. Ours is called <code class="mono">hello-world</code>.</dd>
+            <dt>Clúster</dt>
+            <dd>El conjunto de máquinas (nodos) donde corre Kubernetes. El nuestro se llama <code class="mono">hello-world</code>.</dd>
           </div>
           <div class="term-card">
             <dt>kind</dt>
-            <dd>A tool that simulates a full Kubernetes cluster inside Docker, on your own laptop — no cloud needed, great for learning and testing.</dd>
+            <dd>Una herramienta que simula un clúster de Kubernetes completo dentro de Docker, en tu propio portátil — sin nube, ideal para aprender y probar.</dd>
           </div>
           <div class="term-card">
             <dt>kubectl</dt>
-            <dd>The command you use to talk to Kubernetes: create, list, or delete things in the cluster (e.g. <code class="mono">kubectl get pods</code>).</dd>
+            <dd>El comando que usas para hablar con Kubernetes: crear, listar o borrar cosas en el clúster (por ejemplo, <code class="mono">kubectl get pods</code>).</dd>
           </div>
           <div class="term-card">
             <dt>Namespace</dt>
-            <dd>A logical "folder" inside the cluster that groups one project's resources. Hello-world lives in the <code class="mono">hello-world</code> namespace.</dd>
+            <dd>Una "carpeta" lógica dentro del clúster que agrupa los recursos de un proyecto. Hello-world vive en el namespace <code class="mono">hello-world</code>.</dd>
           </div>
           <div class="term-card">
             <dt>Pod</dt>
-            <dd>The smallest thing that runs in Kubernetes. It usually wraps a single container.</dd>
+            <dd>Lo más pequeño que corre en Kubernetes. Normalmente envuelve un único contenedor.</dd>
           </div>
           <div class="term-card">
             <dt>Deployment</dt>
-            <dd>The recipe that tells Kubernetes which image to use and how many copies (replicas) of the Pod to always keep alive.</dd>
+            <dd>La receta que le dice a Kubernetes qué imagen usar y cuántas copias (réplicas) del Pod mantener siempre vivas.</dd>
           </div>
           <div class="term-card">
             <dt>Service</dt>
-            <dd>A fixed "front door" to reach the Pods, even as they restart and their internal addresses change underneath.</dd>
+            <dd>Una "puerta" fija para llegar a los Pods, aunque se reinicien y sus direcciones internas cambien por debajo.</dd>
           </div>
           <div class="term-card">
-            <dt>Manifest / YAML</dt>
-            <dd>The text file describing what you want to exist (a Deployment, a Service...). It's the order form Kubernetes fulfills.</dd>
+            <dt>Manifiesto / YAML</dt>
+            <dd>El fichero de texto que describe lo que quieres que exista (un Deployment, un Service...). Es el formulario de pedido que Kubernetes rellena.</dd>
           </div>
         </dl>
       </div>
 
       <div class="glossary-group">
-        <h3>Deploying itself (the head chef)</h3>
+        <h3>Se despliega solo (el chef principal)</h3>
         <dl class="glossary-grid">
           <div class="term-card">
             <dt>ArgoCD</dt>
-            <dd>An application that lives inside the cluster itself, watches a Git repo, and applies any change it sees there — on its own.</dd>
+            <dd>Una aplicación que vive dentro del propio clúster, vigila un repo de Git, y aplica cualquier cambio que vea ahí — sola.</dd>
           </div>
           <div class="term-card">
             <dt>GitOps</dt>
-            <dd>The practice of treating Git as the single source of truth: you never touch the cluster by hand, you edit the repo and a tool (Argo) applies it.</dd>
+            <dd>La práctica de tratar Git como la única fuente de verdad: nunca tocas el clúster a mano, editas el repo y una herramienta (Argo) lo aplica.</dd>
           </div>
           <div class="term-card">
-            <dt>Application (Argo's)</dt>
-            <dd>The manifest that tells Argo "watch this repo, this folder, and deploy it to this namespace" — see <span class="inline-file">applications/hello-world.yaml</span>.</dd>
+            <dt>Application (de Argo)</dt>
+            <dd>El manifiesto que le dice a Argo "vigila este repo, esta carpeta, y despliégalo en este namespace" — ver <span class="inline-file">applications/hello-world.yaml</span>.</dd>
           </div>
           <div class="term-card">
             <dt>Sync / selfHeal / prune</dt>
-            <dd>Argo's three reconciliation actions — explained in detail in section 03.</dd>
+            <dd>Las tres acciones de reconciliación de Argo — explicadas en detalle en la sección 03.</dd>
           </div>
         </dl>
       </div>
     </div>
   </section>
 
-  <section id="architecture">
-    <div class="section-head"><span class="num">02</span><h2>Architecture — three independent pieces</h2></div>
-    <p class="muted">None of the three knows how to build the other two. They only ever talk through Git and the Kubernetes API.</p>
+  <section id="arquitectura">
+    <div class="section-head"><span class="num">02</span><h2>Arquitectura — tres piezas independientes</h2></div>
+    <p class="muted">Ninguna de las tres sabe construir a las otras dos. Solo se comunican a través de Git y de la API de Kubernetes.</p>
     <div class="arch" style="margin-top:20px;">
       <div class="arch-box">
-        <span class="tag">Code repo</span>
+        <span class="tag">Repo de código</span>
         <h3>hello-world-argocd</h3>
-        <p>Java 21 / Spring Boot 3.2. One endpoint, <code class="mono">GET /hello</code>. Contains zero Kubernetes manifests and zero Argo config.</p>
+        <p>Java 21 / Spring Boot 3.2. Un endpoint, <code class="mono">GET /hello</code>. No contiene ni un manifiesto de Kubernetes ni configuración de Argo.</p>
         <a class="repo-link" href="https://github.com/juanfranciscofernandezherreros/hello-world-argocd">github.com/.../hello-world-argocd →</a>
       </div>
       <div class="arch-box">
-        <span class="tag">Config repo</span>
+        <span class="tag">Repo de configuración</span>
         <h3>gitops-config</h3>
-        <p>The "recipe book": Deployment/Service manifests plus the Application object that registers the service with Argo.</p>
+        <p>El "recetario": manifiestos de Deployment/Service más el objeto Application que registra el servicio en Argo.</p>
         <a class="repo-link" href="https://github.com/juanfranciscofernandezherreros/gitops-config">github.com/.../gitops-config →</a>
       </div>
-      <div class="arch-arrow-row"><span>the Deployment in gitops-config references the image name that hello-world-argocd's Dockerfile produces</span></div>
+      <div class="arch-arrow-row"><span>el Deployment de gitops-config referencia el nombre de imagen que produce el Dockerfile de hello-world-argocd</span></div>
       <div class="arch-box arch-full arch-cluster">
-        <span class="tag">Inside the cluster (kind-hello-world)</span>
-        <h3>ArgoCD → hello-world namespace</h3>
-        <p>Argo reads <em>gitops-config</em>, compares it against the cluster's real state, and applies the difference. The result: the <code class="mono">hello-world</code> Deployment, running in its own namespace.</p>
+        <span class="tag">Dentro del clúster (kind-hello-world)</span>
+        <h3>ArgoCD → namespace hello-world</h3>
+        <p>Argo lee <em>gitops-config</em>, lo compara contra el estado real del clúster, y aplica la diferencia. El resultado: el Deployment <code class="mono">hello-world</code>, corriendo en su propio namespace.</p>
       </div>
     </div>
   </section>
 
-  <section id="loop">
-    <div class="section-head"><span class="num">03</span><h2>The reconciliation loop</h2></div>
-    <p class="muted">Git is the only source of truth. Nobody ever runs <code class="mono">kubectl apply</code> by hand — you edit the repo, and Argo corrects the difference on its own.</p>
+  <section id="bucle">
+    <div class="section-head"><span class="num">03</span><h2>El bucle de reconciliación</h2></div>
+    <p class="muted">Git es la única fuente de verdad. Nadie ejecuta nunca <code class="mono">kubectl apply</code> a mano — editas el repo, y Argo corrige la diferencia solo.</p>
     <dl class="keylist" style="margin-top:20px;">
       <div class="term">
         <dt>sync</dt>
-        <dd>The repo has something the cluster doesn't → Argo creates it.</dd>
+        <dd>El repo tiene algo que el clúster no tiene → Argo lo crea.</dd>
       </div>
       <div class="term">
         <dt>prune</dt>
-        <dd>The cluster has something no longer in the repo → Argo deletes it.</dd>
+        <dd>El clúster tiene algo que ya no está en el repo → Argo lo borra.</dd>
       </div>
       <div class="term">
         <dt>selfHeal</dt>
-        <dd>Someone edits something by hand in the cluster (<code class="mono">kubectl edit</code>) → Argo reverts it back to match Git.</dd>
+        <dd>Alguien edita algo a mano en el clúster (<code class="mono">kubectl edit</code>) → Argo lo revierte para que vuelva a coincidir con Git.</dd>
       </div>
       <div class="term">
         <dt>refresh</dt>
-        <dd>Every ~3 minutes, or on demand, Argo re-compares repo vs. cluster even if nothing changed.</dd>
+        <dd>Cada ~3 minutos, o bajo demanda, Argo vuelve a comparar repo contra clúster aunque nada haya cambiado.</dd>
       </div>
     </dl>
   </section>
 
   <section id="startup">
-    <div class="section-head"><span class="num">04</span><h2>Bringing it all up — from a restart, or from zero</h2></div>
-    <p class="muted">Section 05 assumes the cluster and ArgoCD already exist. Here's how to actually get there, on a fresh machine or after Docker Desktop was closed.</p>
+    <div class="section-head"><span class="num">04</span><h2>Levantar todo — tras un reinicio, o desde cero</h2></div>
+    <p class="muted">La sección 05 asume que el clúster y ArgoCD ya existen. Aquí tienes cómo llegar ahí de verdad, en una máquina nueva o después de cerrar Docker Desktop.</p>
 
     <div class="note" style="margin-top:20px;">
-      <h4>"Starting" Argo and "configuring" Argo are two different things</h4>
-      <p><strong>Installing it</strong> (the commands below) just means applying a Kubernetes manifest — ArgoCD isn't a program you launch, it's a handful of Deployments and a StatefulSet that Kubernetes schedules like any other app. Once those pods are <code class="mono">Running</code>, Argo is "started" — and watching nothing yet.</p>
-      <p><strong>Configuring what it watches</strong> is a separate step: creating an <code class="mono">Application</code> resource (<span class="inline-file">applications/hello-world.yaml</span>, applied in the "starting from zero" path below). That's the only "configuration" this guide ever touches — the two ConfigMaps that configure ArgoCD's own behavior (<code class="mono">argocd-cm</code>, <code class="mono">argocd-rbac-cm</code>) are left at their defaults, which is normal for a setup this size.</p>
+      <h4>"Iniciar" Argo y "configurar" Argo son dos cosas distintas</h4>
+      <p><strong>Instalarlo</strong> (los comandos de abajo) es solo aplicar un manifiesto de Kubernetes — ArgoCD no es un programa que se lanza, es un puñado de Deployments y un StatefulSet que Kubernetes programa igual que cualquier otra app. En cuanto esos pods están en <code class="mono">Running</code>, Argo ya está "iniciado" — y sin vigilar nada todavía.</p>
+      <p><strong>Configurar qué vigila</strong> es un paso aparte: crear un recurso <code class="mono">Application</code> (<span class="inline-file">applications/hello-world.yaml</span>, aplicado en el camino "empezando desde cero" de abajo). Esa es la única "configuración" que toca esta guía — los dos ConfigMaps que configuran el comportamiento del propio ArgoCD (<code class="mono">argocd-cm</code>, <code class="mono">argocd-rbac-cm</code>) se dejan con sus valores por defecto, algo normal para una instalación de este tamaño.</p>
     </div>
 
-    <span class="flow-tag auto" style="margin-top:20px;">just resuming</span>
-    <p class="muted">The cluster still exists — Docker Desktop (or the machine) was just closed for a while.</p>
+    <span class="flow-tag auto" style="margin-top:20px;">solo reanudando</span>
+    <p class="muted">El clúster todavía existe — Docker Desktop (o la máquina) simplemente estuvo cerrado un rato.</p>
     <div class="flow" style="margin-top:16px;">
       <div class="flow-step">
         <span class="idx">1</span>
         <span class="actor you">You</span>
-        <span class="msg">Start Docker Desktop and wait for its engine to actually be ready — <code class="mono">docker ps</code> should stop erroring.</span>
+        <span class="msg">Arranca Docker Desktop y espera a que su motor esté realmente listo — <code class="mono">docker ps</code> debería dejar de dar error.</span>
       </div>
       <div class="flow-step">
         <span class="idx">2</span>
         <span class="actor k8s">kind</span>
-        <span class="msg">The cluster's container has a restart policy, so it comes back on its own as soon as Docker's engine is up — no <code class="mono">kind create cluster</code> needed. Confirm with <code class="mono">kubectl get nodes</code>; if it points at the wrong cluster, <code class="mono">kubectl config use-context kind-hello-world</code>.</span>
+        <span class="msg">El contenedor del clúster tiene una política de reinicio, así que vuelve solo en cuanto el motor de Docker está arriba — no hace falta <code class="mono">kind create cluster</code>. Confírmalo con <code class="mono">kubectl get nodes</code>; si apunta al clúster equivocado, <code class="mono">kubectl config use-context kind-hello-world</code>.</span>
       </div>
       <div class="flow-step">
         <span class="idx">3</span>
         <span class="actor k8s">Kubernetes + Argo</span>
-        <span class="msg">Pods that show <code class="mono">Unknown</code> right after the restart flip back to <code class="mono">Running</code> on their own within about a minute — that's kubelet reconnecting, not a real failure. No action needed, just wait and re-check <code class="mono">kubectl get pods -n argocd</code>.</span>
+        <span class="msg">Los pods que muestran <code class="mono">Unknown</code> justo después del reinicio vuelven solos a <code class="mono">Running</code> en aproximadamente un minuto — es kubelet reconectando, no un fallo real. No hace falta hacer nada, solo espera y vuelve a comprobar con <code class="mono">kubectl get pods -n argocd</code>.</span>
       </div>
       <div class="flow-step">
         <span class="idx">4</span>
         <span class="actor you">You</span>
-        <span class="msg">What does <em>not</em> come back on its own: the two <code class="mono">kubectl port-forward</code> processes from the "Live locally" panel. Re-run both:</span>
+        <span class="msg">Lo que no vuelve solo: los dos procesos <code class="mono">kubectl port-forward</code> del panel "En local". Vuelve a lanzar ambos:</span>
       </div>
     </div>
     <pre style="margin-top:14px;"><span class="c">kubectl</span> -n argocd port-forward svc/argocd-server 8081:443 &amp;
 <span class="c">kubectl</span> -n hello-world port-forward svc/hello-world 8080:8080 &amp;</pre>
-    <p class="muted" style="margin-top:10px;">If a port-forward errors with <code class="mono">unable to listen on any of the requested ports</code>, an old one from before the restart is still holding it — find and kill that process first, then retry.</p>
+    <p class="muted" style="margin-top:10px;">Si un port-forward da error con <code class="mono">unable to listen on any of the requested ports</code>, uno antiguo de antes del reinicio todavía lo está ocupando — encuentra y mata ese proceso primero, y reinténtalo.</p>
 
-    <span class="flow-tag manual" style="margin-top:32px;">starting from zero</span>
-    <p class="muted">No cluster exists yet — first time on this machine, or you ran <code class="mono">kind delete cluster</code>.</p>
+    <span class="flow-tag manual" style="margin-top:32px;">empezando desde cero</span>
+    <p class="muted">Todavía no existe ningún clúster — primera vez en esta máquina, o has ejecutado <code class="mono">kind delete cluster</code>.</p>
     <div class="flow" style="margin-top:16px;">
       <div class="flow-step">
         <span class="idx">1</span>
         <span class="actor you">You</span>
-        <span class="msg">Clone both repos — everything below assumes you're inside them:</span>
+        <span class="msg">Clona los dos repos — todo lo de abajo asume que estás dentro de ellos:</span>
       </div>
     </div>
     <pre style="margin-top:14px;"><span class="c">git</span> clone https://github.com/juanfranciscofernandezherreros/hello-world-argocd.git
@@ -908,7 +908,7 @@ reading_minutes: 13
       <div class="flow-step">
         <span class="idx">2</span>
         <span class="actor you">You</span>
-        <span class="msg">Start Docker Desktop, then create the cluster:</span>
+        <span class="msg">Arranca Docker Desktop, y luego crea el clúster:</span>
       </div>
     </div>
     <pre style="margin-top:14px;"><span class="c">kind</span> create cluster --name hello-world</pre>
@@ -916,180 +916,180 @@ reading_minutes: 13
       <div class="flow-step">
         <span class="idx">3</span>
         <span class="actor you">You</span>
-        <span class="msg">Install ArgoCD into it:</span>
+        <span class="msg">Instala ArgoCD dentro:</span>
       </div>
     </div>
     <pre style="margin-top:14px;"><span class="c">kubectl</span> create namespace argocd
 <span class="c">kubectl</span> apply -n argocd --server-side --force-conflicts \
   -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 <span class="c">kubectl</span> -n argocd rollout status deploy/argocd-server</pre>
-    <p class="muted" style="margin-top:10px;"><code class="mono">--server-side</code> matters: a plain <code class="mono">apply</code> fails here because the <code class="mono">ApplicationSet</code> CRD is bigger than the 262144-byte limit on the <code class="mono">last-applied-configuration</code> annotation a normal apply writes.</p>
+    <p class="muted" style="margin-top:10px;"><code class="mono">--server-side</code> importa: un <code class="mono">apply</code> normal falla aquí porque el CRD de <code class="mono">ApplicationSet</code> supera el límite de 262144 bytes de la anotación <code class="mono">last-applied-configuration</code> que escribe un apply normal.</p>
     <div class="flow" style="margin-top:16px;">
       <div class="flow-step">
         <span class="idx">4</span>
         <span class="actor you">You</span>
-        <span class="msg">The cluster and ArgoCD are ready, but the app itself still isn't running. That's the next section — <strong>05, right below</strong> — run from inside your <span class="inline-file">hello-world-argocd</span> clone: build the jar, build the image, load it into <code class="mono">kind</code>, then from your <span class="inline-file">gitops-config</span> clone, register it with Argo — with the real output of every step.</span>
+        <span class="msg">El clúster y ArgoCD ya están listos, pero la app en sí todavía no está corriendo. Esa es la siguiente sección — la <strong>05, justo debajo</strong> — desde dentro de tu clon de <span class="inline-file">hello-world-argocd</span>: construye el jar, construye la imagen, cárgala en <code class="mono">kind</code>, y luego desde tu clon de <span class="inline-file">gitops-config</span>, regístrala en Argo — con la salida real de cada paso.</span>
       </div>
       <div class="flow-step">
         <span class="idx">5</span>
         <span class="actor you">You</span>
-        <span class="msg">Once that's done, open the two doors: same two <code class="mono">port-forward</code> commands as the "just resuming" path above, then <code class="mono">curl http://localhost:8080/hello</code> to confirm.</span>
+        <span class="msg">Una vez hecho eso, abre las dos puertas: los mismos dos comandos <code class="mono">port-forward</code> del camino "solo reanudando" de arriba, y luego <code class="mono">curl http://localhost:8080/hello</code> para confirmarlo.</span>
       </div>
     </div>
   </section>
 
   <section id="terminal-walkthrough">
-    <div class="section-head"><span class="num">05</span><h2>Terminal walkthrough — every command, for real</h2></div>
-    <p class="muted">Steps 0 and 0b are the one-time setup from section 04, already done here. Steps 1-6 are the repeatable loop — build, load, sync, verify — with the real terminal output of each. The screenshots in section 06 show this same result in the browser; the bare commands, quick to copy, are in section 09.</p>
+    <div class="section-head"><span class="num">05</span><h2>Recorrido por la terminal — cada comando, de verdad</h2></div>
+    <p class="muted">Los pasos 0 y 0b son la configuración de una sola vez de la sección 04, ya hecha aquí. Los pasos 1-6 son el bucle repetible — construir, cargar, sincronizar, verificar — con la salida real de terminal de cada uno. Las capturas de la sección 06 muestran este mismo resultado en el navegador; los comandos sueltos, para copiar rápido, están en la sección 09.</p>
     <div class="evidence" style="margin-top:22px;">
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/01-terminal-output-of-kind-get-clusters-and-kubectl-get.png' | relative_url }}" alt="Terminal output of kind get clusters and kubectl get nodes" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/01-terminal-output-of-kind-get-clusters-and-kubectl-get.png' | relative_url }}" alt="Salida de terminal de kind get clusters y kubectl get nodes" /></div>
         <div>
-          <p class="step-idx">0 — one-time setup, already done</p>
-          <h4>The cluster exists and is Ready</h4>
-          <p><code class="mono">kind get clusters</code> lists the cluster; <code class="mono">kubectl get nodes</code> confirms Kubernetes itself is up on it.</p>
+          <p class="step-idx">0 — configuración de una sola vez, ya hecha</p>
+          <h4>El clúster existe y está Ready</h4>
+          <p><code class="mono">kind get clusters</code> lista el clúster; <code class="mono">kubectl get nodes</code> confirma que Kubernetes en sí está arriba.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/02-terminal-output-of-kubectl-get-pods-n-argocd.png' | relative_url }}" alt="Terminal output of kubectl get pods -n argocd" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/02-terminal-output-of-kubectl-get-pods-n-argocd.png' | relative_url }}" alt="Salida de terminal de kubectl get pods -n argocd" /></div>
         <div>
-          <p class="step-idx">0b — Argo is installed</p>
-          <h4>All 7 ArgoCD pods Running</h4>
-          <p>ArgoCD is itself just a handful of pods living in the <code class="mono">argocd</code> namespace — the application-controller, repo-server, the UI server, and a few helpers.</p>
+          <p class="step-idx">0b — Argo está instalado</p>
+          <h4>Los 7 pods de ArgoCD en Running</h4>
+          <p>ArgoCD en sí es solo un puñado de pods viviendo en el namespace <code class="mono">argocd</code> — el application-controller, el repo-server, el servidor de la UI, y algunos ayudantes.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/03-terminal-output-of-mvn-clean-package.png' | relative_url }}" alt="Terminal output of mvn clean package" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/03-terminal-output-of-mvn-clean-package.png' | relative_url }}" alt="Salida de terminal de mvn clean package" /></div>
         <div>
-          <p class="step-idx">1 — build the jar</p>
+          <p class="step-idx">1 — construir el jar</p>
           <h4>mvn clean package</h4>
-          <p>Compiles the Spring Boot app, runs its one test, and produces <code class="mono">hello-world-0.0.1-SNAPSHOT.jar</code> in <span class="inline-file">target/</span>.</p>
+          <p>Compila la app Spring Boot, corre su único test, y produce <code class="mono">hello-world-0.0.1-SNAPSHOT.jar</code> en <span class="inline-file">target/</span>.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/04-terminal-output-of-docker-build.png' | relative_url }}" alt="Terminal output of docker build" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/04-terminal-output-of-docker-build.png' | relative_url }}" alt="Salida de terminal de docker build" /></div>
         <div>
-          <p class="step-idx">2 — build the image</p>
+          <p class="step-idx">2 — construir la imagen</p>
           <h4>docker build -t hello-world:local app</h4>
-          <p>Wraps that jar and a JRE into the <code class="mono">hello-world:local</code> image, using the <span class="inline-file">app/Dockerfile</span>. Layers get cached, so re-runs after a code change are fast.</p>
+          <p>Envuelve ese jar y un JRE en la imagen <code class="mono">hello-world:local</code>, usando <span class="inline-file">app/Dockerfile</span>. Las capas quedan en caché, así que volver a ejecutarlo tras un cambio de código es rápido.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/05-terminal-output-loading-the-container-into-the-kind.png' | relative_url }}" alt="Terminal output loading the container into the kind cluster" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/05-terminal-output-loading-the-container-into-the-kind.png' | relative_url }}" alt="Salida de terminal cargando el contenedor en el clúster kind" /></div>
         <div>
-          <p class="step-idx">3 — get the image into the cluster</p>
+          <p class="step-idx">3 — meter la imagen en el clúster</p>
           <h4>kind load docker-image</h4>
-          <p>There's no registry in this base, so the image is injected straight into the <code class="mono">kind</code> node. The ID changes every time you rebuild, which is why it says "not yet present" here.</p>
+          <p>No hay registry en esta base, así que la imagen se inyecta directamente en el nodo de <code class="mono">kind</code>. El ID cambia cada vez que reconstruyes, por eso aquí dice "not yet present".</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/06-terminal-output-of-kubectl-apply-on-the-application.png' | relative_url }}" alt="Terminal output of kubectl apply on the Application manifest" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/06-terminal-output-of-kubectl-apply-on-the-application.png' | relative_url }}" alt="Salida de terminal de kubectl apply sobre el manifiesto Application" /></div>
         <div>
-          <p class="step-idx">4 — register (or re-register) with Argo</p>
+          <p class="step-idx">4 — registrar (o volver a registrar) en Argo</p>
           <h4>kubectl apply -f applications/hello-world.yaml</h4>
-          <p>Says <code class="mono">unchanged</code> here because the <code class="mono">Application</code> already existed from an earlier run — that's expected and fine. On a first run it would say <code class="mono">created</code>.</p>
+          <p>Aquí dice <code class="mono">unchanged</code> porque el <code class="mono">Application</code> ya existía de una ejecución anterior — es lo esperado y está bien. En una primera ejecución diría <code class="mono">created</code>.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/07-terminal-output-of-argocd-app-sync.png' | relative_url }}" alt="Terminal output of argocd app sync" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/07-terminal-output-of-argocd-app-sync.png' | relative_url }}" alt="Salida de terminal de argocd app sync" /></div>
         <div>
-          <p class="step-idx">5 — sync on demand</p>
+          <p class="step-idx">5 — sincronizar bajo demanda</p>
           <h4>argocd app sync hello-world</h4>
-          <p>Forces the comparison instead of waiting for the automatic ~3-minute refresh. The table at the bottom is Argo's resource-by-resource report: Namespace, Service, Deployment — all <code class="mono">Synced</code>.</p>
+          <p>Fuerza la comparación en vez de esperar al refresh automático de ~3 minutos. La tabla de abajo es el informe recurso por recurso de Argo: Namespace, Service, Deployment — todos <code class="mono">Synced</code>.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/08-terminal-output-of-kubectl-get-pods-and-curl.png' | relative_url }}" alt="Terminal output of kubectl get pods and curl" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/08-terminal-output-of-kubectl-get-pods-and-curl.png' | relative_url }}" alt="Salida de terminal de kubectl get pods y curl" /></div>
         <div>
-          <p class="step-idx">6 — final proof</p>
+          <p class="step-idx">6 — prueba final</p>
           <h4>kubectl get pods + curl</h4>
-          <p>The Pod is <code class="mono">Running</code>, and the endpoint answers. This is the same result as the screenshot in section 06, step 1 — just seen from the terminal instead of the browser.</p>
+          <p>El Pod está <code class="mono">Running</code>, y el endpoint responde. Es el mismo resultado que la captura de la sección 06, paso 1 — solo que visto desde la terminal en vez del navegador.</p>
         </div>
       </div>
     </div>
   </section>
 
   <section id="evidence">
-    <div class="section-head"><span class="num">06</span><h2>Proven on a real machine — actual screenshots</h2></div>
-    <p class="muted">None of this is theoretical: these are real screenshots, taken right after rebuilding the <code class="mono">hello-world</code> cluster from scratch.</p>
+    <div class="section-head"><span class="num">06</span><h2>Probado en una máquina real — capturas reales</h2></div>
+    <p class="muted">Nada de esto es teórico: son capturas reales, tomadas justo después de reconstruir el clúster <code class="mono">hello-world</code> desde cero.</p>
     <div class="evidence" style="margin-top:22px;">
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/09-json-response-from-the-hello-endpoint-in-the-browser.png' | relative_url }}" alt="JSON response from the /hello endpoint in the browser" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/09-json-response-from-the-hello-endpoint-in-the-browser.png' | relative_url }}" alt="Respuesta JSON del endpoint /hello en el navegador" /></div>
         <div>
-          <p class="step-idx">Step 1 — the microservice responds</p>
+          <p class="step-idx">Paso 1 — el microservicio responde</p>
           <h4>GET http://localhost:8080/hello</h4>
-          <p>The browser reaches the Pod through the <code class="mono">Service</code> (via <code class="mono">kubectl port-forward</code>). Confirms the container started and Spring Boot is serving requests.</p>
+          <p>El navegador llega al Pod a través del <code class="mono">Service</code> (vía <code class="mono">kubectl port-forward</code>). Confirma que el contenedor arrancó y Spring Boot está sirviendo peticiones.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/10-argocd-login-screen.png' | relative_url }}" alt="ArgoCD login screen" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/10-argocd-login-screen.png' | relative_url }}" alt="Pantalla de login de ArgoCD" /></div>
         <div>
-          <p class="step-idx">Step 2 — Argo's login screen</p>
+          <p class="step-idx">Paso 2 — la pantalla de login de Argo</p>
           <h4>https://localhost:8081</h4>
-          <p>ArgoCD ships its own web interface, separate from Kubernetes itself. Log in with username <code class="mono">admin</code> and the initial password (command in the "Live locally" panel above).</p>
+          <p>ArgoCD trae su propia interfaz web, separada de Kubernetes. Entra con el usuario <code class="mono">admin</code> y el password inicial (comando en el panel "En local" de arriba).</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/11-argocd-applications-panel-showing-hello-world-as.png' | relative_url }}" alt="ArgoCD Applications panel showing hello-world as Healthy and Synced" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/11-argocd-applications-panel-showing-hello-world-as.png' | relative_url }}" alt="Panel de Applications de ArgoCD mostrando hello-world como Healthy y Synced" /></div>
         <div>
-          <p class="step-idx">Step 3 — inside, the Applications panel</p>
+          <p class="step-idx">Paso 3 — ya dentro, el panel de Applications</p>
           <h4>hello-world · Healthy · Synced</h4>
-          <p>Argo's main view: each card is one <code class="mono">Application</code> it's watching. You can see the repo (<code class="mono">gitops-config</code>), the folder (<code class="mono">manifests/hello-world</code>), and the status.</p>
+          <p>La vista principal de Argo: cada tarjeta es un <code class="mono">Application</code> que vigila. Se ve el repo (<code class="mono">gitops-config</code>), la carpeta (<code class="mono">manifests/hello-world</code>), y el estado.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-1/12-resource-tree-of-the-hello-world-application-in-argocd.png' | relative_url }}" alt="Resource tree of the hello-world Application in ArgoCD" /></div>
+        <div class="shot"><img src="{{ '/assets/img/hello-world-argocd/12-resource-tree-of-the-hello-world-application-in-argocd.png' | relative_url }}" alt="Árbol de recursos del Application hello-world en ArgoCD" /></div>
         <div>
-          <p class="step-idx">Step 4 — the resource tree</p>
+          <p class="step-idx">Paso 4 — el árbol de recursos</p>
           <h4>Namespace → Service → Deployment → Pod</h4>
-          <p>Opening the card, Argo draws everything it created from the YAML: the <code class="mono">Namespace</code>, the <code class="mono">Service</code>, the <code class="mono">Deployment</code>, and hanging off it, the actual running <code class="mono">Pod</code>. All green = fully synced and healthy.</p>
+          <p>Al abrir la tarjeta, Argo dibuja todo lo que creó a partir del YAML: el <code class="mono">Namespace</code>, el <code class="mono">Service</code>, el <code class="mono">Deployment</code>, y colgando de él, el <code class="mono">Pod</code> real corriendo. Todo en verde = completamente sincronizado y sano.</p>
         </div>
       </div>
     </div>
   </section>
 
   <section id="scenario-a">
-    <div class="section-head"><span class="num">07</span><h2>Sequence — changing the deployment</h2></div>
-    <span class="flow-tag auto">100% automatic</span>
-    <p class="muted">Example: scaling from 1 to 3 replicas by editing <span class="inline-file">gitops-config/manifests/hello-world/deployment.yaml</span>.</p>
+    <div class="section-head"><span class="num">07</span><h2>Secuencia — cambiar el despliegue</h2></div>
+    <span class="flow-tag auto">100% automático</span>
+    <p class="muted">Ejemplo: pasar de 1 a 3 réplicas editando <span class="inline-file">gitops-config/manifests/hello-world/deployment.yaml</span>.</p>
     <div class="flow" style="margin-top:16px;">
       <div class="flow-step">
         <span class="idx">1</span>
         <span class="actor you">You</span>
-        <span class="msg">Edit the YAML and <code class="mono">git push</code> to <strong>gitops-config</strong>.</span>
+        <span class="msg">Edita el YAML y haz <code class="mono">git push</code> a <strong>gitops-config</strong>.</span>
       </div>
       <div class="flow-step loop">
         <span class="idx">2</span>
         <span class="actor argo">ArgoCD</span>
-        <span class="msg">Runs <code class="mono">git fetch</code> on the repo and compares HEAD against the cluster's real state.<span class="to">repeats every ~3 min, or on a forced refresh</span></span>
+        <span class="msg">Ejecuta <code class="mono">git fetch</code> en el repo y compara HEAD contra el estado real del clúster.<span class="to">se repite cada ~3 min, o al forzar un refresh</span></span>
       </div>
       <div class="flow-step">
         <span class="idx">3</span>
         <span class="actor k8s">Kubernetes API</span>
-        <span class="msg">Argo applies the difference: creates, updates, or deletes resources as needed.</span>
+        <span class="msg">Argo aplica la diferencia: crea, actualiza o borra recursos según haga falta.</span>
       </div>
       <div class="flow-step">
         <span class="idx">4</span>
         <span class="actor k8s">hello-world Pod</span>
-        <span class="msg">The missing pods get created. The <code class="mono">readinessProbe</code> confirms they're ready.</span>
+        <span class="msg">Se crean los pods que faltan. El <code class="mono">readinessProbe</code> confirma que están listos.</span>
       </div>
       <div class="flow-step">
         <span class="idx">5</span>
         <span class="actor argo">ArgoCD</span>
-        <span class="msg">Marks the <code class="mono">Application</code> as <strong>Synced · Healthy</strong>. Done — nobody touched <code class="mono">kubectl</code>.</span>
+        <span class="msg">Marca el <code class="mono">Application</code> como <strong>Synced · Healthy</strong>. Listo — nadie tocó <code class="mono">kubectl</code>.</span>
       </div>
     </div>
   </section>
 
   <section id="scenario-b">
-    <div class="section-head"><span class="num">08</span><h2>Sequence — changing the code</h2></div>
-    <span class="flow-tag manual">manual in this base</span>
-    <p class="muted">There's no CI or registry yet, so building and publishing the new image is on you.</p>
+    <div class="section-head"><span class="num">08</span><h2>Secuencia — cambiar el código</h2></div>
+    <span class="flow-tag manual">manual en esta base</span>
+    <p class="muted">Todavía no hay CI ni registry, así que construir y publicar la imagen nueva depende de ti.</p>
     <div class="flow" style="margin-top:16px;">
       <div class="flow-step">
         <span class="idx">1</span>
         <span class="actor manual">You</span>
-        <span class="msg"><code class="mono">mvn package</code> in <span class="inline-file">hello-world-argocd/app</span>.</span>
+        <span class="msg"><code class="mono">mvn package</code> en <span class="inline-file">hello-world-argocd/app</span>.</span>
       </div>
       <div class="flow-step">
         <span class="idx">2</span>
@@ -1099,39 +1099,39 @@ reading_minutes: 13
       <div class="flow-step">
         <span class="idx">3</span>
         <span class="actor manual">You</span>
-        <span class="msg"><code class="mono">kind load docker-image hello-world:local --name hello-world</code> — the image doesn't come from any registry, it's injected straight into the cluster's nodes.</span>
+        <span class="msg"><code class="mono">kind load docker-image hello-world:local --name hello-world</code> — la imagen no viene de ningún registry, se inyecta directamente en los nodos del clúster.</span>
       </div>
       <div class="flow-step">
         <span class="idx">4</span>
         <span class="actor manual">You</span>
-        <span class="msg"><code class="mono">kubectl rollout restart deploy/hello-world -n hello-world</code> — Argo doesn't notice this change on its own because the image tag never changed.</span>
+        <span class="msg"><code class="mono">kubectl rollout restart deploy/hello-world -n hello-world</code> — Argo no detecta este cambio solo porque el tag de la imagen nunca cambió.</span>
       </div>
       <div class="flow-step">
         <span class="idx">5</span>
         <span class="actor k8s">hello-world Pod</span>
-        <span class="msg">Gets recreated with the new image and goes back to <strong>Ready</strong>.</span>
+        <span class="msg">Se recrea con la imagen nueva y vuelve a quedar <strong>Ready</strong>.</span>
       </div>
     </div>
   </section>
 
   <section id="commands">
-    <div class="section-head"><span class="num">09</span><h2>Reference commands</h2></div>
+    <div class="section-head"><span class="num">09</span><h2>Comandos de referencia</h2></div>
     <div class="cmd-group">
-      <h4>Local build</h4>
+      <h4>Build local</h4>
       <pre><span class="c">mvn</span> -f app/pom.xml clean package
 <span class="c">docker</span> build -t hello-world:local app</pre>
     </div>
     <div class="cmd-group">
-      <h4>Load the image into kind</h4>
+      <h4>Cargar la imagen en kind</h4>
       <pre><span class="c">kind</span> load docker-image hello-world:local --name hello-world</pre>
     </div>
     <div class="cmd-group">
-      <h4>Register the service with Argo</h4>
+      <h4>Registrar el servicio en Argo</h4>
       <pre><span class="c">kubectl</span> apply -f applications/hello-world.yaml
-<span class="c">argocd</span> app sync hello-world   <span style="color:var(--ink-soft)"># optional: don't wait for the automatic refresh</span></pre>
+<span class="c">argocd</span> app sync hello-world   <span style="color:var(--ink-soft)"># opcional: no esperar al refresh automático</span></pre>
     </div>
     <div class="cmd-group">
-      <h4>Verify</h4>
+      <h4>Verificar</h4>
       <pre><span class="c">kubectl</span> -n hello-world get pods
 <span class="c">kubectl</span> -n hello-world port-forward svc/hello-world 8080:8080
 <span class="c">curl</span> http://localhost:8080/hello</pre>
@@ -1143,8 +1143,8 @@ reading_minutes: 13
       <div class="next-item">
         <span class="mark">→</span>
         <div>
-          <h4><a href="../../part-2/gitops-config/">the gitops-config article — The Config Repo: gitops-config</a></h4>
-          <p>The <span class="inline-file">Application</span> resource and the manifests it points at, line by line — plus how to add a second service.</p>
+          <h4><a href="/gitops/gitops-config/es/">el artículo de gitops-config — El repo de configuración: gitops-config</a></h4>
+          <p>El recurso <span class="inline-file">Application</span> y los manifiestos a los que apunta, línea a línea — más cómo añadir un segundo servicio.</p>
         </div>
       </div>
     </div>
@@ -1152,8 +1152,8 @@ reading_minutes: 13
 
 </div>
 
-<dialog class="lightbox-overlay" id="lightbox" aria-label="Screenshot preview">
-  <button class="lightbox-close" type="button" aria-label="Close image">✕</button>
+<dialog class="lightbox-overlay" id="lightbox" aria-label="Vista previa de la captura">
+  <button class="lightbox-close" type="button" aria-label="Cerrar imagen">✕</button>
   <img id="lightbox-img" src="" alt="" />
 </dialog>
 
