@@ -3,6 +3,10 @@ name: Build and deploy Jekyll site to Pages
 on:
   push:
     branches: ["master"]
+  schedule:
+    # 04:00 UTC = 06:00 in Madrid while CEST is active.
+    # This rebuild publishes future-dated posts when their Wednesday arrives.
+    - cron: "0 4 * * 3"
   workflow_dispatch:
 
 permissions:
