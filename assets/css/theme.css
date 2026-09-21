@@ -242,3 +242,163 @@ body {
   html { scroll-behavior: auto; }
   .card { transform: none !important; }
 }
+
+
+/* ==========================================================
+   DevBlog-inspired global shell.
+   Original implementation for this site; no theme assets copied.
+   ========================================================== */
+.devblog-body{min-height:100vh;margin:0;background:var(--bg)!important}
+.devblog-shell{min-height:100vh}
+.devblog-sidebar{
+  position:fixed;inset:0 auto 0 0;z-index:40;width:280px;overflow-y:auto;
+  background:var(--accent);color:var(--accent-ink);
+  box-shadow:8px 0 28px -24px rgba(0,0,0,.45)
+}
+.sidebar-inner{
+  min-height:100%;display:flex;flex-direction:column;align-items:center;
+  padding:38px 28px 30px;text-align:center
+}
+.sidebar-profile{color:inherit;text-decoration:none}
+.sidebar-avatar{
+  display:grid;width:104px;height:104px;margin:0 auto 20px;place-items:center;
+  border:4px solid color-mix(in srgb,var(--accent-ink) 82%,transparent);border-radius:50%;
+  background:color-mix(in srgb,var(--accent-ink) 12%,transparent);
+  font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:2.35rem;font-weight:700
+}
+.sidebar-name{
+  display:block;font-family:"Barlow Condensed","Arial Narrow",sans-serif;
+  font-size:1.65rem;font-weight:700;line-height:1.02
+}
+.sidebar-role{
+  margin:12px 0 0;font-family:"IBM Plex Mono",monospace;font-size:.72rem;
+  font-weight:600;letter-spacing:.1em;text-transform:uppercase;opacity:.82
+}
+.sidebar-bio{margin:18px 0 22px;max-width:25ch;font-size:.84rem;line-height:1.62;opacity:.9}
+.sidebar-nav{
+  width:100%;padding:18px 0;
+  border-top:1px solid color-mix(in srgb,var(--accent-ink) 22%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--accent-ink) 22%,transparent)
+}
+.sidebar-nav a{
+  display:flex;align-items:center;gap:12px;width:100%;padding:10px 12px;border-radius:7px;
+  color:inherit;font-family:"IBM Plex Sans","Segoe UI",sans-serif;font-size:.9rem;
+  font-weight:600;text-align:left;text-decoration:none
+}
+.sidebar-nav a span{width:20px;font-family:"IBM Plex Mono",monospace;text-align:center;opacity:.78}
+.sidebar-nav a:hover,.sidebar-nav a:focus-visible{
+  background:color-mix(in srgb,var(--accent-ink) 14%,transparent);outline:none
+}
+.sidebar-lang{
+  margin-top:20px;padding:8px 11px;border:1px solid color-mix(in srgb,var(--accent-ink) 40%,transparent);
+  border-radius:7px;color:inherit;font-family:"IBM Plex Mono",monospace;font-size:.7rem;text-decoration:none
+}
+.sidebar-stack{
+  margin:auto 0 0;padding-top:24px;font-family:"IBM Plex Mono",monospace;
+  font-size:.62rem;line-height:1.55;opacity:.7
+}
+.devblog-main{min-height:100vh;margin-left:280px;display:flex;flex-direction:column}
+.devblog-content{flex:1;min-width:0}
+
+/* Blog-first home: sidebar + clean article feed. */
+.devblog-body:not(.devblog-article) .wrap{max-width:1060px!important;padding:54px 42px 88px!important}
+.devblog-body:not(.devblog-article) .portfolio-hero{
+  grid-template-columns:1fr!important;padding:0 0 38px!important;margin-bottom:38px!important;
+  background:transparent!important;border:0!important;border-bottom:1px solid var(--line)!important;
+  border-radius:0!important;box-shadow:none!important
+}
+.devblog-body:not(.devblog-article) .portfolio-hero h1{
+  max-width:12ch;font-family:"IBM Plex Sans","Segoe UI",sans-serif!important;
+  font-size:clamp(3rem,7vw,5.35rem)!important;line-height:.98!important;
+  letter-spacing:-.045em!important;text-transform:none!important
+}
+.devblog-body:not(.devblog-article) .hero-role{font-size:1.25rem!important;text-transform:none}
+.devblog-body:not(.devblog-article) .hero-profile,
+.devblog-body:not(.devblog-article) .about,
+.devblog-body:not(.devblog-article) .slider{display:none!important}
+.devblog-body:not(.devblog-article) .layout{
+  grid-template-columns:220px minmax(0,1fr)!important;gap:34px!important
+}
+.devblog-body:not(.devblog-article) .filters{
+  top:28px!important;padding:0 18px 0 0!important;background:transparent!important;
+  border:0!important;border-right:1px solid var(--line)!important;border-radius:0!important;box-shadow:none!important
+}
+.devblog-body:not(.devblog-article) .cards{gap:0!important}
+.devblog-body:not(.devblog-article) .cards>.card{
+  padding:25px 0!important;border:0!important;border-bottom:1px solid var(--line)!important;
+  border-radius:0!important;box-shadow:none!important;background:transparent!important;transform:none!important
+}
+.devblog-body:not(.devblog-article) .cards>.card:first-child{padding-top:0!important}
+.devblog-body:not(.devblog-article) .cards>.card h2{
+  font-family:"IBM Plex Sans","Segoe UI",sans-serif!important;font-size:1.34rem!important;
+  line-height:1.25!important;letter-spacing:-.015em!important;text-transform:none!important
+}
+.devblog-body:not(.devblog-article) .cards>.card .eyebrow{margin-bottom:7px!important;font-size:.66rem!important}
+.devblog-body:not(.devblog-article) .cards>.card .go{font-size:.76rem!important}
+
+/* Articles share one editorial frame, regardless of local post CSS. */
+.devblog-article .meta-bar-wrap{
+  max-width:880px!important;margin:34px auto 0!important;padding:0 34px!important
+}
+.devblog-article .sheet{
+  max-width:880px!important;margin:28px auto 84px!important;padding-left:34px!important;padding-right:34px!important
+}
+.devblog-article .titleblock,.devblog-article .hero{
+  margin-top:0!important;background:transparent!important;border:0!important;
+  border-bottom:1px solid var(--line)!important;border-radius:0!important;box-shadow:none!important;
+  padding:0 0 34px!important
+}
+.devblog-article .titleblock::after{display:none!important}
+.devblog-article .titleblock h1,.devblog-article .hero h1{
+  font-family:"IBM Plex Sans","Segoe UI",sans-serif!important;font-size:clamp(2.35rem,5vw,3.7rem)!important;
+  font-weight:700!important;line-height:1.08!important;letter-spacing:-.035em!important;text-transform:none!important
+}
+.devblog-article .sheet h2{
+  font-family:"IBM Plex Sans","Segoe UI",sans-serif!important;font-size:clamp(1.5rem,3vw,1.95rem)!important;
+  line-height:1.2!important;letter-spacing:-.02em!important;text-transform:none!important
+}
+.devblog-article .sheet h3{text-transform:none!important}
+.devblog-article .sheet section{margin-top:54px!important}
+.devblog-article .article-discovery{max-width:880px!important;padding:0 34px!important}
+.devblog-article .series-nav-card,.devblog-article .related-reading-card{
+  border-radius:7px!important;box-shadow:none!important
+}
+.site-footer{margin-top:auto!important}
+.site-footer-inner{max-width:1060px!important;padding:30px 42px!important}
+.site-header{display:none!important}
+
+@media(max-width:960px){
+  .devblog-sidebar{position:static;width:100%;overflow:visible}
+  .sidebar-inner{
+    min-height:auto;display:grid;grid-template-columns:auto 1fr;align-items:center;
+    gap:8px 18px;padding:18px 22px;text-align:left
+  }
+  .sidebar-profile{display:flex;align-items:center;gap:12px}
+  .sidebar-avatar{width:52px;height:52px;margin:0;border-width:2px;font-size:1.25rem}
+  .sidebar-name{font-size:1.15rem;line-height:1}
+  .sidebar-role{margin:0}
+  .sidebar-bio,.sidebar-stack,.sidebar-lang{display:none}
+  .sidebar-nav{
+    grid-column:1/-1;display:flex;width:auto;gap:4px;padding:10px 0 0;border-top:1px solid
+    color-mix(in srgb,var(--accent-ink) 22%,transparent);border-bottom:0;overflow-x:auto
+  }
+  .sidebar-nav a{width:auto;white-space:nowrap;padding:8px 10px}
+  .devblog-main{margin-left:0}
+  .devblog-body:not(.devblog-article) .wrap{padding:40px 24px 72px!important}
+}
+@media(max-width:720px){
+  .sidebar-inner{display:flex;flex-direction:column;align-items:flex-start}
+  .sidebar-role{margin-left:64px;margin-top:-18px}
+  .sidebar-nav{width:100%}
+  .devblog-body:not(.devblog-article) .portfolio-hero{padding-bottom:28px!important;margin-bottom:28px!important}
+  .devblog-body:not(.devblog-article) .layout{grid-template-columns:1fr!important}
+  .devblog-body:not(.devblog-article) .filters{
+    position:static!important;padding:0 0 22px!important;border-right:0!important;
+    border-bottom:1px solid var(--line)!important
+  }
+  .devblog-article .meta-bar-wrap,.devblog-article .sheet,.devblog-article .article-discovery{
+    padding-left:20px!important;padding-right:20px!important
+  }
+  .devblog-article .sheet{margin-top:22px!important}
+  .site-footer-inner{padding:26px 22px!important}
+}

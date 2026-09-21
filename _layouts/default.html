@@ -56,33 +56,43 @@
 {% endif %}
 {% feed_meta %}
 </head>
-<body>
-<header class="site-header">
-  <div class="site-header-inner">
-    <a class="site-brand" href="{{ '/' | relative_url }}" aria-label="Juan Francisco Fernández Herreros — {% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}">
-      <span class="site-brand-mark" aria-hidden="true">JF</span>
-      <span class="site-brand-copy">
-        <strong>Juan Francisco</strong>
-        <small>Backend Engineer</small>
-      </span>
-    </a>
-    <nav class="site-nav" aria-label="{% if page.lang == 'en' %}Main navigation{% else %}Navegación principal{% endif %}">
-      <a href="{{ '/' | relative_url }}">{% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}</a>
-      <a href="{{ '/#articles' | relative_url }}">{% if page.lang == 'en' %}Articles{% else %}Artículos{% endif %}</a>
-      <a href="{{ '/commands/' | relative_url }}">{% if page.lang == 'en' %}Resources{% else %}Recursos{% endif %}</a>
-      {% if page.lang_url %}<a class="site-lang" href="{{ page.lang_url | relative_url }}">{% if page.lang == 'en' %}ES{% else %}EN{% endif %}</a>{% endif %}
-    </nav>
-  </div>
-</header>
-{{ content }}
-<footer class="site-footer">
-  <div class="site-footer-inner">
-    <div class="footer-brand">
-      <strong>Juan Francisco Fernández Herreros</strong>
-      <span>Backend · Java · Spring Boot · Arquitectura distribuida</span>
+<body class="devblog-body{% if page.layout == 'article' %} devblog-article{% endif %}">
+<div class="devblog-shell">
+  <aside class="devblog-sidebar">
+    <div class="sidebar-inner">
+      <a class="sidebar-profile" href="{{ '/' | relative_url }}" aria-label="Juan Francisco Fernández Herreros — {% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}">
+        <span class="sidebar-avatar" aria-hidden="true">JF</span>
+        <span class="sidebar-name">Juan Francisco<br>Fernández Herreros</span>
+      </a>
+      <p class="sidebar-role">Backend Engineer</p>
+      <p class="sidebar-bio">{% if page.lang == 'en' %}Java, Spring Boot, Kafka and distributed systems. Notes, tutorials and real-world engineering.{% else %}Java, Spring Boot, Kafka y sistemas distribuidos. Apuntes, tutoriales y experiencias reales de ingeniería.{% endif %}</p>
+      <nav class="sidebar-nav" aria-label="{% if page.lang == 'en' %}Main navigation{% else %}Navegación principal{% endif %}">
+        <a href="{{ '/' | relative_url }}"><span aria-hidden="true">⌂</span>{% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}</a>
+        <a href="{{ '/#articles' | relative_url }}"><span aria-hidden="true">✎</span>{% if page.lang == 'en' %}Articles{% else %}Artículos{% endif %}</a>
+        <a href="{{ '/commands/' | relative_url }}"><span aria-hidden="true">⌘</span>{% if page.lang == 'en' %}Resources{% else %}Recursos{% endif %}</a>
+        <a href="https://github.com/juanfranciscofernandezherreros" rel="me"><span aria-hidden="true">↗</span>GitHub</a>
+      </nav>
+      {% if page.lang_url %}
+      <a class="sidebar-lang" href="{{ page.lang_url | relative_url }}">{% if page.lang == 'en' %}Leer en español{% else %}Read in English{% endif %}</a>
+      {% endif %}
+      <p class="sidebar-stack">Java · Spring Boot · Kafka · Microservices · Architecture</p>
     </div>
-    <span class="footer-copy">© {{ site.time | date: '%Y' }} · Construido para compartir conocimiento.</span>
+  </aside>
+
+  <div class="devblog-main">
+    <main class="devblog-content">
+      {{ content }}
+    </main>
+    <footer class="site-footer">
+      <div class="site-footer-inner">
+        <div class="footer-brand">
+          <strong>Juan Francisco Fernández Herreros</strong>
+          <span>Backend · Java · Spring Boot · Arquitectura distribuida</span>
+        </div>
+        <span class="footer-copy">© {{ site.time | date: '%Y' }} · Construido para compartir conocimiento.</span>
+      </div>
+    </footer>
   </div>
-</footer>
+</div>
 </body>
 </html>
