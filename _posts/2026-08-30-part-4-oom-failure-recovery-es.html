@@ -2,15 +2,13 @@
 layout: "article"
 title: "De OOMKilled a un despliegue saludable en Argo CD"
 description: "Un ejercicio práctico de fallo: superar el límite Kubernetes de 100Mi con Spring Boot, entender sincronización frente a salud en Argo CD, hacer fallar la operación y recuperar un único pod saludable."
-og_title: "De OOMKilled a un despliegue saludable en Argo CD — Argo Real World Microservices"
+og_title: "De OOMKilled a un despliegue saludable en Argo CD"
 og_description: "Provocar, diagnosticar, exponer y recuperar una OOM real de arranque en Kubernetes y Argo CD."
-twitter_title: "De OOMKilled a Healthy — Argo Real World Microservices"
+twitter_title: "De OOMKilled a Healthy"
 twitter_description: "Una OOM real en Kubernetes, la semántica de Argo CD y una recuperación verificada."
 permalink: "/argo-real-world-microservices/part-4/oom-failure-recovery/es/"
 lang: "es"
 lang_url: "/argo-real-world-microservices/part-4/oom-failure-recovery/"
-series: "Argo Real World Microservices"
-part: 4
 categories: ["GitOps & Kubernetes"]
 subcategories: ["Incident Recovery"]
 tags: ["argocd","kubernetes","oomkilled","spring-boot","gitops","incident-recovery"]
@@ -27,9 +25,8 @@ reading_minutes: 5
 
 <div class="sheet">
   <div class="titleblock">
-    <p class="back-link"><a href="../../../part-3/crud-automation/es/">← Parte 3 — Generar un microservicio nuevo</a></p>
+    <p class="back-link"><a href="../../../part-3/crud-automation/es/">← Generar un microservicio nuevo</a></p>
     <p class="lang-switch"><a href="../">EN · English</a></p>
-    <p class="eyebrow">Argo Real World Microservices — Parte 4</p>
     <h1>De OOMKilled a Healthy</h1>
     <p class="lede">Rompemos deliberadamente <span class="inline-file">godbyemicroservices</span> bajo un límite de 100Mi, hacemos visible el fallo en Argo CD y recuperamos un único pod estable sin relajar ese límite de Kubernetes.</p>
     <dl class="stamp"><div><dt>Workload</dt><dd>Spring Boot 3</dd></div><div><dt>Límite</dt><dd>100Mi</dd></div><div><dt>Fallo</dt><dd>OOMKilled · 137</dd></div><div><dt>Estado final</dt><dd>Synced · Healthy</dd></div></dl>
@@ -111,5 +108,5 @@ godbyemicroservices   Synced        Healthy
   <section id="commits"><div class="section-head"><span class="num">06</span><h2>Los cambios reales</h2></div>
     <div class="links"><a href="https://github.com/juanfranciscofernandezherreros/gitops-config/commit/1a836d7"><strong>1a836d7 · límite de 100Mi</strong><span>Introdujo el Deployment limitado utilizado en el ejercicio.</span></a><a href="https://github.com/juanfranciscofernandezherreros/gitops-config/commit/a731a49"><strong>a731a49 · puerta de fallo</strong><span>Hook PreSync que hizo fallar la operación por la OOM intencionada.</span></a><a href="https://github.com/juanfranciscofernandezherreros/gitops-config/commit/4fc7726"><strong>4fc7726 · recuperación</strong><span>Eliminó el hook y restauró el Deployment saludable de una réplica.</span></a><a href="https://github.com/juanfranciscofernandezherreros/crud-godbyemicroservices-minimal/commit/59a6bd1"><strong>59a6bd1 · límites JVM iniciales</strong><span>Añadió los primeros límites conservadores de memoria a la imagen.</span></a><a href="https://github.com/juanfranciscofernandezherreros/crud-godbyemicroservices-minimal/commit/244c42c"><strong>244c42c · ajuste final</strong><span>Redujo los máximos JVM hasta estabilizar el pod bajo 100Mi.</span></a></div>
   </section>
-  <section><div class="section-head"><span class="num">07</span><h2>Continúa el laboratorio</h2></div><p>La siguiente parte explica el túnel local utilizado para acceder a Argo CD, la API HTTP y PostgreSQL sin publicar esos servicios fuera de Kubernetes.</p><div class="links"><a href="../../../part-5/kubectl-port-forward/es/"><strong>Parte 5 · kubectl port-forward</strong><span>Puertos locales, ciclo de vida del túnel, DBeaver, curl y diagnóstico.</span></a></div></section>
+  <section><div class="section-head"><span class="num">07</span><h2>Continúa el laboratorio</h2></div><p>El siguiente artículo explica el túnel local utilizado para acceder a Argo CD, la API HTTP y PostgreSQL sin publicar esos servicios fuera de Kubernetes.</p><div class="links"><a href="../../../part-5/kubectl-port-forward/es/"><strong>kubectl port-forward</strong><span>Puertos locales, ciclo de vida del túnel, DBeaver, curl y diagnóstico.</span></a></div></section>
 </div>
