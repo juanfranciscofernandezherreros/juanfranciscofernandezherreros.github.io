@@ -2,15 +2,13 @@
 layout: "article"
 title: "The Config Repo"
 description: "A tour of gitops-config: the repo ArgoCD actually watches. What lives in manifests/ vs applications/, reading the Application resource line by line, and how to add a second service."
-og_title: "The Config Repo — Argo Real World Microservices"
+og_title: "The Config Repo"
 og_description: "A tour of gitops-config: the repo ArgoCD actually watches. What lives in manifests/ vs applications/, reading the Application resource line by line, and how to add a second service."
-twitter_title: "The Config Repo — Argo Real World Microservices"
+twitter_title: "The Config Repo"
 twitter_description: "A tour of gitops-config: what ArgoCD actually watches, and how to add a second service."
 permalink: "/argo-real-world-microservices/part-2/gitops-config/"
 lang: "en"
 lang_url: "/argo-real-world-microservices/part-2/gitops-config/es/"
-series: "Argo Real World Microservices"
-part: 2
 categories: ["GitOps & Kubernetes"]
 subcategories: ["Configuration Management"]
 tags: ["argocd","gitops","kubernetes-manifests","config-repo"]
@@ -153,16 +151,15 @@ reading_minutes: 4
 <div class="sheet">
 
   <div class="titleblock">
-    <p class="back-link"><a href="../../part-1/hello-world-argocd/">← Part 1 — Hello World with ArgoCD</a></p>
+    <p class="back-link"><a href="../../part-1/hello-world-argocd/">← Hello World with ArgoCD</a></p>
     <p class="lang-switch"><a href="es/">ES · Español</a></p>
-    <p class="eyebrow">Argo Real World Microservices — Part 2 of the series</p>
     <h1>The Config Repo: gitops-config</h1>
-    <p class="lede">Part 1 built the microservice and said "the manifests live in a separate repo." This part is that repo: what's actually inside it, why it's shaped the way it is, and how to add a second service without guessing.</p>
+    <p class="lede">the Hello World with ArgoCD article built the microservice and said "the manifests live in a separate repo." This article is that repo: what's actually inside it, why it's shaped the way it is, and how to add a second service without guessing.</p>
   </div>
 
   <section id="recap">
     <div class="section-head"><span class="num">00</span><h2>Where this fits</h2></div>
-    <p class="muted">Two repos, two jobs — <a href="../../part-1/hello-world-argocd/">Part 1, section 02</a> covers this in full. Short version: <span class="inline-file">hello-world-argocd</span> is code, Java, Docker. <span class="inline-file">gitops-config</span> is the "recipe book" — what should exist in the cluster, and it's the only repo ArgoCD's <code class="mono">Application</code> ever points at.</p>
+    <p class="muted">Two repos, two jobs — <a href="../../part-1/hello-world-argocd/">the Hello World with ArgoCD article, section 02</a> covers this in full. Short version: <span class="inline-file">hello-world-argocd</span> is code, Java, Docker. <span class="inline-file">gitops-config</span> is the "recipe book" — what should exist in the cluster, and it's the only repo ArgoCD's <code class="mono">Application</code> ever points at.</p>
   </section>
 
   <section id="folders">
@@ -207,7 +204,7 @@ reading_minutes: 4
       <div class="term"><dt>metadata.namespace</dt><dd><code class="mono">argocd</code> — this object itself lives where Argo lives, not where the app runs. That's a different <code class="mono">namespace</code>, three lines down.</dd></div>
       <div class="term"><dt>source.repoURL + path</dt><dd>This repo, folder <span class="inline-file">manifests/hello-world</span> — the two folders from section 01, pointing at each other.</dd></div>
       <div class="term"><dt>destination.namespace</dt><dd><code class="mono">hello-world</code> — where the <em>app's</em> pods actually run. Created automatically because of <code class="mono">CreateNamespace=true</code> below.</dd></div>
-      <div class="term"><dt>syncPolicy.automated</dt><dd><code class="mono">prune</code> and <code class="mono">selfHeal</code> — explained in full in <a href="../../part-1/hello-world-argocd/#bucle">Part 1, section 03</a>. Without this block, syncing would need a manual <code class="mono">argocd app sync</code> every time.</dd></div>
+      <div class="term"><dt>syncPolicy.automated</dt><dd><code class="mono">prune</code> and <code class="mono">selfHeal</code> — explained in full in <a href="../../part-1/hello-world-argocd/#bucle">the Hello World with ArgoCD article, section 03</a>. Without this block, syncing would need a manual <code class="mono">argocd app sync</code> every time.</dd></div>
     </dl>
   </section>
 
@@ -228,7 +225,7 @@ reading_minutes: 4
       <div class="arch-box arch-full">
         <span class="tag">deployment.yaml</span>
         <h3>Deployment</h3>
-        <p>The one worth reading closely: <code class="mono">image: hello-world:local</code> with <code class="mono">imagePullPolicy: Never</code> — there's no registry in this base (see Part 1, section 08), so the image has to already be sitting on the node via <code class="mono">kind load</code>, and Kubernetes must never try to pull it. It also carries the <code class="mono">readinessProbe</code>/<code class="mono">livenessProbe</code> hitting <span class="inline-file">/actuator/health/*</span> — the thing that makes the ArgoCD UI show <strong>Healthy</strong> instead of just <strong>Synced</strong>.</p>
+        <p>The one worth reading closely: <code class="mono">image: hello-world:local</code> with <code class="mono">imagePullPolicy: Never</code> — there's no registry in this base (see the Hello World with ArgoCD article, section 08), so the image has to already be sitting on the node via <code class="mono">kind load</code>, and Kubernetes must never try to pull it. It also carries the <code class="mono">readinessProbe</code>/<code class="mono">livenessProbe</code> hitting <span class="inline-file">/actuator/health/*</span> — the thing that makes the ArgoCD UI show <strong>Healthy</strong> instead of just <strong>Synced</strong>.</p>
       </div>
     </div>
   </section>
