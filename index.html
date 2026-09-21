@@ -293,7 +293,7 @@ lang: es
   /* ---------- layout: sidebar + main ---------- */
   .layout{
     display:grid;
-    grid-template-columns:240px 1fr;
+    grid-template-columns:270px 1fr;
     gap:28px;
     align-items:start;
   }
@@ -339,6 +339,44 @@ lang: es
     margin-bottom:16px;
   }
   .filter-group:last-of-type{ margin-bottom:0; }
+  .taxonomy-group{
+    display:grid;
+    grid-template-columns:1fr;
+    gap:6px;
+  }
+  .taxonomy-group .taxonomy-pill{
+    width:100%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:7px 10px;
+    border-radius:4px;
+    text-align:left;
+  }
+  .taxonomy-group .filter-name{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+  }
+  .taxonomy-group .filter-count{
+    flex:0 0 auto;
+    min-width:24px;
+    padding:2px 6px;
+    border-radius:999px;
+    background:var(--surface);
+    color:var(--ink-soft);
+    border:1px solid var(--line);
+    font-size:.64rem;
+    line-height:1.2;
+    text-align:center;
+  }
+  .taxonomy-group .taxonomy-pill.active .filter-count{
+    background:color-mix(in srgb, var(--accent-ink) 14%, transparent);
+    color:var(--accent-ink);
+    border-color:color-mix(in srgb, var(--accent-ink) 45%, transparent);
+  }
   .sort-row{ margin-bottom:16px; }
   #sort-select{
     width:100%;
@@ -554,9 +592,9 @@ lang: es
       </div>
 
       <p class="filter-label">Categoría</p>
-      <div class="filter-group" id="category-filters">
-        <button type="button" class="pill active" data-filter-category="all">Todas</button>
-        {% for c in all_categories %}<button type="button" class="pill" data-filter-category="{{ c }}">{{ c }}</button>{% endfor %}
+      <div class="filter-group taxonomy-group" id="category-filters">
+        <button type="button" class="pill taxonomy-pill active" data-filter-category="all">Todas</button>
+        {% for c in all_categories %}<button type="button" class="pill taxonomy-pill" data-filter-category="{{ c }}">{{ c }}</button>{% endfor %}
       </div>
 
       <p class="filter-label">Subcategoría</p>
@@ -565,9 +603,9 @@ lang: es
         {% for s in all_subcategories %}<button type="button" class="pill" data-filter-subcategory="{{ s }}">{{ s }}</button>{% endfor %}
       </div>
 
-      <p class="filter-label">Etiquetas</p>
-      <div class="filter-group" id="tag-filters">
-        {% for t in all_tags %}<button type="button" class="pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
+      <p class="filter-label">Etiquetas principales</p>
+      <div class="filter-group taxonomy-group" id="tag-filters">
+        {% for t in all_tags %}<button type="button" class="pill taxonomy-pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
       </div>
 
       <p class="filter-label">Ordenar por</p>
