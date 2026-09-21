@@ -1,0 +1,95 @@
+---
+layout: "article"
+title: "Spring Security interview guide: filters, authentication, JWT and authorization"
+description: "Detailed Spring Security interview guide covering SecurityFilterChain, authentication and authorization, SecurityContext, JWT, sessions, CSRF, CORS, 401 vs 403, method security and common mistakes."
+permalink: "/java-spring/spring-security-interview/"
+lang: "en"
+lang_url: "/java-spring/spring-security-interview/es/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Spring Security", "Security"]
+tags: ["java","spring","spring-boot","spring-security","security","jwt","authentication","authorization","csrf","cors","interviews"]
+date: "2026-09-23"
+reading_minutes: 18
+---
+<style>
+.interview-note{--panel:var(--surface);--muted:var(--ink-soft);--line:var(--line);--notice:var(--accent-soft);--warn:#8b5a16;--warn-bg:#f7eddd;max-width:940px;margin:36px auto 96px;padding:0 24px}.interview-note .titleblock,.interview-note .card,.interview-note .answer{background:var(--panel);border:1px solid var(--line)}.interview-note .titleblock{position:relative;padding:32px;overflow:hidden}.interview-note .back,.interview-note .lang,.interview-note .eyebrow,.interview-note .num,.interview-note .stamp dt,.interview-note pre,.interview-note code{font-family:"IBM Plex Mono",monospace}.interview-note .back,.interview-note .lang{font-size:.74rem}.interview-note .lang{position:absolute;right:24px;top:20px}.interview-note .eyebrow,.interview-note .num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.interview-note h1,.interview-note h2,.interview-note h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.interview-note .titleblock h1{font-size:clamp(2.35rem,7vw,4rem);line-height:1;max-width:20ch}.interview-note .lede{font-size:1.03rem;color:var(--muted);max-width:68ch}.interview-note .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:16px}.interview-note .stamp>div{padding:12px;background:var(--surface-2);border-radius:8px}.interview-note .stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.interview-note .stamp dd{margin:4px 0 0;font-weight:600}.interview-note section{margin-top:64px}.interview-note .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}.interview-note h2{font-size:clamp(1.6rem,4vw,2rem)}.interview-note h3{font-size:1.12rem;margin-top:30px}.interview-note p,.interview-note li{max-width:74ch;line-height:1.72}.interview-note .answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem;border-radius:10px}.interview-note .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.interview-note .card{padding:17px;border-radius:10px}.interview-note .card h3{margin:0 0 7px}.interview-note .card p{font-size:.93rem;color:var(--muted);margin:0}.interview-note pre{overflow:auto;background:var(--code-bg);color:var(--code-ink);padding:16px;border-radius:10px;line-height:1.55;font-size:.82rem}.interview-note .notice,.interview-note .trap{padding:15px 18px;border-radius:10px}.interview-note .notice{border-left:3px solid var(--accent);background:var(--notice)}.interview-note .trap{border-left:3px solid var(--warn);background:var(--warn-bg)}.interview-note table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.9rem}.interview-note th,.interview-note td{padding:10px 11px;border:1px solid var(--line);text-align:left;vertical-align:top}.interview-note th{background:var(--surface-2)}.interview-note footer{color:var(--muted);border-top:1px solid var(--line);margin-top:52px;padding-top:20px}.interview-note .small{font-size:.9rem}@media(max-width:680px){.interview-note{padding:0 16px}.interview-note .grid,.interview-note .stamp{grid-template-columns:1fr}.interview-note .titleblock{padding:24px 20px}.interview-note .lang{position:static}.interview-note table{display:block;overflow-x:auto}.interview-note p,.interview-note li{text-align:left}}
+</style>
+<div class="sheet interview-note">
+<div class="titleblock"><p class="back"><a href="{{ '/java-spring/spring-boot-error-handling/' | relative_url }}">&larr; Error handling in Spring Boot</a></p><p class="lang"><a href="es/">ES · Español</a></p><p class="eyebrow">Java & Spring · Spring Security</p><h1>Spring Security in interviews</h1><p class="lede">In an interview, knowing how to write a <code>SecurityFilterChain</code> is not enough. A strong answer explains what happens from the moment a request arrives until Spring decides who the caller is, which permissions they have and whether the request may reach the controller.</p><dl class="stamp"><div><dt>Level</dt><dd>Intermediate–advanced</dd></div><div><dt>Scope</dt><dd>Spring Security</dd></div><div><dt>Goal</dt><dd>Understand the full flow</dd></div></dl></div>
+<section id="answer"><div class="head"><span class="num">00</span><h2>The short interview answer</h2></div><p class="answer"><strong>Spring Security protects servlet applications primarily through a chain of filters.</strong> Those filters extract credentials, authenticate the caller, store the result in a <code>SecurityContext</code>, and then authorize the request based on paths, roles, authorities or method rules. Authentication answers “who are you?” while authorization answers “are you allowed to do this?”.</p><p>This mental model unlocks most follow-up questions: where the authenticated principal lives, who validates a password or JWT, why an endpoint returns 401 or 403, and why disabling CSRF without understanding the client model can create a vulnerability.</p></section>
+<section id="filters"><div class="head"><span class="num">01</span><h2>The mental model: a filter chain before the controller</h2></div><p>In a servlet application, a request does not jump directly into the <code>DispatcherServlet</code>. Spring Security integrates a <code>FilterChainProxy</code> that selects a matching <code>SecurityFilterChain</code> and runs its filters.</p><pre>Client
+  │
+  ▼
+Servlet FilterChain
+  │
+  ▼
+DelegatingFilterProxy
+  │
+  ▼
+FilterChainProxy
+  │
+  ▼
+SecurityFilterChain
+  ├─ CSRF / headers
+  ├─ authentication
+  ├─ SecurityContext
+  └─ authorization
+  │
+  ▼
+DispatcherServlet → Controller</pre><p>Ordering matters: authentication must establish an identity before authorization can decide whether it has permission. You do not need to memorize every internal filter, but you should understand the sequence.</p><pre>@Bean
+SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    return http
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/public/**").permitAll()
+            .requestMatchers("/admin/**").hasRole("ADMIN")
+            .anyRequest().authenticated())
+        .httpBasic(Customizer.withDefaults())
+        .build();
+}</pre><p class="notice"><strong>Common interview question:</strong> “What replaces <code>WebSecurityConfigurerAdapter</code>?” Bean-based configuration, typically one or more <code>SecurityFilterChain</code> beans.</p></section>
+<section id="authentication"><div class="head"><span class="num">02</span><h2>Authentication: turn credentials into an identity</h2></div><p>Spring Security represents authentication through <code>Authentication</code>. Before validation it may represent an authentication request; afterwards it represents the authenticated principal.</p><table><thead><tr><th>Component</th><th>Responsibility</th></tr></thead><tbody><tr><td><code>Authentication</code></td><td>Principal, credentials and authorities.</td></tr><tr><td><code>AuthenticationManager</code></td><td>Contract that attempts authentication.</td></tr><tr><td><code>ProviderManager</code></td><td>Common implementation delegating to providers.</td></tr><tr><td><code>AuthenticationProvider</code></td><td>Understands a concrete mechanism: username/password, JWT, etc.</td></tr><tr><td><code>SecurityContext</code></td><td>Contains current authentication.</td></tr><tr><td><code>SecurityContextHolder</code></td><td>Provides access to the current execution's security context.</td></tr></tbody></table><p>For username/password authentication, a common flow loads a user with <code>UserDetailsService</code> and verifies the password through <code>PasswordEncoder</code>.</p><pre>@Bean
+PasswordEncoder passwordEncoder() {
+    return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+}</pre><p class="trap"><strong>Do not confuse hashing with encryption.</strong> Passwords are normally stored with adaptive hashes; authentication does not require decrypting the stored value.</p></section>
+<section id="authorization"><div class="head"><span class="num">03</span><h2>Authorization: identity does not imply permission</h2></div><p>Authentication only establishes that Spring recognizes an identity. Authorization decides whether it may access a resource.</p><pre>.authorizeHttpRequests(auth -> auth
+    .requestMatchers(HttpMethod.GET, "/catalog/**").permitAll()
+    .requestMatchers("/admin/**").hasRole("ADMIN")
+    .requestMatchers("/orders/**").hasAuthority("orders:write")
+    .anyRequest().authenticated()
+)</pre><p><code>hasRole("ADMIN")</code> follows the <code>ROLE_ADMIN</code> convention; <code>hasAuthority</code> compares the stated authority. Authorization can also be applied to methods:</p><pre>@EnableMethodSecurity
+@Configuration
+class SecurityConfig { }
+
+@PreAuthorize("hasAuthority('orders:write')")
+public Order cancel(UUID id) {
+    ...
+}</pre><p>Request authorization protects the HTTP boundary; method security can protect an operation when it is reached through another internal path. They are complementary.</p></section>
+<section id="jwt"><div class="head"><span class="num">04</span><h2>JWT: Spring Security does not become stateless by magic</h2></div><p>A JWT is a signed token format. In a Resource Server API, a client commonly sends <code>Authorization: Bearer ...</code>. Spring validates signature, time constraints and claims according to configuration, maps relevant claims to authorities and creates the authentication.</p><pre>@Bean
+SecurityFilterChain apiSecurity(HttpSecurity http) throws Exception {
+    return http
+        .sessionManagement(session -> session
+            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+        .authorizeHttpRequests(auth -> auth
+            .requestMatchers("/actuator/health").permitAll()
+            .anyRequest().authenticated())
+        .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
+        .build();
+}</pre><div class="grid"><article class="card"><h3>JWT is not encryption</h3><p>A signed JWT provides integrity and authenticity, while its payload is commonly readable. Do not put secrets in it assuming the token hides them.</p></article><article class="card"><h3>Stateless does not mean no state</h3><p>The API may avoid login HttpSession state and still depend on external state for revocation, users, permissions, keys or business data.</p></article></div><p class="trap"><strong>Common mistake:</strong> writing a custom JWT filter for everything when Spring Security already provides OAuth2 Resource Server support. Custom filters need a concrete requirement.</p></section>
+<section id="session"><div class="head"><span class="num">05</span><h2>Session vs JWT: there is no universal winner</h2></div><table><thead><tr><th>Aspect</th><th>Session</th><th>Bearer JWT</th></tr></thead><tbody><tr><td>Login state</td><td>Usually server-side</td><td>Mainly represented by the token</td></tr><tr><td>Immediate revocation</td><td>Easy by invalidating the session</td><td>May require short expiry or additional strategy</td></tr><tr><td>Traditional browser</td><td>Excellent fit with a secure cookie</td><td>Possible, but storage and transport need care</td></tr><tr><td>Service-to-service</td><td>Less common</td><td>Common with OAuth2/OIDC</td></tr></tbody></table><p>A mature answer is not “JWT always scales better”. The choice depends on clients, revocation, infrastructure, identity provider and threat model.</p></section>
+<section id="csrf"><div class="head"><span class="num">06</span><h2>CSRF: why you should not disable it by reflex</h2></div><p>CSRF exploits the fact that a browser can automatically attach credentials associated with another site, especially cookies. If an application authenticates using cookies and accepts state-changing requests, CSRF protection must be considered.</p><p>For an API that receives bearer tokens exclusively through an explicit header, the threat model changes. That is why many stateless APIs disable CSRF, but the correct reasoning is credential transport, not “because it is REST”.</p><pre>http.csrf(csrf -> csrf.disable()); // only when the client model justifies it</pre><p class="notice"><strong>Strong answer:</strong> “I decide CSRF based on how credentials travel. If a browser automatically sends an authenticated cookie, disabling it requires another justified mitigation.”</p></section>
+<section id="cors"><div class="head"><span class="num">07</span><h2>CORS does not authenticate or authorize</h2></div><p>CORS is a browser policy for cross-origin requests. It does not prevent a non-browser client from calling your API and never replaces server-side authorization.</p><pre>@Bean
+CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    config.setAllowedOrigins(List.of("https://app.example.com"));
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE"));
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+}</pre></section>
+<section id="401-403"><div class="head"><span class="num">08</span><h2>401 vs 403</h2></div><div class="grid"><article class="card"><h3>401 Unauthorized</h3><p>The request requires valid authentication and does not have it. Conceptually it is an authentication problem.</p></article><article class="card"><h3>403 Forbidden</h3><p>A valid identity exists but lacks sufficient authorization.</p></article></div><p>In Spring Security, <code>AuthenticationEntryPoint</code> participates when credentials are required, while <code>AccessDeniedHandler</code> handles denied access.</p></section>
+<section id="mistakes"><div class="head"><span class="num">09</span><h2>Common mistakes in real projects</h2></div><div class="grid"><article class="card"><h3>Overly broad permitAll</h3><p>A generic matcher can expose more surface than intended.</p></article><article class="card"><h3>Hard-coded roles</h3><p>They tightly couple security and business logic and make permissions harder to evolve.</p></article><article class="card"><h3>Storing JWTs anywhere</h3><p>Browser storage choices change XSS and CSRF exposure.</p></article><article class="card"><h3>Logging tokens</h3><p>A bearer token is a credential and should not appear in logs or traces.</p></article><article class="card"><h3>Trusting CORS</h3><p>Non-browser clients ignore CORS; server authorization remains mandatory.</p></article><article class="card"><h3>Inventing cryptography</h3><p>Use established mechanisms instead of custom signing or hashing schemes.</p></article></div></section>
+<section id="questions"><div class="head"><span class="num">10</span><h2>Rapid interview questions</h2></div><h3>Where does Spring keep the authenticated user?</h3><p>In an <code>Authentication</code> inside the <code>SecurityContext</code>, normally accessible through <code>SecurityContextHolder</code>.</p><h3>Are authentication and authorization the same?</h3><p>No. Authentication establishes identity; authorization decides what it can do.</p><h3>What is SecurityFilterChain?</h3><p>A chain of security filters applicable to a request. There can be multiple chains and Spring selects the matching one.</p><h3>What does PasswordEncoder do?</h3><p>It encodes and verifies passwords using suitable algorithms, comparing against a hash rather than plain text.</p><h3>When 401 and when 403?</h3><p>401 when valid authentication is missing; 403 when an authenticated caller lacks permission.</p><h3>Would you disable CSRF for an API?</h3><p>Only after analyzing credential transport; returning JSON is not sufficient reason.</p></section>
+<section id="senior"><div class="head"><span class="num">11</span><h2>How I would answer at senior level</h2></div><p class="answer">“I start with the threat model and client type. In a servlet application Spring Security runs a filter chain before the controller. An authentication mechanism creates an <code>Authentication</code>, the result lives in the <code>SecurityContext</code>, and request or method authorization is evaluated afterwards. For OAuth2 APIs I prefer standard Resource Server support before custom JWT filters. I distinguish 401 from 403, decide CSRF from credential transport, and never treat CORS as server-side security. The technical configuration follows the security model, not the other way around.”</p></section>
+<footer><p><strong>Key idea:</strong> memorizing annotations does not prove that you understand Spring Security. The important skill is tracing a request: filters → authentication → <code>SecurityContext</code> → authorization → application.</p><p class="small"><strong>Official references:</strong> <a href="https://docs.spring.io/spring-security/reference/servlet/architecture.html">Servlet Architecture</a>, <a href="https://docs.spring.io/spring-security/reference/servlet/authentication/architecture.html">Authentication Architecture</a> and <a href="https://docs.spring.io/spring-security/reference/servlet/exploits/csrf.html">CSRF</a>.</p></footer>
+</div>
