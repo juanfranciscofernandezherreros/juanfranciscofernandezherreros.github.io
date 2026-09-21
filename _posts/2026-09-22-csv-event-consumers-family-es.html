@@ -1,0 +1,170 @@
+---
+layout: "article"
+title: "Cinco CSV, un mismo contrato Kafka: la familia que completa csv-stats-player-consumer"
+description: "Cómo csv-seassons, csv-stats-match, csv-point-by-point, csv-results y csv-fixtures reutilizan el mismo patrón event-driven para importar distintos contratos CSV en PostgreSQL."
+permalink: "/java-spring/csv-event-consumers-family/es/"
+lang: "es"
+lang_url: ""
+series: "Kafka & Spring Boot in Practice"
+categories: ["Java & Spring"]
+subcategories: ["Event Streaming"]
+tags: ["java","spring-boot","kafka","avro","postgresql","csv","jpa","flyway","event-driven","microservices"]
+date: "2026-09-22"
+reading_minutes: 10
+published: false
+---
+<style>
+.csv-family{--panel:var(--surface);--panel2:var(--surface-2);--line-local:var(--line);--muted:var(--ink-soft);--code-local:var(--code-bg);--code-ink-local:var(--code-ink);max-width:940px;margin:36px auto 96px;padding:0 24px}
+.csv-family .hero,.csv-family .card,.csv-family .callout{background:var(--panel);border:1px solid var(--line-local)}
+.csv-family .hero{padding:clamp(26px,5vw,46px);border-top:5px solid var(--accent)}
+.csv-family .eyebrow,.csv-family .num,.csv-family pre,.csv-family code,.csv-family .badge{font-family:"IBM Plex Mono",monospace}
+.csv-family .eyebrow,.csv-family .num{color:var(--accent);font-size:.76rem;text-transform:uppercase;letter-spacing:.08em}
+.csv-family h1,.csv-family h2,.csv-family h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em}
+.csv-family h1{font-size:clamp(2.4rem,7vw,4.05rem);line-height:.98;max-width:20ch;margin:.2em 0}
+.csv-family h2{font-size:clamp(1.55rem,4vw,2rem);margin:0}.csv-family h3{font-size:1.08rem;margin:0 0 8px}
+.csv-family p,.csv-family li{max-width:72ch;line-height:1.72}.csv-family .lede{font-size:1.06rem;color:var(--muted);max-width:68ch}
+.csv-family section{margin-top:60px}.csv-family .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:20px}
+.csv-family .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:24px 0}.csv-family .flow .card{padding:14px}.csv-family .flow strong{display:block;color:var(--accent);font-size:.78rem;margin-bottom:7px}.csv-family .flow p{font-size:.84rem;line-height:1.45;margin:0;text-align:left}
+.csv-family .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0}.csv-family .card{padding:18px}.csv-family .card p{margin-bottom:0;color:var(--muted)}
+.csv-family .callout{padding:17px 20px;margin:22px 0;border-left:4px solid var(--accent);background:var(--panel2)}
+.csv-family pre{overflow:auto;background:var(--code-local);color:var(--code-ink-local);border:1px solid var(--line-local);padding:17px 18px;line-height:1.55;font-size:.82rem}
+.csv-family table{width:100%;border-collapse:collapse;margin:22px 0;font-size:.9rem}.csv-family th,.csv-family td{border:1px solid var(--line-local);padding:10px;text-align:left;vertical-align:top}.csv-family th{background:var(--panel2)}
+.csv-family .badge{font-size:.72rem;color:var(--accent)}.csv-family footer{margin-top:54px;padding-top:22px;border-top:1px solid var(--line-local);color:var(--muted)}
+@media(max-width:760px){.csv-family{padding:0 16px}.csv-family .flow,.csv-family .grid{grid-template-columns:1fr}.csv-family table{display:block;overflow-x:auto}.csv-family .hero{padding:26px 20px}}
+</style>
+
+<article class="sheet csv-family">
+<header class="hero">
+<p class="eyebrow">Kafka · Spring Boot · CSV · PostgreSQL</p>
+<h1>Cinco CSV distintos, una sola idea arquitectónica</h1>
+<p class="lede">Después de desmontar <a href="{{ '/java-spring/csv-stats-player-consumer/es/' | relative_url }}"><code>csv-stats-player-consumer</code></a>, la pregunta natural era si aquel diseño era una excepción o una pieza de un sistema mayor. Al revisar los otros cinco repositorios aparece la respuesta: todos reutilizan el mismo contrato de evento y la misma frontera transaccional, pero cada uno protege un tipo de dato distinto.</p>
+</header>
+
+<section id="patron">
+<div class="head"><span class="num">01</span><h2>El patrón común: Kafka avisa, el CSV sigue siendo la carga</h2></div>
+<p>Los cinco servicios escuchan el topic configurado como <code>app.kafka.topics.file-ready</code>. La key Avro aporta el <code>uniqueId</code> y el value indica <code>fileType</code> y <code>filePath</code>. Cada consumer descarta los eventos que no le pertenecen y solo procesa su tipo.</p>
+<div class="flow" aria-label="Patrón común de la familia de consumers CSV">
+<div class="card"><strong>01 · FILE READY</strong><p>Un evento Avro anuncia que existe un CSV.</p></div>
+<div class="card"><strong>02 · FILTRO</strong><p>Cada servicio compara su <code>fileType</code>.</p></div>
+<div class="card"><strong>03 · PARSER</strong><p>Valida el contrato específico del fichero.</p></div>
+<div class="card"><strong>04 · JPA</strong><p>Persiste dentro de una transacción.</p></div>
+<div class="card"><strong>05 · EVENT ID</strong><p>Registra el evento para no repetirlo.</p></div>
+</div>
+<p>También comparten Java 21, Spring Boot, PostgreSQL, Flyway y una tabla de eventos procesados. En los importadores de varias filas aparece además el mismo patrón de chunks de 500, <code>saveAllAndFlush()</code> y limpieza del <code>EntityManager</code>.</p>
+<div class="callout"><strong>La idea reusable:</strong> el microservicio no se define por «leer CSV». Se define por ser dueño de un contrato de datos. Kafka solo distribuye la señal; cada consumer protege la interpretación y persistencia de su propio fichero.</div>
+</section>
+
+<section id="mapa">
+<div class="head"><span class="num">02</span><h2>El mapa de responsabilidades</h2></div>
+<table>
+<thead><tr><th>Repositorio</th><th><code>fileType</code></th><th>Contrato principal</th><th>Versión revisada</th></tr></thead>
+<tbody>
+<tr><td><a href="https://github.com/juanfranciscofernandezherreros/csv-seassons"><code>csv-seassons</code></a></td><td><code>SEASONS</code></td><td>País + temporada</td><td>1.0.4</td></tr>
+<tr><td><a href="https://github.com/juanfranciscofernandezherreros/csv-stats-match"><code>csv-stats-match</code></a></td><td><code>MATCH_SUMMARY</code></td><td>Resumen único de un partido, 19 columnas</td><td>1.0.4</td></tr>
+<tr><td><a href="https://github.com/juanfranciscofernandezherreros/csv-point-by-point"><code>csv-point-by-point</code></a></td><td><code>POINT_BY_POINT</code></td><td><code>matchId</code> + marcador secuencial</td><td>1.0.4</td></tr>
+<tr><td><a href="https://github.com/juanfranciscofernandezherreros/csv-results"><code>csv-results</code></a></td><td><code>RESULTS</code></td><td>Resultado y parciales, 16 columnas</td><td>1.0.5</td></tr>
+<tr><td><a href="https://github.com/juanfranciscofernandezherreros/csv-fixtures"><code>csv-fixtures</code></a></td><td><code>FIXTURES</code></td><td>Partido programado, 4 columnas + metadatos del nombre</td><td>1.0.3</td></tr>
+</tbody>
+</table>
+<p>El nombre <code>csv-seassons</code> conserva la grafía del repositorio. Técnicamente, sin embargo, el dominio interno usa <code>Season</code>, <code>SeasonId</code> y <code>SeasonImportService</code>.</p>
+</section>
+
+<section id="seasons">
+<div class="head"><span class="num">03</span><h2>csv-seassons: el catálogo mínimo que alimenta el resto</h2></div>
+<p><a href="https://github.com/juanfranciscofernandezherreros/csv-seassons"><code>csv-seassons</code></a> es el más pequeño de la familia. Su parser exige exactamente dos columnas no vacías: país y <code>seasonSlug</code>. Esa sencillez es importante porque el resultado se convierte en una clave compuesta mediante <code>SeasonId</code>.</p>
+<pre>country,seasonSlug
+usa,nba-2025-2026
+spain,acb-2025-2026</pre>
+<p>El consumer solo acepta <code>SEASONS</code>, procesa por bloques de 500 y registra el <code>eventId</code> cuando toda la importación termina. Es el mismo mecanismo de idempotencia que vimos en estadísticas de jugadores, aplicado a un contrato mucho más pequeño.</p>
+<p>Arquitectónicamente funciona bien como catálogo de trabajo: primero existe una temporada; después otros procesos pueden generar fixtures, resultados o datos de partido asociados a ella.</p>
+</section>
+
+<section id="fixtures-results">
+<div class="head"><span class="num">04</span><h2>Fixtures y results: dos caras del calendario</h2></div>
+<div class="grid">
+<div class="card"><h3>csv-fixtures</h3><p>Importa partidos programados. Cada fila contiene <code>matchId</code>, hora del evento, local y visitante. País y competición se extraen del nombre del fichero antes de persistir.</p></div>
+<div class="card"><h3>csv-results</h3><p>Importa el resultado final y los parciales. Exige 16 columnas y también deriva país y competición del nombre del fichero.</p></div>
+</div>
+<p>En <a href="https://github.com/juanfranciscofernandezherreros/csv-fixtures"><code>csv-fixtures</code></a>, el parser valida cuatro columnas y completa el modelo con metadatos obtenidos del filename. En <a href="https://github.com/juanfranciscofernandezherreros/csv-results"><code>csv-results</code></a>, el contrato es más estricto: el nombre debe seguir el patrón <code>RESULTS_&lt;timestamp&gt;_&lt;country&gt;_&lt;competition&gt;.csv</code>.</p>
+<pre>FIXTURES_*     ──► partido previsto
+RESULTS_*      ──► partido terminado + parciales</pre>
+<p>Ambos servicios convierten el nombre del fichero en parte del dato. Eso reduce columnas repetidas dentro de cada CSV, pero crea una dependencia explícita con la convención de naming. Si cambia el nombre, no solo cambia una ruta: cambia el contrato de entrada.</p>
+</section>
+
+<section id="point-by-point">
+<div class="head"><span class="num">05</span><h2>csv-point-by-point: cuando cada fila es un instante del partido</h2></div>
+<p><a href="https://github.com/juanfranciscofernandezherreros/csv-point-by-point"><code>csv-point-by-point</code></a> tiene un contrato muy estrecho: exactamente dos campos por fila, <code>matchId</code> y <code>score</code>. No intenta reconstruir el significado del marcador dentro del listener; su responsabilidad es validar, mapear y persistir la secuencia.</p>
+<pre>matchId,score
+abc123,2-0
+abc123,2-2
+abc123,5-2</pre>
+<p>El parser omite líneas vacías, rechaza filas incompletas y entrega DTOs en chunks de 500. Después MapStruct convierte cada DTO en entidad y JPA persiste el bloque. La combinación es útil para volúmenes altos: el servicio puede almacenar una cronología larga sin mantener todo el fichero en memoria.</p>
+<p>A diferencia de un resumen final, este modelo conserva el recorrido. Dos partidos pueden terminar 90-88 y haber tenido historias completamente diferentes; el point-by-point mantiene esa información temporal.</p>
+</section>
+
+<section id="match-summary">
+<div class="head"><span class="num">06</span><h2>csv-stats-match: una fila, 19 columnas y una salida hacia otros eventos</h2></div>
+<p><a href="https://github.com/juanfranciscofernandezherreros/csv-stats-match"><code>csv-stats-match</code></a> rompe el patrón de «muchas filas por fichero»: su parser exige exactamente una fila de datos y 19 columnas. De ahí salen fecha, equipos, imágenes, resultado total y parciales.</p>
+<p>El <code>matchId</code> no viene en una columna. Se deriva del nombre del fichero eliminando el prefijo <code>MATCH_SUMMARY_</code> y la extensión <code>.csv</code>. Antes de insertar, el servicio comprueba dos niveles de duplicado: el evento Kafka y la existencia previa de un resumen con ese <code>matchId</code>.</p>
+<p>La diferencia más interesante aparece después de persistir. <code>MatchSummaryNotificationService</code> guarda un estado y publica un evento Avro de éxito; si la importación falla, guarda el estado de error, publica el evento correspondiente y vuelve a propagar la excepción.</p>
+<pre>file.ready
+   │
+   ▼
+MATCH_SUMMARY
+   │
+   ├──► PostgreSQL
+   │
+   ├──► file.success
+   │
+   └──► file.errors</pre>
+<div class="callout"><strong>Aquí el consumer deja de ser un callejón sin salida.</strong> La persistencia genera una nueva señal que otros componentes pueden consumir. El pipeline empieza a comportarse como una cadena de etapas observables.</div>
+</section>
+
+<section id="diferencias">
+<div class="head"><span class="num">07</span><h2>Mismo esqueleto, invariantes diferentes</h2></div>
+<p>Copiar el patrón base no significa copiar las reglas de negocio. Cada servicio protege invariantes propias:</p>
+<table>
+<thead><tr><th>Servicio</th><th>Invariante que no conviene perder</th></tr></thead>
+<tbody>
+<tr><td><code>csv-seassons</code></td><td>Dos columnas obligatorias y clave compuesta país/temporada.</td></tr>
+<tr><td><code>csv-fixtures</code></td><td>Cuatro columnas y metadatos derivados del nombre.</td></tr>
+<tr><td><code>csv-results</code></td><td>16 columnas y filename con timestamp, país y competición.</td></tr>
+<tr><td><code>csv-point-by-point</code></td><td>Dos valores no vacíos por instante y procesamiento por chunks.</td></tr>
+<tr><td><code>csv-stats-match</code></td><td>Una única fila, 19 columnas, deduplicación por <code>matchId</code> y notificación posterior.</td></tr>
+</tbody>
+</table>
+<p>Esto es lo que justifica que existan servicios separados. El valor no está en repartir clases Java arbitrariamente, sino en mantener fronteras donde los contratos, errores y ciclos de evolución son distintos.</p>
+</section>
+
+<section id="tradeoffs">
+<div class="head"><span class="num">08</span><h2>Lo que gana el diseño y lo que cuesta</h2></div>
+<div class="grid">
+<div class="card"><h3>Gana aislamiento</h3><p>Un CSV roto de point-by-point no obliga a cambiar el parser de fixtures ni el esquema de resultados.</p></div>
+<div class="card"><h3>Gana escalado selectivo</h3><p>Los importadores con más volumen pueden desplegarse o dimensionarse de forma independiente.</p></div>
+<div class="card"><h3>Cuesta repetición</h3><p>Listener, idempotencia, configuración Kafka, Flyway y patrón de chunks aparecen en varios repositorios.</p></div>
+<div class="card"><h3>Cuesta coordinación</h3><p>El contrato Avro y las convenciones de nombres deben mantenerse compatibles entre productores y consumidores.</p></div>
+</div>
+<p>Hay una tentación obvia: crear una librería común para abstraer toda la importación. Conviene hacerlo con cuidado. Compartir el contrato técnico —por ejemplo, utilidades de Kafka o observabilidad— puede reducir duplicación; intentar meter todos los parsers y reglas de negocio bajo una abstracción genérica suele ocultar precisamente las diferencias que hacen útil la separación.</p>
+</section>
+
+<section id="modelo">
+<div class="head"><span class="num">09</span><h2>El modelo mental completo</h2></div>
+<pre>SEASONS ───────────────► catálogo de temporadas
+   │
+   ├──► FIXTURES ──────► partidos programados
+   │         │
+   │         └──► RESULTS ───────► marcador y parciales
+   │                    │
+   │                    ├──► POINT_BY_POINT ─► evolución del marcador
+   │                    ├──► MATCH_SUMMARY ───► resumen del partido
+   │                    └──► STATS_PLAYER ─────► estadísticas por jugador
+   │
+   └── todos comparten ─► file.ready + Avro + idempotencia + PostgreSQL</pre>
+<p>No todos esos enlaces son llamadas directas entre servicios; es un modelo de dominio para entender cómo encajan los datasets. La integración real gira alrededor de eventos y ficheros, no de una cadena rígida de llamadas HTTP.</p>
+<p>Visto así, <code>csv-stats-player-consumer</code> deja de ser un importador aislado. Es una especialización dentro de una familia que transforma artefactos CSV heterogéneos en tablas con contratos claros y procesamiento repetible.</p>
+</section>
+
+<footer>
+<p>Este artículo revisa el estado de los repositorios privados <a href="https://github.com/juanfranciscofernandezherreros/csv-seassons"><code>csv-seassons</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-stats-match"><code>csv-stats-match</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-point-by-point"><code>csv-point-by-point</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-results"><code>csv-results</code></a> y <a href="https://github.com/juanfranciscofernandezherreros/csv-fixtures"><code>csv-fixtures</code></a>. Los enlaces requieren autorización mientras sigan siendo privados.</p>
+</footer>
+</article>
