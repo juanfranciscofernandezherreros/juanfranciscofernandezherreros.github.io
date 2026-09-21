@@ -5,8 +5,6 @@ description: "Architecture and operations guide for a local Kafka platform with 
 permalink: "/argo-real-world-microservices/part-8/devtools-kafka/"
 lang: "en"
 lang_url: "/argo-real-world-microservices/part-8/devtools-kafka/es/"
-series: "Argo Real World Microservices"
-part: 8
 categories: ["GitOps & Kubernetes"]
 subcategories: ["Event Streaming"]
 tags: ["kafka","argocd","kubernetes","gitops","schema-registry","zookeeper"]
@@ -18,9 +16,8 @@ reading_minutes: 6
 </style>
 <div class="sheet">
   <div class="titleblock">
-    <p class="back"><a href="../../part-7/postgresql-argocd/">&larr; Part 7 — PostgreSQL in Argo CD</a></p>
+    <p class="back"><a href="../../part-7/postgresql-argocd/">&larr; PostgreSQL in Argo CD</a></p>
     <p class="lang"><a href="es/">ES · Español</a></p>
-    <p class="eyebrow">Argo Real World Microservices — Part 8</p>
     <h1>Local Kafka Platform</h1>
     <p class="lede">Run Kafka, ZooKeeper, Schema Registry, REST Proxy, Kafka UI, and Redpanda Console in Kubernetes while Argo CD continuously reconciles the complete stack from Git.</p>
     <dl class="stamp"><div><dt>Application</dt><dd>devtools-kafka</dd></div><div><dt>Namespace</dt><dd>devtools-kafka</dd></div><div><dt>Cluster</dt><dd>kind-hello-world</dd></div></dl>
@@ -102,6 +99,6 @@ reading_minutes: 6
     <p>The definition is split between <code>applications/devtools-kafka.yaml</code> and the files under <code>manifests/devtools-kafka/</code>: ZooKeeper, Kafka, Schema Registry, REST Proxy, Kafka UI, Redpanda Console, and the PostSync registrar. Git describes the desired state and Argo CD keeps the cluster aligned with it.</p>
   </section>
 
-  <div class="next"><strong>Kafka platform complete</strong><p>The local event platform is now declarative, observable, and ready for microservices to use through stable in-cluster endpoints.</p><a href="../../">Return to the complete course &rarr;</a></div>
+  <div class="next"><strong>Kafka platform complete</strong><p>The local event platform is now declarative, observable, and ready for microservices to use through stable in-cluster endpoints.</p><a href="/">Back to all articles &rarr;</a></div>
   <footer>Technical article from the <a href="https://github.com/juanfranciscofernandezherreros/gitops-config"><code>gitops-config</code> repository</a>.</footer>
 </div>
