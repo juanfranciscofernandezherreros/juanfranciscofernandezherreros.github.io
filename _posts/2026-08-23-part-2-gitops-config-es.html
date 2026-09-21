@@ -2,15 +2,13 @@
 layout: "article"
 title: "El repo de configuración"
 description: "Un recorrido por gitops-config: el repo que ArgoCD vigila de verdad. Qué vive en manifests/ y en applications/, el recurso Application línea a línea, y cómo añadir un segundo servicio."
-og_title: "El repo de configuración — Argo Real World Microservices"
+og_title: "El repo de configuración"
 og_description: "Un recorrido por gitops-config: el repo que ArgoCD vigila de verdad. Qué vive en manifests/ y en applications/, el recurso Application línea a línea, y cómo añadir un segundo servicio."
-twitter_title: "El repo de configuración — Argo Real World Microservices"
+twitter_title: "El repo de configuración"
 twitter_description: "Un recorrido por gitops-config: que vigila ArgoCD de verdad, y cómo añadir un segundo servicio."
 permalink: "/argo-real-world-microservices/part-2/gitops-config/es/"
 lang: "es"
 lang_url: "/argo-real-world-microservices/part-2/gitops-config/"
-series: "Argo Real World Microservices"
-part: 2
 categories: ["GitOps & Kubernetes"]
 subcategories: ["Configuration Management"]
 tags: ["argocd","gitops","kubernetes-manifests","config-repo"]
@@ -153,16 +151,15 @@ reading_minutes: 4
 <div class="sheet">
 
   <div class="titleblock">
-    <p class="back-link"><a href="../../../part-1/hello-world-argocd/es/">← Parte 1 — Hello World con ArgoCD</a></p>
+    <p class="back-link"><a href="../../../part-1/hello-world-argocd/es/">← Hello World con ArgoCD</a></p>
     <p class="lang-switch"><a href="../">EN · English</a></p>
-    <p class="eyebrow">Argo Real World Microservices — Parte 2 de la serie</p>
     <h1>El repo de configuración: gitops-config</h1>
-    <p class="lede">La Parte 1 construyó el microservicio y dijo "los manifiestos viven en un repo aparte". Esta parte es ese repo: qué hay dentro de verdad, por qué tiene esa forma, y cómo añadir un segundo servicio sin adivinar.</p>
+    <p class="lede">La el artículo Hello World con ArgoCD construyó el microservicio y dijo "los manifiestos viven en un repo aparte". Este artículo es ese repo: qué hay dentro de verdad, por qué tiene esa forma, y cómo añadir un segundo servicio sin adivinar.</p>
   </div>
 
   <section id="recap">
     <div class="section-head"><span class="num">00</span><h2>Dónde encaja esto</h2></div>
-    <p class="muted">Dos repos, dos trabajos — <a href="../../../part-1/hello-world-argocd/es/">Parte 1, sección 02</a> lo cubre entero. Versión corta: <span class="inline-file">hello-world-argocd</span> es código, Java, Docker. <span class="inline-file">gitops-config</span> es el "recetario" — lo que debería existir en el clúster, y es el único repo al que apunta el <code class="mono">Application</code> de ArgoCD.</p>
+    <p class="muted">Dos repos, dos trabajos — <a href="../../../part-1/hello-world-argocd/es/">el artículo Hello World con ArgoCD, sección 02</a> lo cubre entero. Versión corta: <span class="inline-file">hello-world-argocd</span> es código, Java, Docker. <span class="inline-file">gitops-config</span> es el "recetario" — lo que debería existir en el clúster, y es el único repo al que apunta el <code class="mono">Application</code> de ArgoCD.</p>
   </section>
 
   <section id="folders">
@@ -207,7 +204,7 @@ reading_minutes: 4
       <div class="term"><dt>metadata.namespace</dt><dd><code class="mono">argocd</code> — este objeto en sí vive donde vive Argo, no donde corre la app. Eso es un <code class="mono">namespace</code> distinto, tres líneas más abajo.</dd></div>
       <div class="term"><dt>source.repoURL + path</dt><dd>Este mismo repo, carpeta <span class="inline-file">manifests/hello-world</span> — las dos carpetas de la sección 01, apuntándose entre sí.</dd></div>
       <div class="term"><dt>destination.namespace</dt><dd><code class="mono">hello-world</code> — donde corren de verdad los pods de la <em>app</em>. Se crea solo gracias a <code class="mono">CreateNamespace=true</code> de abajo.</dd></div>
-      <div class="term"><dt>syncPolicy.automated</dt><dd><code class="mono">prune</code> y <code class="mono">selfHeal</code> — explicados a fondo en la <a href="../../../part-1/hello-world-argocd/es/#bucle">Parte 1, sección 03</a>. Sin este bloque, sincronizar necesitaría un <code class="mono">argocd app sync</code> manual cada vez.</dd></div>
+      <div class="term"><dt>syncPolicy.automated</dt><dd><code class="mono">prune</code> y <code class="mono">selfHeal</code> — explicados a fondo en la <a href="../../../part-1/hello-world-argocd/es/#bucle">el artículo Hello World con ArgoCD, sección 03</a>. Sin este bloque, sincronizar necesitaría un <code class="mono">argocd app sync</code> manual cada vez.</dd></div>
     </dl>
   </section>
 
@@ -228,7 +225,7 @@ reading_minutes: 4
       <div class="arch-box arch-full">
         <span class="tag">deployment.yaml</span>
         <h3>Deployment</h3>
-        <p>El que merece leerse con calma: <code class="mono">image: hello-world:local</code> con <code class="mono">imagePullPolicy: Never</code> — no hay registry en esta base (ver Parte 1, sección 08), así que la imagen tiene que estar ya en el nodo vía <code class="mono">kind load</code>, y Kubernetes nunca debe intentar descargarla. También lleva el <code class="mono">readinessProbe</code>/<code class="mono">livenessProbe</code> apuntando a <span class="inline-file">/actuator/health/*</span> — lo que hace que la UI de ArgoCD muestre <strong>Healthy</strong> y no solo <strong>Synced</strong>.</p>
+        <p>El que merece leerse con calma: <code class="mono">image: hello-world:local</code> con <code class="mono">imagePullPolicy: Never</code> — no hay registry en esta base (ver el artículo Hello World con ArgoCD, sección 08), así que la imagen tiene que estar ya en el nodo vía <code class="mono">kind load</code>, y Kubernetes nunca debe intentar descargarla. También lleva el <code class="mono">readinessProbe</code>/<code class="mono">livenessProbe</code> apuntando a <span class="inline-file">/actuator/health/*</span> — lo que hace que la UI de ArgoCD muestre <strong>Healthy</strong> y no solo <strong>Synced</strong>.</p>
       </div>
     </div>
   </section>
