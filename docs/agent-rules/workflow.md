@@ -14,7 +14,7 @@
 1. Verifica front matter.
 2. Revisa HTML/Liquid y jerarquía de headings.
 3. Revisa rutas, enlaces y anclas.
-4. Comprueba navegación EN/ES y anterior/siguiente.
+4. Comprueba navegación EN/ES y enlaces internos relacionados.
 5. Revisa responsive, accesibilidad y contraste.
 6. Confirma que ejemplos, comandos, tablas, diagramas y texto cuentan la misma historia.
 7. Confirma descubrimiento desde index.html con colección y taxonomías correctas.
@@ -23,7 +23,7 @@
 
 ## Checklist editorial
 
-Antes de terminar, confirma que el título promete algo concreto; la introducción llega rápido al problema; existe un aprendizaje memorable; se explica el porqué; los ejemplos son creíbles; se muestran límites y trade-offs; cada recurso aporta información; la estructura se puede escanear; hay enlaces internos útiles; la conclusión aporta algo; EN y ES tienen la misma calidad cuando ambas existen; funciona en móvil y escritorio; y puede localizarse desde el índice, serie, categoría o tags.
+Antes de terminar, confirma que el título promete algo concreto; la introducción llega rápido al problema; existe un aprendizaje memorable; se explica el porqué; los ejemplos son creíbles; se muestran límites y trade-offs; cada recurso aporta información; la estructura se puede escanear; hay enlaces internos útiles; la conclusión aporta algo; EN y ES tienen la misma calidad cuando ambas existen; funciona en móvil y escritorio; y puede localizarse desde el índice, categoría o tags.
 
 ## Regla de evidencia
 
