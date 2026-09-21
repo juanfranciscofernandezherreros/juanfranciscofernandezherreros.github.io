@@ -517,8 +517,6 @@ lang: es
   {% assign posts = intro_pages | concat: numbered_posts | concat: standalone_posts %}
   {% assign all_series = posts | map: "series" | uniq | sort %}
   {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
-  {% assign all_subcategories = posts | map: "subcategories" | flatten | uniq | sort %}
-  {% assign all_tags = posts | map: "tags" | flatten | uniq | sort %}
 
   <section class="portfolio-hero" aria-labelledby="author-title">
     <div>
@@ -595,28 +593,6 @@ lang: es
       <div class="filter-group taxonomy-group" id="category-filters">
         <button type="button" class="pill taxonomy-pill active" data-filter-category="all">Todas</button>
         {% for c in all_categories %}<button type="button" class="pill taxonomy-pill" data-filter-category="{{ c }}">{{ c }}</button>{% endfor %}
-      </div>
-
-      <p class="filter-label">Subcategoría</p>
-      <div class="filter-group" id="subcategory-filters">
-        <button type="button" class="pill active" data-filter-subcategory="all">Todas</button>
-        {% for s in all_subcategories %}<button type="button" class="pill" data-filter-subcategory="{{ s }}">{{ s }}</button>{% endfor %}
-      </div>
-
-      <p class="filter-label">Etiquetas principales</p>
-      <div class="filter-group taxonomy-group" id="tag-filters">
-        {% for t in all_tags %}<button type="button" class="pill taxonomy-pill" data-filter-tag="{{ t }}">#{{ t }}</button>{% endfor %}
-      </div>
-
-      <p class="filter-label">Ordenar por</p>
-      <div class="sort-row">
-        <select id="sort-select" aria-label="Sort articles">
-          <option value="date-desc">Más recientes</option>
-          <option value="part">Orden de lectura</option>
-          <option value="date-asc">Más antiguos</option>
-          <option value="title-asc">Título A–Z</option>
-          <option value="title-desc">Título Z–A</option>
-        </select>
       </div>
 
       <div class="filters-footer">

@@ -1,23 +1,20 @@
 (function () {
   var PAGE_SIZE = 5;
   var cardsContainer = document.getElementById('cards');
+  if (!cardsContainer) return;
 
-  // Standalone Jekyll pages are not part of site.posts. Add the state-machines
-  // theory page to the same client-side catalogue so it behaves like every
-  // other article in search, filters, sorting and pagination.
-  if (cardsContainer && !cardsContainer.querySelector('[href$="/state-machines/es/"]')) {
+  // Standalone Jekyll pages are not part of site.posts.
+  if (!cardsContainer.querySelector('[href$="/state-machines/es/"]')) {
     var stateMachineCard = document.createElement('a');
     stateMachineCard.className = 'card';
     stateMachineCard.href = '/state-machines/es/';
     stateMachineCard.dataset.series = '';
     stateMachineCard.dataset.categories = 'Concepts & Theory';
-    stateMachineCard.dataset.subcategories = 'Software Architecture,Foundations';
-    stateMachineCard.dataset.tags = 'state-machine,fsm,automata,software-architecture,design,theory';
     stateMachineCard.dataset.search = 'máquinas de estados — fundamentos teóricos introducción teórica a las máquinas de estados finitos: estados, eventos, transiciones, guardas, acciones, determinismo, modelos de mealy y moore, composición y diseño.';
-    stateMachineCard.dataset.part = '9999';
     stateMachineCard.dataset.date = '2026-09-10';
     stateMachineCard.dataset.title = 'Máquinas de estados — Fundamentos teóricos';
-    stateMachineCard.innerHTML = '<p class="eyebrow">Concepts &amp; Theory</p>' +
+    stateMachineCard.innerHTML =
+      '<p class="eyebrow">Concepts &amp; Theory</p>' +
       '<h2>Máquinas de estados — Fundamentos teóricos</h2>' +
       '<p class="desc">Introducción teórica a las máquinas de estados finitos: estados, eventos, transiciones, guardas, acciones, determinismo, modelos de Mealy y Moore, composición y diseño.</p>' +
       '<p class="card-tags">' +
@@ -26,40 +23,20 @@
         '<span class="badge badge-subcat">Foundations</span>' +
         '<span class="badge badge-tag">#state-machine</span>' +
         '<span class="badge badge-tag">#fsm</span>' +
-        '<span class="badge badge-tag">#automata</span>' +
-        '<span class="badge badge-tag">#software-architecture</span>' +
-        '<span class="badge badge-tag">#design</span>' +
-        '<span class="badge badge-tag">#theory</span>' +
       '</p>' +
       '<span class="go">Leer el artículo →</span>';
     cardsContainer.appendChild(stateMachineCard);
   }
 
-  function ensureFilter(containerId, dataAttribute, value, label) {
-    var container = document.getElementById(containerId);
-    if (!container) return;
-    var selector = '[data-' + dataAttribute + ']';
-    var exists = Array.prototype.some.call(container.querySelectorAll(selector), function (btn) {
-      return btn.getAttribute('data-' + dataAttribute) === value;
-    });
-    if (!exists) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'pill';
-      btn.setAttribute('data-' + dataAttribute, value);
-      btn.textContent = label;
-      container.appendChild(btn);
-    }
-  }
-
-  ensureFilter('category-filters', 'filter-category', 'Concepts & Theory', 'Concepts & Theory');
-  ensureFilter('subcategory-filters', 'filter-subcategory', 'Software Architecture', 'Software Architecture');
-  ensureFilter('subcategory-filters', 'filter-subcategory', 'Foundations', 'Foundations');
-  ['state-machine', 'fsm', 'automata', 'software-architecture', 'design', 'theory'].forEach(function (tag) {
-    ensureFilter('tag-filters', 'filter-tag', tag, '#' + tag);
-  });
-
-  var cards = Array.prototype.slice.call(document.querySelectorAll('#cards .card'));
+  var cards = Array.prototype.slice.call(cardsContainer.querySelectorAll('.card'));
+  var seriesButtons = Array.prototype.slice.call(document.querySelectorAll('#series-filters .pill'));
+  var categoryContainer = document.getElementById('category-filters');
+  var categoryButtons = Array.prototype.slice.call(document.querySelectorAll('#category-filters .pill'));
+  var searchInput = document.getElementById('search-input');
+  var emptyState = document.getElementById('empty-state');
+  var resultCount = document.getElementById('result-count');
+  var clearButton = document.getElementById('clear-filters');
+  var pagination = document.getElementById('pagination');
 
   function taxonomyValues(card, key) {
     return (card.dataset[key] || '').split(',').map(function (value) {
@@ -67,13 +44,13 @@
     }).filter(Boolean);
   }
 
-  function taxonomyCount(key, value) {
+  function taxonomyCount(value) {
     return cards.reduce(function (total, card) {
-      return total + (taxonomyValues(card, key).indexOf(value) !== -1 ? 1 : 0);
+      return total + (taxonomyValues(card, 'categories').indexOf(value) !== -1 ? 1 : 0);
     }, 0);
   }
 
-  function setTaxonomyButtonContent(btn, label, count) {
+  function setCategoryButtonContent(btn, label, count) {
     btn.classList.add('taxonomy-pill');
     btn.innerHTML = '';
     var name = document.createElement('span');
@@ -81,81 +58,34 @@
     name.textContent = label;
     var badge = document.createElement('span');
     badge.className = 'filter-count';
-    badge.setAttribute('aria-label', count + (count === 1 ? ' artículo' : ' artículos'));
     badge.textContent = String(count);
+    badge.setAttribute('aria-label', count + (count === 1 ? ' artículo' : ' artículos'));
     btn.appendChild(name);
     btn.appendChild(badge);
   }
 
-  function balanceTaxonomyFilters() {
-    var categoryContainer = document.getElementById('category-filters');
-    var tagContainer = document.getElementById('tag-filters');
-    if (!categoryContainer || !tagContainer) return;
-
-    var categoryButtons = Array.prototype.slice.call(categoryContainer.querySelectorAll('[data-filter-category]'));
-    categoryButtons.forEach(function (btn) {
-      var category = btn.dataset.filterCategory;
-      var count = category === 'all' ? cards.length : taxonomyCount('categories', category);
-      setTaxonomyButtonContent(btn, category === 'all' ? 'Todas' : category, count);
-    });
-
-    var visibleTagCount = categoryButtons.filter(function (btn) {
-      return btn.dataset.filterCategory !== 'all';
-    }).length;
-
-    var counts = {};
-    cards.forEach(function (card) {
-      taxonomyValues(card, 'tags').forEach(function (tag) {
-        counts[tag] = (counts[tag] || 0) + 1;
-      });
-    });
-
-    var rankedTags = Object.keys(counts).sort(function (a, b) {
-      return counts[b] - counts[a] || a.localeCompare(b);
-    });
-
-    var wantedTag = new URLSearchParams(window.location.search).get('tag');
-    var wantedTagName = null;
-    if (wantedTag) {
-      wantedTagName = rankedTags.find(function (tag) {
-        var slug = String(tag).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-        return slug === wantedTag;
-      }) || null;
-    }
-
-    var visibleTags = rankedTags.slice(0, visibleTagCount);
-    if (wantedTagName && visibleTags.indexOf(wantedTagName) === -1 && visibleTagCount > 0) {
-      visibleTags[visibleTags.length - 1] = wantedTagName;
-    }
-
-    tagContainer.innerHTML = '';
-    visibleTags.forEach(function (tag) {
-      var btn = document.createElement('button');
-      btn.type = 'button';
-      btn.className = 'pill taxonomy-pill';
-      btn.setAttribute('data-filter-tag', tag);
-      setTaxonomyButtonContent(btn, '#' + tag, counts[tag]);
-      tagContainer.appendChild(btn);
-    });
+  // Add the category represented only by the standalone theory page.
+  if (categoryContainer && !categoryContainer.querySelector('[data-filter-category="Concepts & Theory"]')) {
+    var conceptButton = document.createElement('button');
+    conceptButton.type = 'button';
+    conceptButton.className = 'pill taxonomy-pill';
+    conceptButton.dataset.filterCategory = 'Concepts & Theory';
+    conceptButton.textContent = 'Concepts & Theory';
+    categoryContainer.appendChild(conceptButton);
+    categoryButtons.push(conceptButton);
   }
 
-  balanceTaxonomyFilters();
-
-  var seriesButtons = Array.prototype.slice.call(document.querySelectorAll('#series-filters .pill'));
-  var categoryButtons = Array.prototype.slice.call(document.querySelectorAll('#category-filters .pill'));
-  var subcategoryButtons = Array.prototype.slice.call(document.querySelectorAll('#subcategory-filters .pill'));
-  var tagButtons = Array.prototype.slice.call(document.querySelectorAll('#tag-filters .pill'));
-  var searchInput = document.getElementById('search-input');
-  var sortSelect = document.getElementById('sort-select');
-  var emptyState = document.getElementById('empty-state');
-  var resultCount = document.getElementById('result-count');
-  var clearButton = document.getElementById('clear-filters');
-  var pagination = document.getElementById('pagination');
+  categoryButtons.forEach(function (btn) {
+    var category = btn.dataset.filterCategory;
+    setCategoryButtonContent(
+      btn,
+      category === 'all' ? 'Todas' : category,
+      category === 'all' ? cards.length : taxonomyCount(category)
+    );
+  });
 
   var activeSeries = 'all';
   var activeCategory = 'all';
-  var activeSubcategory = 'all';
-  var activeTags = new Set();
   var query = '';
   var currentPage = 1;
 
@@ -172,31 +102,18 @@
     });
   }
 
-  var SORT_COMPARATORS = {
-    'part': function (a, b) { return Number(a.dataset.part) - Number(b.dataset.part); },
-    'date-desc': function (a, b) { return b.dataset.date.localeCompare(a.dataset.date); },
-    'date-asc': function (a, b) { return a.dataset.date.localeCompare(b.dataset.date); },
-    'title-asc': function (a, b) { return a.dataset.title.localeCompare(b.dataset.title); },
-    'title-desc': function (a, b) { return b.dataset.title.localeCompare(a.dataset.title); }
-  };
-
-  function sortCards(criterion) {
-    var comparator = SORT_COMPARATORS[criterion] || SORT_COMPARATORS['date-desc'];
-    cards.slice().sort(comparator).forEach(function (card) {
-      cardsContainer.appendChild(card);
-    });
-  }
+  // Blog order is intentionally fixed to newest first.
+  cards.slice().sort(function (a, b) {
+    return (b.dataset.date || '').localeCompare(a.dataset.date || '');
+  }).forEach(function (card) {
+    cardsContainer.appendChild(card);
+  });
 
   function matches(card) {
     var matchesSeries = activeSeries === 'all' || card.dataset.series === activeSeries;
-    var cardCategories = (card.dataset.categories || '').split(',').filter(Boolean);
-    var cardSubcategories = (card.dataset.subcategories || '').split(',').filter(Boolean);
-    var matchesCategory = activeCategory === 'all' || cardCategories.indexOf(activeCategory) !== -1;
-    var matchesSubcategory = activeSubcategory === 'all' || cardSubcategories.indexOf(activeSubcategory) !== -1;
-    var cardTags = (card.dataset.tags || '').split(',').filter(Boolean);
-    var matchesTags = activeTags.size === 0 || cardTags.some(function (t) { return activeTags.has(t); });
+    var matchesCategory = activeCategory === 'all' || taxonomyValues(card, 'categories').indexOf(activeCategory) !== -1;
     var matchesQuery = !query || (card.dataset.search || '').indexOf(query) !== -1;
-    return matchesSeries && matchesCategory && matchesSubcategory && matchesTags && matchesQuery;
+    return matchesSeries && matchesCategory && matchesQuery;
   }
 
   function renderPagination(totalPages) {
@@ -233,10 +150,9 @@
   }
 
   function apply() {
-    var matched = Array.prototype.filter.call(cardsContainer.querySelectorAll('.card'), matches);
+    var matched = cards.filter(matches);
     var totalPages = Math.max(1, Math.ceil(matched.length / PAGE_SIZE));
-    if (currentPage > totalPages) currentPage = totalPages;
-    if (currentPage < 1) currentPage = 1;
+    currentPage = Math.min(Math.max(currentPage, 1), totalPages);
 
     var pageStart = (currentPage - 1) * PAGE_SIZE;
     var visibleSet = matched.slice(pageStart, pageStart + PAGE_SIZE);
@@ -246,9 +162,7 @@
 
     if (emptyState) emptyState.classList.toggle('hidden', matched.length !== 0);
     if (resultCount) {
-      var label = matched.length + (matched.length === 1 ? ' artículo' : ' artículos');
-      if (totalPages > 1) label += ' — página ' + currentPage + ' de ' + totalPages;
-      resultCount.textContent = label;
+      resultCount.textContent = matched.length + (matched.length === 1 ? ' artículo' : ' artículos');
     }
     renderPagination(totalPages);
   }
@@ -271,41 +185,9 @@
     });
   });
 
-  subcategoryButtons.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      activeSubcategory = btn.dataset.filterSubcategory;
-      setActiveSingle(subcategoryButtons, activeSubcategory, 'filterSubcategory');
-      currentPage = 1;
-      apply();
-    });
-  });
-
-  tagButtons.forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      var tag = btn.dataset.filterTag;
-      if (activeTags.has(tag)) {
-        activeTags.delete(tag);
-        btn.classList.remove('active');
-      } else {
-        activeTags.add(tag);
-        btn.classList.add('active');
-      }
-      currentPage = 1;
-      apply();
-    });
-  });
-
   if (searchInput) {
     searchInput.addEventListener('input', function () {
       query = searchInput.value.trim().toLowerCase();
-      currentPage = 1;
-      apply();
-    });
-  }
-
-  if (sortSelect) {
-    sortSelect.addEventListener('change', function () {
-      sortCards(sortSelect.value);
       currentPage = 1;
       apply();
     });
@@ -315,58 +197,25 @@
     clearButton.addEventListener('click', function () {
       activeSeries = 'all';
       activeCategory = 'all';
-      activeSubcategory = 'all';
-      activeTags.clear();
       query = '';
-      if (searchInput) searchInput.value = '';
-      if (sortSelect) sortSelect.value = 'date-desc';
+      searchInput.value = '';
       setActiveSingle(seriesButtons, 'all', 'filterSeries');
       setActiveSingle(categoryButtons, 'all', 'filterCategory');
-      setActiveSingle(subcategoryButtons, 'all', 'filterSubcategory');
-      tagButtons.forEach(function (btn) { btn.classList.remove('active'); });
-      sortCards('date-desc');
       currentPage = 1;
       apply();
     });
   }
 
-  // Pre-select from taxonomy or sort query params, e.g. links from an article's badge bar.
-  var params = new URLSearchParams(window.location.search);
-  var wantedCategory = params.get('category');
-  var wantedSubcategory = params.get('subcategory');
-  var wantedTag = params.get('tag');
-  var wantedSort = params.get('sort');
-
+  // Keep category links from article taxonomy working.
+  var wantedCategory = new URLSearchParams(window.location.search).get('category');
   if (wantedCategory) {
-    var catMatch = categoryButtons.find(function (btn) {
+    var categoryMatch = categoryButtons.find(function (btn) {
       return btn.dataset.filterCategory !== 'all' && slugify(btn.dataset.filterCategory) === wantedCategory;
     });
-    if (catMatch) {
-      activeCategory = catMatch.dataset.filterCategory;
+    if (categoryMatch) {
+      activeCategory = categoryMatch.dataset.filterCategory;
       setActiveSingle(categoryButtons, activeCategory, 'filterCategory');
     }
-  }
-  if (wantedTag) {
-    var tagMatch = tagButtons.find(function (btn) { return slugify(btn.dataset.filterTag) === wantedTag; });
-    if (tagMatch) {
-      activeTags.add(tagMatch.dataset.filterTag);
-      tagMatch.classList.add('active');
-    }
-  }
-  if (wantedSubcategory) {
-    var subcatMatch = subcategoryButtons.find(function (btn) {
-      return btn.dataset.filterSubcategory !== 'all' && slugify(btn.dataset.filterSubcategory) === wantedSubcategory;
-    });
-    if (subcatMatch) {
-      activeSubcategory = subcatMatch.dataset.filterSubcategory;
-      setActiveSingle(subcategoryButtons, activeSubcategory, 'filterSubcategory');
-    }
-  }
-  if (wantedSort && SORT_COMPARATORS[wantedSort]) {
-    if (sortSelect) sortSelect.value = wantedSort;
-    sortCards(wantedSort);
-  } else {
-    sortCards('date-desc');
   }
 
   apply();
