@@ -1,27 +1,15 @@
 # Estructura, bilingüismo y descubrimiento
 
-## Series y continuidad
+## Estructura y continuidad
 
-Los artículos de Argo Real World Microservices viven en _posts/ y usan:
-
-    /argo-real-world-microservices/part-N/<slug-descriptivo>/
-    /argo-real-world-microservices/part-N/<slug-descriptivo>/es/
-
-Nunca uses /part-N/ a secas. El slug debe ser el mismo en EN y ES; solo cambia /es/.
-
-Nombres de archivo:
-
-    _posts/YYYY-MM-DD-part-N-<slug>.html
-    _posts/YYYY-MM-DD-part-N-<slug>-es.html
-
-Cada parte debe funcionar por sí sola y encajar en la historia global. La navegación anterior/siguiente debe formar una cadena correcta.
-
-Los artículos independientes usan una URL temática estable:
+Los artículos viven en `_posts/` y deben usar URLs estables y descriptivas. Conserva los permalinks existentes para no romper enlaces. Para contenido nuevo, prefiere rutas temáticas:
 
     /<tema>/<slug>/
     /<tema>/<slug>/es/
 
-Incluye series cuando el artículo pertenezca a una familia reconocible.
+Cada artículo debe funcionar por sí solo. Los enlaces a otros artículos deben ser contextuales y describir el contenido enlazado, sin depender de numeración editorial.
+
+Incluye `series` solo cuando el artículo pertenezca realmente a una familia editorial reconocible y no necesite numeración para entenderse.
 
 ## Bilingüismo
 
@@ -31,7 +19,7 @@ Ninguna versión debe sentirse secundaria. Si solo existe un idioma por decisió
 
 ## Front matter
 
-Todo post debe incluir como mínimo: layout, title, description, permalink, lang, lang_url, series, categories, subcategories, tags, date y reading_minutes. Los artículos del curso añaden part.
+Todo post debe incluir como mínimo: layout, title, description, permalink, lang, lang_url, categories, subcategories, tags, date y reading_minutes. `series` es opcional y solo se usa cuando aporta una agrupación editorial útil.
 
 lang_url usa rutas absolutas desde la raíz. reading_minutes se estima sobre texto visible real a unas 200 palabras/minuto, redondeando hacia arriba y con mínimo 3. No dupliques metadatos og_* o twitter_* sin aportar una variante útil.
 
@@ -55,6 +43,6 @@ Cuando exista una relación real, enlaza contenido previo o posterior de forma c
 
 Todo artículo nuevo debe ser descubrible desde el índice principal. Publicar en _posts/ no basta.
 
-index.html construye el catálogo a partir de posts en español y del front matter. Comprueba que lang es es en la versión española; series/categories/subcategories/tags permiten encontrarla; título y descripción funcionan en tarjeta/carrusel; las series están conectadas; lang_url enlaza la pareja; y tras una build real la URL aparece en la portada generada.
+index.html construye el catálogo a partir de posts en español y del front matter. Comprueba que `lang` es `es` en la versión española; categories/subcategories/tags permiten encontrarla; título y descripción funcionan en tarjeta/carrusel; `lang_url` enlaza la pareja; y tras una build real la URL aparece en la portada generada.
 
 No des por terminado un artículo que quede huérfano.
