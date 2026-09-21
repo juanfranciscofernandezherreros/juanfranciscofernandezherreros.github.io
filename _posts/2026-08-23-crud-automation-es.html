@@ -1,14 +1,14 @@
 ---
 layout: "article"
-title: "Generating a New Microservice"
-description: "Using crud-automation's minimal architecture to generate a brand new microservice, publish it, and onboard it into the same GitOps pattern from the gitops-config article — with real terminal output for every step."
-og_title: "Generating a New Microservice"
-og_description: "Using crud-automation's minimal architecture to generate a brand new microservice, publish it, and onboard it into the same GitOps pattern from the gitops-config article — with real terminal output for every step."
-twitter_title: "Generating a New Microservice"
-twitter_description: "Generate, publish, and onboard a new microservice into the same GitOps pattern — real terminal output for every step."
-permalink: "/argo-real-world-microservices/part-3/crud-automation/"
-lang: "en"
-lang_url: "/argo-real-world-microservices/part-3/crud-automation/es/"
+title: "Generar un microservicio nuevo"
+description: "Usando la arquitectura minimal de crud-automation para generar un microservicio nuevo, publicarlo, e integrarlo en el mismo patrón GitOps de la el artículo de gitops-config — con salida real de terminal en cada paso."
+og_title: "Generar un microservicio nuevo"
+og_description: "Usando la arquitectura minimal de crud-automation para generar un microservicio nuevo, publicarlo, e integrarlo en el mismo patrón GitOps de la el artículo de gitops-config — con salida real de terminal en cada paso."
+twitter_title: "Generar un microservicio nuevo"
+twitter_description: "Generar, publicar e integrar un microservicio nuevo en el mismo patrón GitOps — salida real de terminal en cada paso."
+permalink: "/automation/crud-automation/es/"
+lang: "es"
+lang_url: "/automation/crud-automation/"
 categories: ["Automation"]
 subcategories: ["Code Generation"]
 tags: ["crud-automation","code-generation","microservices","gitops","argocd"]
@@ -435,205 +435,205 @@ reading_minutes: 5
 <div class="sheet">
 
   <div class="titleblock">
-    <p class="back-link"><a href="../../part-2/gitops-config/">← The Config Repo: gitops-config</a></p>
-    <p class="lang-switch"><a href="es/">ES · Español</a></p>
-    <h1>Generating a New Microservice</h1>
-    <p class="lede">Parts 1 and 2 built one service by hand and explained the repo that watches it. This article generates a second, completely different service with a tool — <span class="inline-file">crud-automation</span> — and walks it through the exact same onboarding, end to end, with the real terminal output of every step.</p>
+    <p class="back-link"><a href="/gitops/gitops-config/es/">← El repo de configuración: gitops-config</a></p>
+    <p class="lang-switch"><a href="../">EN · English</a></p>
+    <h1>Generar un microservicio nuevo</h1>
+    <p class="lede">Las Partes 1 y 2 construyeron un servicio a mano y explicaron el repo que lo vigila. Este artículo genera un segundo servicio, completamente distinto, con una herramienta — <span class="inline-file">crud-automation</span> — y lo lleva por exactamente la misma integración, de principio a fin, con la salida real de terminal de cada paso.</p>
     <dl class="stamp">
       <div>
-        <dt>Generator</dt>
+        <dt>Generador</dt>
         <dd class="mono">crud-automation</dd>
       </div>
       <div>
-        <dt>New service</dt>
+        <dt>Servicio nuevo</dt>
         <dd class="mono">godbyemicroservices</dd>
       </div>
       <div>
-        <dt>Architecture</dt>
+        <dt>Arquitectura</dt>
         <dd class="mono">minimal</dd>
       </div>
       <div>
-        <dt>Verified state</dt>
+        <dt>Estado verificado</dt>
         <dd class="pill"><span class="dot"></span>Synced · Healthy</dd>
       </div>
     </dl>
   </div>
 
   <section id="what">
-    <div class="section-head"><span class="num">00</span><h2>What this article covers</h2></div>
-    <p class="muted">Building <span class="inline-file">hello-world-argocd</span> by hand in the Hello World with ArgoCD article was the point — it's how you learn what each file actually does. But a real team doesn't hand-write every microservice from scratch. This article uses <a href="https://github.com/juanfranciscofernandezherreros/crud-automation"><span class="inline-file">crud-automation</span></a>, a Python generator, to produce a brand new service with the exact same shape, then runs it through the same onboarding as the gitops-config article — copy the manifests pattern, register the <code class="mono">Application</code>, done.</p>
+    <div class="section-head"><span class="num">00</span><h2>Qué cubre este artículo</h2></div>
+    <p class="muted">Construir <span class="inline-file">hello-world-argocd</span> a mano en la el artículo Hello World con ArgoCD tenía sentido — es cómo aprendes qué hace de verdad cada fichero. Pero un equipo real no escribe a mano cada microservicio desde cero. Este artículo usa <a href="https://github.com/juanfranciscofernandezherreros/crud-automation"><span class="inline-file">crud-automation</span></a>, un generador en Python, para producir un servicio nuevo con exactamente la misma forma, y lo lleva por la misma integración de la el artículo de gitops-config — copiar el patrón de manifiestos, registrar el <code class="mono">Application</code>, listo.</p>
   </section>
 
   <section id="generator">
-    <div class="section-head"><span class="num">01</span><h2>The generator: --architecture minimal</h2></div>
-    <p class="muted"><span class="inline-file">crud-automation</span> normally generates full CRUD microservices — Postgres, Flyway, MapStruct, security, observability. Its <code class="mono">minimal</code> architecture is the odd one out: it ignores the entity's fields entirely and produces the same bare skeleton as <span class="inline-file">hello-world-argocd</span> instead — one endpoint, no database, no security, no observability. Meant for exactly this: a new service that's going to be wired into GitOps, not a CRUD API.</p>
+    <div class="section-head"><span class="num">01</span><h2>El generador: --architecture minimal</h2></div>
+    <p class="muted"><span class="inline-file">crud-automation</span> normalmente genera microservicios CRUD completos — Postgres, Flyway, MapStruct, seguridad, observabilidad. Su arquitectura <code class="mono">minimal</code> es la excepción: ignora por completo los campos de la entidad y produce el mismo esqueleto desnudo que <span class="inline-file">hello-world-argocd</span> — un endpoint, sin base de datos, sin seguridad, sin observabilidad. Pensada exactamente para esto: un servicio nuevo que se va a enganchar a GitOps, no una API CRUD.</p>
     <dl class="glossary-grid" style="margin-top:20px;">
       <div class="term-card">
-        <dt>Entity name</dt>
-        <dd>Becomes the project folder (<code class="mono">crud-&lt;name&gt;-minimal</code>), the Java class names, and the single endpoint's path. Here: <code class="mono">GodbyeMicroservices</code>.</dd>
+        <dt>Nombre de la entidad</dt>
+        <dd>Se convierte en la carpeta del proyecto (<code class="mono">crud-&lt;nombre&gt;-minimal</code>), los nombres de las clases Java, y la ruta del único endpoint. Aquí: <code class="mono">GodbyeMicroservices</code>.</dd>
       </div>
       <div class="term-card">
-        <dt>Fields</dt>
-        <dd>Still required by the command's syntax, but completely ignored by this architecture — there's no CRUD to build them into.</dd>
+        <dt>Campos</dt>
+        <dd>Siguen siendo obligatorios por la sintaxis del comando, pero esta arquitectura los ignora por completo — no hay CRUD en el que meterlos.</dd>
       </div>
     </dl>
   </section>
 
   <section id="walkthrough">
-    <div class="section-head"><span class="num">02</span><h2>Terminal walkthrough — generate, verify, publish, onboard</h2></div>
-    <p class="muted">Every screenshot below is real output from generating this exact service, right before writing this page — same order you'd run it in.</p>
+    <div class="section-head"><span class="num">02</span><h2>Recorrido por la terminal — generar, verificar, publicar, integrar</h2></div>
+    <p class="muted">Cada captura de abajo es salida real de generar este mismo servicio, justo antes de escribir esta página — en el mismo orden en que lo ejecutarías.</p>
     <div class="evidence" style="margin-top:22px;">
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/01-terminal-output-of-generate-crud-py-with-the-minimal.png' | relative_url }}" alt="Terminal output of generate_crud.py with the minimal architecture" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/01-terminal-output-of-generate-crud-py-with-the-minimal.png' | relative_url }}" alt="Salida de terminal de generate_crud.py con la arquitectura minimal" /></div>
         <div>
-          <p class="step-idx">1 — generate it</p>
-          <h4>generate_crud.py GodbyeMicroservices "id:int" --architecture minimal</h4>
-          <p>One command. The fields (<code class="mono">id:int</code>) are only there to satisfy the CLI's syntax — this architecture never reads them.</p>
+          <p class="step-idx">1 — generarlo</p>
+          <h3>generate_crud.py GodbyeMicroservices "id:int" --architecture minimal</h3>
+          <p>Un solo comando. Los campos (<code class="mono">id:int</code>) solo están para cumplir la sintaxis del CLI — esta arquitectura nunca los lee.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/02-file-tree-of-the-generated-crud-godbyemicroservices.png' | relative_url }}" alt="File tree of the generated crud-godbyemicroservices-minimal project" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/02-file-tree-of-the-generated-crud-godbyemicroservices.png' | relative_url }}" alt="Árbol de ficheros del proyecto crud-godbyemicroservices-minimal generado" /></div>
         <div>
-          <p class="step-idx">2 — what came out</p>
-          <h4>8 files, all under app/</h4>
-          <p>Same shape as <span class="inline-file">hello-world-argocd</span>: <code class="mono">pom.xml</code>, one Application class, one Controller, one test, a Dockerfile. Nothing else.</p>
+          <p class="step-idx">2 — lo que salió</p>
+          <h3>8 ficheros, todos bajo app/</h3>
+          <p>La misma forma que <span class="inline-file">hello-world-argocd</span>: <code class="mono">pom.xml</code>, una clase Application, un Controller, un test, un Dockerfile. Nada más.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/03-terminal-output-of-mvn-test-on-the-generated-project.png' | relative_url }}" alt="Terminal output of mvn test on the generated project" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/03-terminal-output-of-mvn-test-on-the-generated-project.png' | relative_url }}" alt="Salida de terminal de mvn test sobre el proyecto generado" /></div>
         <div>
-          <p class="step-idx">3 — it actually compiles and passes</p>
-          <h4>mvn test</h4>
-          <p>Generated code is worth nothing if it doesn't build. Spring context starts, the one controller test passes, exit code 0.</p>
+          <p class="step-idx">3 — compila y pasa de verdad</p>
+          <h3>mvn test</h3>
+          <p>El código generado no vale nada si no compila. El contexto de Spring arranca, el único test del controller pasa, código de salida 0.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/04-terminal-output-of-docker-build-for-the-new-service.png' | relative_url }}" alt="Terminal output of docker build for the new service" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/04-terminal-output-of-docker-build-for-the-new-service.png' | relative_url }}" alt="Salida de terminal de docker build para el servicio nuevo" /></div>
         <div>
-          <p class="step-idx">4 — build the image</p>
-          <h4>docker build -t godbyemicroservices:local app</h4>
-          <p>Identical step to the Hello World with ArgoCD article, section 05 — just a different image name.</p>
+          <p class="step-idx">4 — construir la imagen</p>
+          <h3>docker build -t godbyemicroservices:local app</h3>
+          <p>El mismo paso que la el artículo Hello World con ArgoCD, sección 05 — solo cambia el nombre de la imagen.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/05-terminal-output-of-kind-load-docker-image-for-the-new.png' | relative_url }}" alt="Terminal output of kind load docker-image for the new service" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/05-terminal-output-of-kind-load-docker-image-for-the-new.png' | relative_url }}" alt="Salida de terminal de kind load docker-image para el servicio nuevo" /></div>
         <div>
-          <p class="step-idx">5 — get it into the cluster</p>
-          <h4>kind load docker-image godbyemicroservices:local --name hello-world</h4>
-          <p>Same cluster as <span class="inline-file">hello-world</span> — one <code class="mono">kind</code> cluster is happily running two independent services.</p>
+          <p class="step-idx">5 — meterla en el clúster</p>
+          <h3>kind load docker-image godbyemicroservices:local --name hello-world</h3>
+          <p>El mismo clúster que <span class="inline-file">hello-world</span> — un único clúster de <code class="mono">kind</code> corriendo felizmente dos servicios independientes.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/06-terminal-output-publishing-the-new-repo-to-github.png' | relative_url }}" alt="Terminal output publishing the new repo to GitHub" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/06-terminal-output-publishing-the-new-repo-to-github.png' | relative_url }}" alt="Salida de terminal publicando el repo nuevo en GitHub" /></div>
         <div>
-          <p class="step-idx">6 — publish the code repo</p>
-          <h4>crud_generator.github_repo.push_to_github(...)</h4>
-          <p>The same function <code class="mono">--github</code> calls on the CLI, run directly since the project already existed: <code class="mono">git init</code> + commit + <code class="mono">gh repo create --push</code>, plus fixing the new repo's Actions permissions.</p>
+          <p class="step-idx">6 — publicar el repo de código</p>
+          <h3>crud_generator.github_repo.push_to_github(...)</h3>
+          <p>La misma función que llama <code class="mono">--github</code> en el CLI, ejecutada directamente porque el proyecto ya existía: <code class="mono">git init</code> + commit + <code class="mono">gh repo create --push</code>, más el arreglo de permisos de Actions del repo nuevo.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/07-terminal-output-registering-the-application-with-argocd.png' | relative_url }}" alt="Terminal output registering the Application with ArgoCD" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/07-terminal-output-registering-the-application-with-argocd.png' | relative_url }}" alt="Salida de terminal registrando el Application en ArgoCD" /></div>
         <div>
-          <p class="step-idx">7 — register with Argo</p>
-          <h4>kubectl apply -f applications/godbyemicroservices.yaml</h4>
-          <p>Exactly the pattern from the gitops-config article, section 04: a copy of <span class="inline-file">manifests/hello-world/</span> and <span class="inline-file">applications/hello-world.yaml</span>, three fields changed. <code class="mono">Synced</code> and <code class="mono">Healthy</code> within seconds.</p>
+          <p class="step-idx">7 — registrarlo en Argo</p>
+          <h3>kubectl apply -f applications/godbyemicroservices.yaml</h3>
+          <p>Exactamente el patrón de la el artículo de gitops-config, sección 04: una copia de <span class="inline-file">manifests/hello-world/</span> y <span class="inline-file">applications/hello-world.yaml</span>, tres campos cambiados. <code class="mono">Synced</code> y <code class="mono">Healthy</code> en segundos.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/08-terminal-output-of-the-final-pod-and-curl-verification.png' | relative_url }}" alt="Terminal output of the final pod and curl verification" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/08-terminal-output-of-the-final-pod-and-curl-verification.png' | relative_url }}" alt="Salida de terminal de la verificación final con pod y curl" /></div>
         <div>
-          <p class="step-idx">8 — final proof</p>
-          <h4>kubectl get pods + curl</h4>
-          <p>The pod is <code class="mono">Running</code>, and the generated endpoint answers with the entity's own name baked in — proof this isn't a copy of <span class="inline-file">hello-world</span>, it's a distinct generated service.</p>
+          <p class="step-idx">8 — prueba final</p>
+          <h3>kubectl get pods + curl</h3>
+          <p>El pod está <code class="mono">Running</code>, y el endpoint generado responde con el propio nombre de la entidad incrustado — prueba de que esto no es una copia de <span class="inline-file">hello-world</span>, es un servicio generado distinto.</p>
         </div>
       </div>
     </div>
   </section>
 
   <section id="proof">
-    <div class="section-head"><span class="num">03</span><h2>Proof it works — in the ArgoCD UI</h2></div>
-    <p class="muted">Same four checks as the Hello World with ArgoCD article, section 06 — this time against <span class="inline-file">godbyemicroservices</span>, taken right after the "not showing up" question got resolved by refreshing the browser tab.</p>
+    <div class="section-head"><span class="num">03</span><h2>Prueba de que funciona — en la UI de ArgoCD</h2></div>
+    <p class="muted">Las mismas cuatro comprobaciones que la el artículo Hello World con ArgoCD, sección 06 — esta vez contra <span class="inline-file">godbyemicroservices</span>, tomadas justo después de resolver la duda de "no aparece" recargando la pestaña del navegador.</p>
     <div class="evidence" style="margin-top:22px;">
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/09-json-response-from-the-godbyemicroservices-endpoint-in.png' | relative_url }}" alt="JSON response from the godbyemicroservices endpoint in the browser" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/09-json-response-from-the-godbyemicroservices-endpoint-in.png' | relative_url }}" alt="Respuesta JSON del endpoint godbyemicroservices en el navegador" /></div>
         <div>
-          <p class="step-idx">Step 1 — the microservice responds</p>
+          <p class="step-idx">Paso 1 — el microservicio responde</p>
           <h4>GET http://localhost:8082/godbyemicroservices</h4>
-          <p>{"message":"Hello from GodbyeMicroservices"} — a second, independent microservice running on the same cluster.</p>
+          <p>{"message":"Hello from GodbyeMicroservices"} — un segundo microservicio, independiente, corriendo en el mismo clúster.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/10-argocd-login-screen.png' | relative_url }}" alt="ArgoCD login screen" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/10-argocd-login-screen.png' | relative_url }}" alt="Pantalla de login de ArgoCD" /></div>
         <div>
-          <p class="step-idx">Step 2 — Argo login screen</p>
+          <p class="step-idx">Paso 2 — pantalla de login de Argo</p>
           <h4>https://localhost:8081</h4>
-          <p>Same ArgoCD instance as the Hello World with ArgoCD article — one install watching both <span class="inline-file">hello-world</span> and this new service.</p>
+          <p>La misma instancia de ArgoCD que la el artículo Hello World con ArgoCD — una sola instalación vigilando tanto <span class="inline-file">hello-world</span> como este servicio nuevo.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/11-argocd-applications-panel-showing-both-hello-world-and.png' | relative_url }}" alt="ArgoCD Applications panel showing both hello-world and godbyemicroservices as Healthy and Synced" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/11-argocd-applications-panel-showing-both-hello-world-and.png' | relative_url }}" alt="Panel de Applications de ArgoCD mostrando hello-world y godbyemicroservices como Healthy y Synced" /></div>
         <div>
-          <p class="step-idx">Step 3 — both Applications, side by side</p>
+          <p class="step-idx">Paso 3 — los dos Applications, uno al lado del otro</p>
           <h4>godbyemicroservices · Healthy · Synced</h4>
-          <p>This is the screen that was missing when the question came up — the fix was refreshing a stale browser tab, not anything broken in the cluster. The backend (<code class="mono">kubectl get application -n argocd</code>) had shown <code class="mono">Synced</code>/<code class="mono">Healthy</code> the whole time.</p>
+          <p>Esta es la pantalla que faltaba cuando surgió la duda — el arreglo fue recargar una pestaña del navegador desactualizada, no nada roto en el clúster. El backend (<code class="mono">kubectl get application -n argocd</code>) llevaba todo el rato mostrando <code class="mono">Synced</code>/<code class="mono">Healthy</code>.</p>
         </div>
       </div>
       <div class="evidence-item">
-        <div class="shot"><img src="{{ '/assets/img/part-3/12-resource-tree-of-the-godbyemicroservices-application.png' | relative_url }}" alt="Resource tree of the godbyemicroservices Application in ArgoCD" /></div>
+        <div class="shot"><img src="{{ '/assets/img/crud-automation/12-resource-tree-of-the-godbyemicroservices-application.png' | relative_url }}" alt="Árbol de recursos del Application godbyemicroservices en ArgoCD" /></div>
         <div>
-          <p class="step-idx">Step 4 — the resource tree</p>
+          <p class="step-idx">Paso 4 — el árbol de recursos</p>
           <h4>Namespace → Service → Deployment → Pod</h4>
-          <p>Its own namespace, own Service, own Deployment, own Pod — fully isolated from <span class="inline-file">hello-world</span> despite sharing the cluster and the ArgoCD instance.</p>
+          <p>Su propio namespace, su propio Service, su propio Deployment, su propio Pod — completamente aislado de <span class="inline-file">hello-world</span> pese a compartir el clúster y la misma instancia de ArgoCD.</p>
         </div>
       </div>
     </div>
   </section>
 
   <section id="onboard-recap">
-    <div class="section-head"><span class="num">04</span><h2>The onboarding, as a sequence</h2></div>
+    <div class="section-head"><span class="num">04</span><h2>La integración, como secuencia</h2></div>
     <div class="flow" style="margin-top:16px;">
       <div class="flow-step">
         <span class="idx">1</span>
-        <span class="actor you">You</span>
-        <span class="msg">Copy <span class="inline-file">manifests/hello-world/</span> to <span class="inline-file">manifests/godbyemicroservices/</span> in <span class="inline-file">gitops-config</span>, rename every field.</span>
+        <span class="actor you">Tú</span>
+        <span class="msg">Copia <span class="inline-file">manifests/hello-world/</span> a <span class="inline-file">manifests/godbyemicroservices/</span> en <span class="inline-file">gitops-config</span>, renombra cada campo.</span>
       </div>
       <div class="flow-step">
         <span class="idx">2</span>
-        <span class="actor you">You</span>
-        <span class="msg">Copy <span class="inline-file">applications/hello-world.yaml</span> the same way — <code class="mono">metadata.name</code>, <code class="mono">source.path</code>, <code class="mono">destination.namespace</code>.</span>
+        <span class="actor you">Tú</span>
+        <span class="msg">Copia <span class="inline-file">applications/hello-world.yaml</span> igual — <code class="mono">metadata.name</code>, <code class="mono">source.path</code>, <code class="mono">destination.namespace</code>.</span>
       </div>
       <div class="flow-step">
         <span class="idx">3</span>
-        <span class="actor you">You</span>
-        <span class="msg"><code class="mono">git push</code>, then <code class="mono">kubectl apply -f applications/godbyemicroservices.yaml</code>.</span>
+        <span class="actor you">Tú</span>
+        <span class="msg"><code class="mono">git push</code>, y luego <code class="mono">kubectl apply -f applications/godbyemicroservices.yaml</code>.</span>
       </div>
       <div class="flow-step">
         <span class="idx">4</span>
         <span class="actor argo">ArgoCD</span>
-        <span class="msg">Picks it up as a second, fully independent <code class="mono">Application</code> — same reconciliation loop, same namespace isolation.</span>
+        <span class="msg">Lo detecta como un segundo <code class="mono">Application</code> completamente independiente — mismo bucle de reconciliación, mismo aislamiento por namespace.</span>
       </div>
     </div>
-    <p class="muted" style="margin-top:16px;">Nothing here is specific to a generated service — it's the exact same four steps the gitops-config article describes for any new service, hand-written or generated.</p>
+    <p class="muted" style="margin-top:16px;">Nada aquí es específico de un servicio generado — son exactamente los mismos cuatro pasos que describe la el artículo de gitops-config para cualquier servicio nuevo, escrito a mano o generado.</p>
   </section>
 
   <section id="commands">
-    <div class="section-head"><span class="num">05</span><h2>Reference commands</h2></div>
+    <div class="section-head"><span class="num">05</span><h2>Comandos de referencia</h2></div>
     <div class="cmd-group" style="margin-top:20px;">
-      <h4>Generate</h4>
+      <h4>Generar</h4>
       <pre><span class="c">python</span> generate_crud.py GodbyeMicroservices "id:int" --architecture minimal</pre>
     </div>
     <div class="cmd-group">
-      <h4>Build + load</h4>
+      <h4>Construir + cargar</h4>
       <pre><span class="c">mvn</span> -f app/pom.xml clean package
 <span class="c">docker</span> build -t godbyemicroservices:local app
 <span class="c">kind</span> load docker-image godbyemicroservices:local --name hello-world</pre>
     </div>
     <div class="cmd-group">
-      <h4>Publish</h4>
+      <h4>Publicar</h4>
       <pre><span class="c">python</span> -c "from crud_generator.github_repo import push_to_github; print(push_to_github('crud-godbyemicroservices-minimal'))"</pre>
     </div>
     <div class="cmd-group">
-      <h4>Onboard + verify</h4>
+      <h4>Integrar + verificar</h4>
       <pre><span class="c">kubectl</span> apply -f applications/godbyemicroservices.yaml
 <span class="c">kubectl</span> -n godbyemicroservices get pods
 <span class="c">kubectl</span> -n godbyemicroservices port-forward svc/godbyemicroservices 8082:8080
@@ -643,8 +643,8 @@ reading_minutes: 5
 
 </div>
 
-<dialog class="lightbox-overlay" id="lightbox" aria-label="Screenshot preview">
-  <button class="lightbox-close" type="button" aria-label="Close image">✕</button>
+<dialog class="lightbox-overlay" id="lightbox" aria-label="Vista previa de la captura">
+  <button class="lightbox-close" type="button" aria-label="Cerrar imagen">✕</button>
   <img id="lightbox-img" src="" alt="" />
 </dialog>
 
