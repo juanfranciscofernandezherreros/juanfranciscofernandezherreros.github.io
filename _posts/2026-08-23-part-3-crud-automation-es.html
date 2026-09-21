@@ -1,16 +1,14 @@
 ---
 layout: "article"
 title: "Generar un microservicio nuevo"
-description: "Usando la arquitectura minimal de crud-automation para generar un microservicio nuevo, publicarlo, e integrarlo en el mismo patrón GitOps de la Parte 2 — con salida real de terminal en cada paso."
-og_title: "Generar un microservicio nuevo — Argo Real World Microservices"
-og_description: "Usando la arquitectura minimal de crud-automation para generar un microservicio nuevo, publicarlo, e integrarlo en el mismo patrón GitOps de la Parte 2 — con salida real de terminal en cada paso."
-twitter_title: "Generar un microservicio nuevo — Argo Real World Microservices"
+description: "Usando la arquitectura minimal de crud-automation para generar un microservicio nuevo, publicarlo, e integrarlo en el mismo patrón GitOps de la el artículo de gitops-config — con salida real de terminal en cada paso."
+og_title: "Generar un microservicio nuevo"
+og_description: "Usando la arquitectura minimal de crud-automation para generar un microservicio nuevo, publicarlo, e integrarlo en el mismo patrón GitOps de la el artículo de gitops-config — con salida real de terminal en cada paso."
+twitter_title: "Generar un microservicio nuevo"
 twitter_description: "Generar, publicar e integrar un microservicio nuevo en el mismo patrón GitOps — salida real de terminal en cada paso."
 permalink: "/argo-real-world-microservices/part-3/crud-automation/es/"
 lang: "es"
 lang_url: "/argo-real-world-microservices/part-3/crud-automation/"
-series: "Argo Real World Microservices"
-part: 3
 categories: ["Automation"]
 subcategories: ["Code Generation"]
 tags: ["crud-automation","code-generation","microservices","gitops","argocd"]
@@ -437,11 +435,10 @@ reading_minutes: 5
 <div class="sheet">
 
   <div class="titleblock">
-    <p class="back-link"><a href="../../../part-2/gitops-config/es/">← Parte 2 — El repo de configuración: gitops-config</a></p>
+    <p class="back-link"><a href="../../../part-2/gitops-config/es/">← El repo de configuración: gitops-config</a></p>
     <p class="lang-switch"><a href="../">EN · English</a></p>
-    <p class="eyebrow">Argo Real World Microservices — Parte 3 de la serie</p>
     <h1>Generar un microservicio nuevo</h1>
-    <p class="lede">Las Partes 1 y 2 construyeron un servicio a mano y explicaron el repo que lo vigila. Esta parte genera un segundo servicio, completamente distinto, con una herramienta — <span class="inline-file">crud-automation</span> — y lo lleva por exactamente la misma integración, de principio a fin, con la salida real de terminal de cada paso.</p>
+    <p class="lede">Las Partes 1 y 2 construyeron un servicio a mano y explicaron el repo que lo vigila. Este artículo genera un segundo servicio, completamente distinto, con una herramienta — <span class="inline-file">crud-automation</span> — y lo lleva por exactamente la misma integración, de principio a fin, con la salida real de terminal de cada paso.</p>
     <dl class="stamp">
       <div>
         <dt>Generador</dt>
@@ -463,8 +460,8 @@ reading_minutes: 5
   </div>
 
   <section id="what">
-    <div class="section-head"><span class="num">00</span><h2>Qué cubre esta parte</h2></div>
-    <p class="muted">Construir <span class="inline-file">hello-world-argocd</span> a mano en la Parte 1 tenía sentido — es cómo aprendes qué hace de verdad cada fichero. Pero un equipo real no escribe a mano cada microservicio desde cero. Esta parte usa <a href="https://github.com/juanfranciscofernandezherreros/crud-automation"><span class="inline-file">crud-automation</span></a>, un generador en Python, para producir un servicio nuevo con exactamente la misma forma, y lo lleva por la misma integración de la Parte 2 — copiar el patrón de manifiestos, registrar el <code class="mono">Application</code>, listo.</p>
+    <div class="section-head"><span class="num">00</span><h2>Qué cubre este artículo</h2></div>
+    <p class="muted">Construir <span class="inline-file">hello-world-argocd</span> a mano en la el artículo Hello World con ArgoCD tenía sentido — es cómo aprendes qué hace de verdad cada fichero. Pero un equipo real no escribe a mano cada microservicio desde cero. Este artículo usa <a href="https://github.com/juanfranciscofernandezherreros/crud-automation"><span class="inline-file">crud-automation</span></a>, un generador en Python, para producir un servicio nuevo con exactamente la misma forma, y lo lleva por la misma integración de la el artículo de gitops-config — copiar el patrón de manifiestos, registrar el <code class="mono">Application</code>, listo.</p>
   </section>
 
   <section id="generator">
@@ -515,7 +512,7 @@ reading_minutes: 5
         <div>
           <p class="step-idx">4 — construir la imagen</p>
           <h3>docker build -t godbyemicroservices:local app</h3>
-          <p>El mismo paso que la Parte 1, sección 05 — solo cambia el nombre de la imagen.</p>
+          <p>El mismo paso que la el artículo Hello World con ArgoCD, sección 05 — solo cambia el nombre de la imagen.</p>
         </div>
       </div>
       <div class="evidence-item">
@@ -539,7 +536,7 @@ reading_minutes: 5
         <div>
           <p class="step-idx">7 — registrarlo en Argo</p>
           <h3>kubectl apply -f applications/godbyemicroservices.yaml</h3>
-          <p>Exactamente el patrón de la Parte 2, sección 04: una copia de <span class="inline-file">manifests/hello-world/</span> y <span class="inline-file">applications/hello-world.yaml</span>, tres campos cambiados. <code class="mono">Synced</code> y <code class="mono">Healthy</code> en segundos.</p>
+          <p>Exactamente el patrón de la el artículo de gitops-config, sección 04: una copia de <span class="inline-file">manifests/hello-world/</span> y <span class="inline-file">applications/hello-world.yaml</span>, tres campos cambiados. <code class="mono">Synced</code> y <code class="mono">Healthy</code> en segundos.</p>
         </div>
       </div>
       <div class="evidence-item">
@@ -555,7 +552,7 @@ reading_minutes: 5
 
   <section id="proof">
     <div class="section-head"><span class="num">03</span><h2>Prueba de que funciona — en la UI de ArgoCD</h2></div>
-    <p class="muted">Las mismas cuatro comprobaciones que la Parte 1, sección 06 — esta vez contra <span class="inline-file">godbyemicroservices</span>, tomadas justo después de resolver la duda de "no aparece" recargando la pestaña del navegador.</p>
+    <p class="muted">Las mismas cuatro comprobaciones que la el artículo Hello World con ArgoCD, sección 06 — esta vez contra <span class="inline-file">godbyemicroservices</span>, tomadas justo después de resolver la duda de "no aparece" recargando la pestaña del navegador.</p>
     <div class="evidence" style="margin-top:22px;">
       <div class="evidence-item">
         <div class="shot"><img src="{{ '/assets/img/part-3/09-json-response-from-the-godbyemicroservices-endpoint-in.png' | relative_url }}" alt="Respuesta JSON del endpoint godbyemicroservices en el navegador" /></div>
@@ -570,7 +567,7 @@ reading_minutes: 5
         <div>
           <p class="step-idx">Paso 2 — pantalla de login de Argo</p>
           <h4>https://localhost:8081</h4>
-          <p>La misma instancia de ArgoCD que la Parte 1 — una sola instalación vigilando tanto <span class="inline-file">hello-world</span> como este servicio nuevo.</p>
+          <p>La misma instancia de ArgoCD que la el artículo Hello World con ArgoCD — una sola instalación vigilando tanto <span class="inline-file">hello-world</span> como este servicio nuevo.</p>
         </div>
       </div>
       <div class="evidence-item">
@@ -616,7 +613,7 @@ reading_minutes: 5
         <span class="msg">Lo detecta como un segundo <code class="mono">Application</code> completamente independiente — mismo bucle de reconciliación, mismo aislamiento por namespace.</span>
       </div>
     </div>
-    <p class="muted" style="margin-top:16px;">Nada aquí es específico de un servicio generado — son exactamente los mismos cuatro pasos que describe la Parte 2 para cualquier servicio nuevo, escrito a mano o generado.</p>
+    <p class="muted" style="margin-top:16px;">Nada aquí es específico de un servicio generado — son exactamente los mismos cuatro pasos que describe la el artículo de gitops-config para cualquier servicio nuevo, escrito a mano o generado.</p>
   </section>
 
   <section id="commands">
