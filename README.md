@@ -5,31 +5,24 @@ Actions (`.github/workflows/pages.yml`). See `AGENTS.md` for the Codex
 authoring conventions (post front matter, permalink rules, categories/subcategories/tags).
 `CLAUDE.md` is kept for Claude compatibility.
 
-- `index.html` — home page: filterable list of articles (search, series,
-  category, subcategory, tags).
+- `index.html` — home page: filterable list of articles (search, category, subcategory, tags).
 - `_posts/` — one HTML file per article per language; `permalink` in its
   front matter controls the published URL.
 - `_layouts/`, `assets/` — shared layout and styles.
 
-## Argo Real World Microservices
+## ArgoCD and GitOps articles
 
-A hands-on series on deploying microservices with ArgoCD and GitOps:
-
-- **Part 0 — Before You Begin**: tooling setup (Git, Docker, kind, kubectl, Java, Maven, ArgoCD CLI).
-- **Part 1 — Hello World with ArgoCD**: deploying a microservice with ArgoCD over a local `kind` cluster — glossary, architecture, the reconciliation loop, real screenshots end to end.
-- **Part 2 — The Config Repo**: the `gitops-config` repo, its manifests and `Application` resource, line by line.
-- **Part 3 — Generating a New Microservice**: using `crud-automation` to generate and onboard a second service into the same GitOps pattern.
+Independent technical articles about ArgoCD, GitOps, Kubernetes, PostgreSQL, failure testing, local access, automation, and Kafka.
 
 Related repos:
-- [hello-world-argocd](https://github.com/juanfranciscofernandezherreros/hello-world-argocd) — the microservice used in Part 1.
-- [gitops-config](https://github.com/juanfranciscofernandezherreros/gitops-config) — its Kubernetes manifests and ArgoCD `Application`.
-- [crud-automation](https://github.com/juanfranciscofernandezherreros/crud-automation) — the generator used in Part 3.
+- [hello-world-argocd](https://github.com/juanfranciscofernandezherreros/hello-world-argocd) — example microservice deployed with ArgoCD.
+- [gitops-config](https://github.com/juanfranciscofernandezherreros/gitops-config) — Kubernetes manifests and ArgoCD `Application` resources.
+- [crud-automation](https://github.com/juanfranciscofernandezherreros/crud-automation) — microservice generator used in an automation article.
 
 ## Java & Spring Interview Notes
 
 Independent bilingual articles for technical interview preparation. These
-posts use their own series, categories, subcategories, and topic-based URLs
-instead of the numbered course permalink structure.
+posts use categories, subcategories, tags, and stable topic-based URLs.
 
 ## Local preview
 
