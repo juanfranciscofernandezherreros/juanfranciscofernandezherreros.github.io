@@ -15,14 +15,14 @@ published: false
 ---
 <style>
 .csv-family{--panel:var(--surface);--panel2:var(--surface-2);--line-local:var(--line);--muted:var(--ink-soft);--code-local:var(--code-bg);--code-ink-local:var(--code-ink);max-width:940px;margin:36px auto 96px;padding:0 24px}
-.csv-family .hero,.csv-family .card,.csv-family .callout{background:var(--panel);border:1px solid var(--line-local)}
-.csv-family .hero{padding:clamp(26px,5vw,46px);border-top:5px solid var(--accent)}
-.csv-family .eyebrow,.csv-family .num,.csv-family pre,.csv-family code,.csv-family .badge{font-family:"IBM Plex Mono",monospace}
-.csv-family .eyebrow,.csv-family .num{color:var(--accent);font-size:.76rem;text-transform:uppercase;letter-spacing:.08em}
-.csv-family h1,.csv-family h2,.csv-family h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em}
-.csv-family h1{font-size:clamp(2.4rem,7vw,4.05rem);line-height:.98;max-width:20ch;margin:.2em 0}
+.csv-family .titleblock,.csv-family .card,.csv-family .callout{background:var(--panel);border:1px solid var(--line-local)}
+.csv-family .titleblock{position:relative;padding:32px;overflow:hidden}
+.csv-family .back,.csv-family .eyebrow,.csv-family .num,.csv-family .stamp dt,.csv-family pre,.csv-family code,.csv-family .badge{font-family:"IBM Plex Mono",monospace}
+.csv-family .back{font-size:.74rem}.csv-family .eyebrow,.csv-family .num{color:var(--accent);font-size:.76rem;text-transform:uppercase;letter-spacing:.08em}
+.csv-family h1,.csv-family h2,.csv-family h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}
+.csv-family .titleblock h1{font-size:clamp(2.35rem,7vw,4rem);line-height:1;max-width:20ch}
 .csv-family h2{font-size:clamp(1.55rem,4vw,2rem);margin:0}.csv-family h3{font-size:1.08rem;margin:0 0 8px}
-.csv-family p,.csv-family li{max-width:72ch;line-height:1.72}.csv-family .lede{font-size:1.06rem;color:var(--muted);max-width:68ch}
+.csv-family p,.csv-family li{max-width:74ch;line-height:1.72}.csv-family .lede{font-size:1.03rem;color:var(--muted);max-width:68ch}.csv-family .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line-local);padding-top:16px}.csv-family .stamp>div{padding:12px;background:var(--panel2);border-radius:8px}.csv-family .stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.csv-family .stamp dd{margin:4px 0 0;font-weight:600}
 .csv-family section{margin-top:60px}.csv-family .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:20px}
 .csv-family .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:24px 0}.csv-family .flow .card{padding:14px}.csv-family .flow strong{display:block;color:var(--accent);font-size:.78rem;margin-bottom:7px}.csv-family .flow p{font-size:.84rem;line-height:1.45;margin:0;text-align:left}
 .csv-family .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0}.csv-family .card{padding:18px}.csv-family .card p{margin-bottom:0;color:var(--muted)}
@@ -30,14 +30,16 @@ published: false
 .csv-family pre{overflow:auto;background:var(--code-local);color:var(--code-ink-local);border:1px solid var(--line-local);padding:17px 18px;line-height:1.55;font-size:.82rem}
 .csv-family table{width:100%;border-collapse:collapse;margin:22px 0;font-size:.9rem}.csv-family th,.csv-family td{border:1px solid var(--line-local);padding:10px;text-align:left;vertical-align:top}.csv-family th{background:var(--panel2)}
 .csv-family .badge{font-size:.72rem;color:var(--accent)}.csv-family footer{margin-top:54px;padding-top:22px;border-top:1px solid var(--line-local);color:var(--muted)}
-@media(max-width:760px){.csv-family{padding:0 16px}.csv-family .flow,.csv-family .grid{grid-template-columns:1fr}.csv-family table{display:block;overflow-x:auto}.csv-family .hero{padding:26px 20px}}
+@media(max-width:760px){.csv-family{padding:0 16px}.csv-family .flow,.csv-family .grid,.csv-family .stamp{grid-template-columns:1fr}.csv-family table{display:block;overflow-x:auto}.csv-family .titleblock{padding:24px 20px}}
 </style>
 
-<article class="sheet csv-family">
-<header class="hero">
-<p class="eyebrow">Kafka · Spring Boot · CSV · PostgreSQL</p>
+<div class="sheet csv-family">
+<header class="titleblock">
+<p class="back"><a href="{{ '/' | relative_url }}">&larr; Volver al blog</a></p>
+<p class="eyebrow">Java & Spring · Event Streaming</p>
 <h1>Cinco CSV distintos, una sola idea arquitectónica</h1>
 <p class="lede">Después de desmontar <a href="{{ '/java-spring/csv-stats-player-consumer/es/' | relative_url }}"><code>csv-stats-player-consumer</code></a>, la pregunta natural era si aquel diseño era una excepción o una pieza de un sistema mayor. Al revisar los otros cinco repositorios aparece la respuesta: todos reutilizan el mismo contrato de evento y la misma frontera transaccional, pero cada uno protege un tipo de dato distinto.</p>
+<dl class="stamp"><div><dt>Ámbito</dt><dd>Kafka + CSV</dd></div><div><dt>Servicios</dt><dd>5 consumers</dd></div><div><dt>Lectura</dt><dd>10 minutos</dd></div></dl>
 </header>
 
 <section id="patron">
@@ -167,4 +169,4 @@ MATCH_SUMMARY
 <footer>
 <p>Este artículo revisa el estado de los repositorios privados <a href="https://github.com/juanfranciscofernandezherreros/csv-seassons"><code>csv-seassons</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-stats-match"><code>csv-stats-match</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-point-by-point"><code>csv-point-by-point</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-results"><code>csv-results</code></a> y <a href="https://github.com/juanfranciscofernandezherreros/csv-fixtures"><code>csv-fixtures</code></a>. Los enlaces requieren autorización mientras sigan siendo privados.</p>
 </footer>
-</article>
+</div>
