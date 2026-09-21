@@ -511,10 +511,8 @@ lang: es
 
 <div class="wrap">
   {% assign spanish_posts = site.posts | where_exp: "p", "p.lang == 'es'" %}
-  {% assign numbered_posts = spanish_posts | where: "series", "Argo Real World Microservices" | sort: "part" %}
-  {% assign standalone_posts = spanish_posts | where_exp: "p", "p.series != 'Argo Real World Microservices'" | sort: "date" | reverse %}
   {% assign intro_pages = site.pages | where: "permalink", "/argo-real-world-microservices/introduction/es/" %}
-  {% assign posts = intro_pages | concat: numbered_posts | concat: standalone_posts %}
+  {% assign posts = spanish_posts | concat: intro_pages | sort: "date" | reverse %}
   {% assign all_series = posts | map: "series" | uniq | sort %}
   {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
 
