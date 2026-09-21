@@ -60,6 +60,87 @@
   });
 
   var cards = Array.prototype.slice.call(document.querySelectorAll('#cards .card'));
+
+  function taxonomyValues(card, key) {
+    return (card.dataset[key] || '').split(',').map(function (value) {
+      return value.trim();
+    }).filter(Boolean);
+  }
+
+  function taxonomyCount(key, value) {
+    return cards.reduce(function (total, card) {
+      return total + (taxonomyValues(card, key).indexOf(value) !== -1 ? 1 : 0);
+    }, 0);
+  }
+
+  function setTaxonomyButtonContent(btn, label, count) {
+    btn.classList.add('taxonomy-pill');
+    btn.innerHTML = '';
+    var name = document.createElement('span');
+    name.className = 'filter-name';
+    name.textContent = label;
+    var badge = document.createElement('span');
+    badge.className = 'filter-count';
+    badge.setAttribute('aria-label', count + (count === 1 ? ' artículo' : ' artículos'));
+    badge.textContent = String(count);
+    btn.appendChild(name);
+    btn.appendChild(badge);
+  }
+
+  function balanceTaxonomyFilters() {
+    var categoryContainer = document.getElementById('category-filters');
+    var tagContainer = document.getElementById('tag-filters');
+    if (!categoryContainer || !tagContainer) return;
+
+    var categoryButtons = Array.prototype.slice.call(categoryContainer.querySelectorAll('[data-filter-category]'));
+    categoryButtons.forEach(function (btn) {
+      var category = btn.dataset.filterCategory;
+      var count = category === 'all' ? cards.length : taxonomyCount('categories', category);
+      setTaxonomyButtonContent(btn, category === 'all' ? 'Todas' : category, count);
+    });
+
+    var visibleTagCount = categoryButtons.filter(function (btn) {
+      return btn.dataset.filterCategory !== 'all';
+    }).length;
+
+    var counts = {};
+    cards.forEach(function (card) {
+      taxonomyValues(card, 'tags').forEach(function (tag) {
+        counts[tag] = (counts[tag] || 0) + 1;
+      });
+    });
+
+    var rankedTags = Object.keys(counts).sort(function (a, b) {
+      return counts[b] - counts[a] || a.localeCompare(b);
+    });
+
+    var wantedTag = new URLSearchParams(window.location.search).get('tag');
+    var wantedTagName = null;
+    if (wantedTag) {
+      wantedTagName = rankedTags.find(function (tag) {
+        var slug = String(tag).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+        return slug === wantedTag;
+      }) || null;
+    }
+
+    var visibleTags = rankedTags.slice(0, visibleTagCount);
+    if (wantedTagName && visibleTags.indexOf(wantedTagName) === -1 && visibleTagCount > 0) {
+      visibleTags[visibleTags.length - 1] = wantedTagName;
+    }
+
+    tagContainer.innerHTML = '';
+    visibleTags.forEach(function (tag) {
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'pill taxonomy-pill';
+      btn.setAttribute('data-filter-tag', tag);
+      setTaxonomyButtonContent(btn, '#' + tag, counts[tag]);
+      tagContainer.appendChild(btn);
+    });
+  }
+
+  balanceTaxonomyFilters();
+
   var seriesButtons = Array.prototype.slice.call(document.querySelectorAll('#series-filters .pill'));
   var categoryButtons = Array.prototype.slice.call(document.querySelectorAll('#category-filters .pill'));
   var subcategoryButtons = Array.prototype.slice.call(document.querySelectorAll('#subcategory-filters .pill'));
