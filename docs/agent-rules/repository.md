@@ -16,7 +16,7 @@ Las reglas visuales detalladas viven en presentation.md. Las reglas de descubrim
 
 ## Comandos y referencias
 
-Los bloques de terminal deben mostrar comandos exactos. Si un curso introduce un comando nuevo, revisa si también debe añadirse a commands.html.
+Los bloques de terminal deben mostrar comandos exactos. Si un artículo introduce un comando nuevo y es útil como referencia reutilizable, revisa si también debe añadirse a `commands.html`.
 
 En commands.html reutiliza entradas equivalentes, añade referencias en vez de duplicar, crea sección/TOC cuando aparezca una herramienta nueva y mantén recuentos y anclas sincronizados.
 
