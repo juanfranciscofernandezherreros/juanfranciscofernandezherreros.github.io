@@ -511,8 +511,7 @@ lang: es
 
 <div class="wrap">
   {% assign spanish_posts = site.posts | where_exp: "p", "p.lang == 'es'" %}
-  {% assign intro_pages = site.pages | where: "permalink", "/argo-real-world-microservices/introduction/es/" %}
-  {% assign posts = spanish_posts | concat: intro_pages %}
+  {% assign posts = spanish_posts %}
   {% assign all_series = posts | map: "series" | uniq | sort %}
   {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
 
@@ -563,7 +562,7 @@ lang: es
          href="{{ post.url | relative_url }}"
          aria-roledescription="slide"
          aria-label="{{ forloop.index }} de {{ forloop.length }}">
-        <span class="slide-eyebrow">{% if post.part %}Parte {{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}Introducción{% else %}{{ post.series }}{% endif %} · {{ category }}</span>
+        <span class="slide-eyebrow">{% if post.series %}{{ post.series }} · {% endif %}{{ category }}</span>
         <h2>{{ post.title }}</h2>
         <p>{{ post.description | truncatewords: 26 }}</p>
         <span class="go">Leer el artículo →</span>
@@ -609,10 +608,10 @@ lang: es
            data-subcategories="{{ post.subcategories | join: ',' | escape }}"
            data-tags="{{ post.tags | join: ',' | escape }}"
            data-search="{{ post.title | append: ' ' | append: post.description | strip_html | downcase | escape }}"
-           data-part="{% if post.part %}{{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}-1{% else %}9999{% endif %}"
+           data-part="{% if post.part %}{{ post.part }}{% else %}9999{% endif %}"
            data-date="{{ post.date | date: '%Y-%m-%d' }}"
            data-title="{{ post.title | escape }}">
-          <p class="eyebrow">{% if post.part %}Parte {{ post.part }}{% elsif post.series == 'Argo Real World Microservices' %}Introducción{% else %}{{ post.series }}{% endif %}</p>
+          <p class="eyebrow">{% if post.series %}{{ post.series }}{% else %}{{ post.categories | first }}{% endif %}</p>
           <h2>{{ post.title }}</h2>
           <p class="desc">{{ post.description }}</p>
           <p class="card-tags">
