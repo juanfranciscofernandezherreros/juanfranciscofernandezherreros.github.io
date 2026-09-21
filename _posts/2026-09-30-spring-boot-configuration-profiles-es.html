@@ -1,0 +1,99 @@
+---
+layout: "article"
+title: "Configuración en Spring Boot para entrevistas: Profiles, @ConfigurationProperties y precedencia"
+description: "Guía detallada de configuración en Spring Boot: application.yml, profiles, variables de entorno, precedencia, @Value, @ConfigurationProperties, validación, secretos y preguntas habituales de entrevista."
+permalink: "/java-spring/spring-boot-configuration-profiles/es/"
+lang: "es"
+lang_url: "/java-spring/spring-boot-configuration-profiles/"
+series: "Java & Spring Interview Notes"
+categories: ["Java & Spring"]
+subcategories: ["Spring Boot", "Configuration"]
+tags: ["java","spring","spring-boot","configuration","profiles","configurationproperties","environment-variables","yaml","interviews"]
+date: "2026-09-30"
+reading_minutes: 17
+---
+<style>
+.interview-note{--panel:var(--surface);--muted:var(--ink-soft);--line:var(--line);--notice:var(--accent-soft);--warn:#8b5a16;--warn-bg:#f7eddd;max-width:940px;margin:36px auto 96px;padding:0 24px}.interview-note .titleblock,.interview-note .card,.interview-note .answer{background:var(--panel);border:1px solid var(--line)}.interview-note .titleblock{position:relative;padding:32px;overflow:hidden}.interview-note .back,.interview-note .lang,.interview-note .eyebrow,.interview-note .num,.interview-note .stamp dt,.interview-note pre,.interview-note code{font-family:"IBM Plex Mono",monospace}.interview-note .back,.interview-note .lang{font-size:.74rem}.interview-note .lang{position:absolute;right:24px;top:20px}.interview-note .eyebrow,.interview-note .num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.interview-note h1,.interview-note h2,.interview-note h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.interview-note .titleblock h1{font-size:clamp(2.35rem,7vw,4rem);line-height:1;max-width:20ch}.interview-note .lede{font-size:1.03rem;color:var(--muted);max-width:68ch}.interview-note .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:16px}.interview-note .stamp>div{padding:12px;background:var(--surface-2);border-radius:8px}.interview-note .stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.interview-note .stamp dd{margin:4px 0 0;font-weight:600}.interview-note section{margin-top:64px}.interview-note .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}.interview-note h2{font-size:clamp(1.6rem,4vw,2rem)}.interview-note h3{font-size:1.12rem;margin-top:30px}.interview-note p,.interview-note li{max-width:74ch;line-height:1.72}.interview-note .answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem;border-radius:10px}.interview-note .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.interview-note .card{padding:17px;border-radius:10px}.interview-note .card h3{margin:0 0 7px}.interview-note .card p{font-size:.93rem;color:var(--muted);margin:0}.interview-note pre{overflow:auto;background:var(--code-bg);color:var(--code-ink);padding:16px;border-radius:10px;line-height:1.55;font-size:.82rem}.interview-note .notice,.interview-note .trap{padding:15px 18px;border-radius:10px}.interview-note .notice{border-left:3px solid var(--accent);background:var(--notice)}.interview-note .trap{border-left:3px solid var(--warn);background:var(--warn-bg)}.interview-note table{width:100%;border-collapse:collapse;margin:20px 0;font-size:.9rem}.interview-note th,.interview-note td{padding:10px 11px;border:1px solid var(--line);text-align:left;vertical-align:top}.interview-note th{background:var(--surface-2)}.interview-note footer{color:var(--muted);border-top:1px solid var(--line);margin-top:52px;padding-top:20px}.interview-note .small{font-size:.9rem}@media(max-width:680px){.interview-note{padding:0 16px}.interview-note .grid,.interview-note .stamp{grid-template-columns:1fr}.interview-note .titleblock{padding:24px 20px}.interview-note .lang{position:static}.interview-note table{display:block;overflow-x:auto}.interview-note p,.interview-note li{text-align:left}}
+</style>
+<div class="sheet interview-note">
+<div class="titleblock"><p class="back"><a href="{{ '/java-spring/spring-security-interview/es/' | relative_url }}">&larr; Spring Security en entrevistas</a></p><p class="lang"><a href="../">EN · English</a></p><p class="eyebrow">Java & Spring · Spring Boot</p><h1>Configuración en Spring Boot</h1><p class="lede">La configuración parece sencilla hasta que una propiedad tiene cuatro valores distintos: uno en <code>application.yml</code>, otro en un profile, otro como variable de entorno y otro en la línea de comandos. En una entrevista, entender quién gana y por qué vale más que memorizar dónde escribir una clave.</p><dl class="stamp"><div><dt>Nivel</dt><dd>Intermedio</dd></div><div><dt>Ámbito</dt><dd>Spring Boot Config</dd></div><div><dt>Objetivo</dt><dd>Configuración predecible</dd></div></dl></div>
+<section id="answer"><div class="head"><span class="num">00</span><h2>La respuesta corta de entrevista</h2></div><p class="answer"><strong>Spring Boot externaliza la configuración para ejecutar el mismo artefacto en entornos diferentes.</strong> Puede leer propiedades desde archivos, variables de entorno, system properties, argumentos de línea de comandos y otras fuentes. Esas fuentes tienen una precedencia definida: las de mayor prioridad pueden sobrescribir valores anteriores. Los profiles activan variantes de configuración, y <code>@ConfigurationProperties</code> permite agrupar y validar configuración tipada.</p><p>La idea importante es separar <strong>código</strong> de <strong>configuración de despliegue</strong>. Una imagen Docker o un JAR no debería recompilarse porque producción use otro hostname, timeout o tamaño de pool.</p></section>
+<section id="externalized"><div class="head"><span class="num">01</span><h2>Externalized Configuration: un artefacto, varios entornos</h2></div><pre># application.yml
+orders:
+  client:
+    base-url: https://orders.example
+    connect-timeout: 2s
+    read-timeout: 5s</pre><p>El mismo código puede arrancar en local, CI, staging o producción cambiando valores desde fuera. Esto permite promover el mismo binario y reducir diferencias accidentales entre entornos.</p><div class="grid"><article class="card"><h3>Código</h3><p>Define comportamiento estable y tipos. Se versiona, compila y prueba.</p></article><article class="card"><h3>Configuración</h3><p>Define valores que cambian por despliegue: endpoints, límites, flags, credenciales referenciadas o parámetros operativos.</p></article></div></section>
+<section id="sources"><div class="head"><span class="num">02</span><h2>Fuentes de propiedades y precedencia</h2></div><p>Spring Boot construye un <code>Environment</code> a partir de múltiples <code>PropertySource</code>. No todas tienen la misma prioridad. Una forma útil de recordarlo es que la configuración externa y explícita suele poder sobrescribir defaults empaquetados.</p><table><thead><tr><th>Ejemplo</th><th>Uso habitual</th><th>Prioridad relativa</th></tr></thead><tbody><tr><td><code>application.yml</code> dentro del JAR</td><td>Defaults</td><td>Base</td></tr><tr><td><code>application-prod.yml</code></td><td>Valores de profile</td><td>Sobrescribe base dentro de config data</td></tr><tr><td>Archivo externo</td><td>Configuración del despliegue</td><td>Mayor que el empaquetado</td></tr><tr><td>Variable de entorno</td><td>Contenedores / plataforma</td><td>Mayor que config data</td></tr><tr><td>Java system property</td><td>Arranque JVM</td><td>Mayor que variables de entorno</td></tr><tr><td><code>--key=value</code></td><td>Override explícito</td><td>Muy alta</td></tr></tbody></table><pre># application.yml
+server:
+  port: 8080
+
+# variable de entorno
+SERVER_PORT=9090
+
+# línea de comandos
+java -jar app.jar --server.port=7070</pre><p>Con esas entradas, el argumento de línea de comandos gana y el servidor arranca con <code>7070</code>.</p><p class="trap"><strong>No memorices una lista sin entender la regla.</strong> En producción importa poder diagnosticar de dónde salió un valor. Un override olvidado explica muchas diferencias entre entornos aparentemente iguales.</p></section>
+<section id="profiles"><div class="head"><span class="num">03</span><h2>Profiles: activar grupos coherentes de configuración o beans</h2></div><p>Un profile representa un contexto lógico como <code>local</code>, <code>test</code> o <code>prod</code>. Spring Boot puede cargar <code>application-prod.yml</code> además del archivo base.</p><pre># application.yml
+orders:
+  client:
+    base-url: http://localhost:8081
+
+# application-prod.yml
+orders:
+  client:
+    base-url: https://orders.internal.example</pre><pre>SPRING_PROFILES_ACTIVE=prod
+java -jar app.jar
+
+# o
+java -jar app.jar --spring.profiles.active=prod</pre><p>También existe <code>@Profile</code> para registrar beans solo bajo determinados profiles:</p><pre>@Bean
+@Profile("local")
+PaymentGateway fakePaymentGateway() {
+    return new InMemoryPaymentGateway();
+}</pre><p class="notice"><strong>Buen uso:</strong> diferencias reales de infraestructura o entorno. <strong>Mal uso:</strong> una explosión de profiles que actúan como feature flags, clientes o combinaciones difíciles de probar.</p></section>
+<section id="value-vs-properties"><div class="head"><span class="num">04</span><h2>@Value vs @ConfigurationProperties</h2></div><p><code>@Value</code> es cómodo para uno o dos valores aislados:</p><pre>@Value("${orders.client.base-url}")
+private String baseUrl;</pre><p>Cuando la configuración forma una unidad, <code>@ConfigurationProperties</code> ofrece tipado, agrupación, relaxed binding y validación.</p><pre>@ConfigurationProperties(prefix = "orders.client")
+@Validated
+public record OrdersClientProperties(
+    @NotNull URI baseUrl,
+    @NotNull Duration connectTimeout,
+    @NotNull Duration readTimeout,
+    @Min(1) int maxRetries
+) {}</pre><pre>orders:
+  client:
+    base-url: https://orders.example
+    connect-timeout: 2s
+    read-timeout: 5s
+    max-retries: 3</pre><p>Ahora la configuración tiene contrato. Si falta un valor obligatorio o <code>max-retries</code> es inválido, es mejor fallar durante el arranque que descubrirlo bajo tráfico real.</p></section>
+<section id="registration"><div class="head"><span class="num">05</span><h2>Cómo registrar @ConfigurationProperties</h2></div><p>Una opción es escanear clases de properties:</p><pre>@SpringBootApplication
+@ConfigurationPropertiesScan
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}</pre><p>Otra es registrar clases concretas:</p><pre>@Configuration
+@EnableConfigurationProperties(OrdersClientProperties.class)
+class OrdersClientConfiguration { }</pre><p>La clase de properties debería representar datos del entorno. No la conviertas en un service lleno de dependencias y lógica de negocio.</p></section>
+<section id="env"><div class="head"><span class="num">06</span><h2>Variables de entorno y relaxed binding</h2></div><p>En Kubernetes, OpenShift y contenedores es habitual suministrar configuración mediante variables de entorno:</p><pre>ORDERS_CLIENT_BASE_URL=https://orders.internal
+ORDERS_CLIENT_MAX_RETRIES=5</pre><p>Spring Boot puede enlazarlas con <code>orders.client.base-url</code> y <code>orders.client.max-retries</code>. Esta flexibilidad forma parte de sus convenciones de relaxed binding.</p><p>La imagen contiene código; un Deployment, Helm chart, ConfigMap, Secret o la plataforma suministra valores del entorno.</p></section>
+<section id="secrets"><div class="head"><span class="num">07</span><h2>Configuración no significa meter secretos en Git</h2></div><p>Contraseñas, tokens, claves privadas y credenciales de base de datos no deberían almacenarse en un <code>application-prod.yml</code> versionado. El repositorio puede definir el contrato o placeholders; el secreto debe llegar desde un mecanismo adecuado.</p><pre>spring:
+  datasource:
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}</pre><p class="trap"><strong>Un placeholder no protege el secreto si después haces commit del valor real en otro fichero.</strong> Gestionar secretos implica almacenamiento, acceso, rotación, auditoría y revocación.</p></section>
+<section id="imports"><div class="head"><span class="num">08</span><h2>spring.config.import y configuración modular</h2></div><p>Spring Boot permite importar configuración adicional mediante <code>spring.config.import</code>.</p><pre>spring:
+  config:
+    import: "optional:file:./config/orders.yml"</pre><p><code>optional:</code> indica que el arranque puede continuar si el recurso no existe. Sin él, una ubicación requerida que falta se considera un error.</p><p>También conviene distinguir <code>spring.config.location</code> y <code>spring.config.additional-location</code>: el primero puede reemplazar ubicaciones por defecto; el segundo añade ubicaciones. Se procesan pronto, por lo que deben proporcionarse desde fuentes disponibles antes de cargar el resto de config data.</p></section>
+<section id="testing"><div class="head"><span class="num">09</span><h2>Configuración en tests</h2></div><p>Los tests no deberían depender accidentalmente del portátil del desarrollador.</p><pre>@SpringBootTest(properties = {
+    "orders.client.base-url=http://localhost:9999",
+    "orders.client.max-retries=1"
+})
+class OrdersApplicationTest { }</pre><p>Con Testcontainers, <code>@DynamicPropertySource</code> es útil cuando una propiedad se conoce después de arrancar el contenedor:</p><pre>@DynamicPropertySource
+static void databaseProperties(DynamicPropertyRegistry registry) {
+    registry.add("spring.datasource.url", postgres::getJdbcUrl);
+    registry.add("spring.datasource.username", postgres::getUsername);
+    registry.add("spring.datasource.password", postgres::getPassword);
+}</pre><p>La idea es que el test declare explícitamente el entorno que necesita y no dependa de valores globales invisibles.</p></section>
+<section id="mistakes"><div class="head"><span class="num">10</span><h2>Errores frecuentes</h2></div><div class="grid"><article class="card"><h3>@Value por todas partes</h3><p>Dispersa claves como strings y oculta el contrato de configuración de un componente.</p></article><article class="card"><h3>Un profile por feature</h3><p>Produce combinaciones difíciles de probar. Los profiles funcionan mejor para contextos coherentes.</p></article><article class="card"><h3>Defaults peligrosos</h3><p>Una credencial o endpoint crítico no debería caer silenciosamente a un valor de otro entorno.</p></article><article class="card"><h3>Secretos en YAML</h3><p>Versionar secretos los extiende a clones, historial, forks, caches y logs.</p></article><article class="card"><h3>No validar configuración</h3><p>Permite que un error de despliegue sobreviva al arranque y falle más tarde.</p></article><article class="card"><h3>No saber quién sobrescribió el valor</h3><p>Sin precedencia, dos despliegues aparentemente iguales pueden comportarse distinto.</p></article></div></section>
+<section id="questions"><div class="head"><span class="num">11</span><h2>Preguntas de entrevista</h2></div><h3>¿Qué diferencia hay entre application.yml y application-prod.yml?</h3><p>El primero contiene configuración general; el segundo es una variante considerada cuando <code>prod</code> está activo y puede sobrescribir valores del documento base.</p><h3>¿Qué gana: YAML o variable de entorno?</h3><p>En el orden habitual, una variable de entorno tiene mayor precedencia que config data empaquetada.</p><h3>¿Cuándo usarías @Value?</h3><p>Para valores aislados. Para grupos estructurados con tipos y validación prefiero <code>@ConfigurationProperties</code>.</p><h3>¿Qué es relaxed binding?</h3><p>La capacidad de enlazar variantes de nombres —kebab-case, camelCase o mayúsculas con guiones bajos según la fuente— al mismo modelo.</p><h3>¿Dónde guardarías secretos?</h3><p>En el mecanismo de secretos de la plataforma o un secret manager, inyectándolos en runtime; no en Git.</p><h3>¿Por qué validar configuration properties?</h3><p>Para convertir un error de despliegue en un fallo temprano y explícito durante el arranque.</p></section>
+<section id="senior"><div class="head"><span class="num">12</span><h2>Cómo lo respondería en una entrevista senior</h2></div><p class="answer">“Intento que el mismo artefacto sea promovible entre entornos y que las diferencias entren como configuración externa. Uso <code>application.yml</code> para defaults seguros, profiles para variantes coherentes y variables o fuentes externas para valores del despliegue. Para configuración estructurada prefiero <code>@ConfigurationProperties</code> con tipos y validación. Conozco la precedencia porque un override puede explicar diferencias entre entornos. Los secretos no viven en Git y los tests declaran sus propiedades explícitamente. Mi objetivo es fallar pronto ante configuración inválida y poder rastrear de dónde salió cada valor.”</p></section>
+<footer><p><strong>Idea clave:</strong> Spring Boot configuration no es solo YAML. Es un sistema de fuentes, precedencia, binding, validación y activación para ejecutar el mismo código de forma predecible en distintos entornos.</p><p class="small"><strong>Referencias oficiales:</strong> <a href="https://docs.spring.io/spring-boot/reference/features/external-config.html">Externalized Configuration</a> y <a href="https://docs.spring.io/spring-boot/reference/features/profiles.html">Profiles</a>.</p></footer>
+</div>
