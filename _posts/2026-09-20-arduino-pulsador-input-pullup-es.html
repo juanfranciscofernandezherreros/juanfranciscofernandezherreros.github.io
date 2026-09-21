@@ -12,17 +12,30 @@ date: "2026-09-20"
 reading_minutes: 8
 ---
 
-<article class="sheet">
-<header>
-<p><strong>Arduino desde cero · entradas digitales</strong></p>
+<style>
+.pulldemo{--pd-border:color-mix(in srgb,currentColor 16%,transparent);--pd-soft:color-mix(in srgb,currentColor 5%,transparent)}
+.pulldemo .lesson-hero{margin:1.5rem 0 2rem;padding:clamp(1.25rem,3vw,2rem);border:1px solid var(--pd-border);border-radius:20px;background:linear-gradient(135deg,var(--pd-soft),transparent)}
+.pulldemo .lesson-kicker,.pulldemo .eyebrow{font-size:.78rem;font-weight:800;letter-spacing:.08em;text-transform:uppercase;opacity:.7}.pulldemo .lesson-hero h1{margin:.35rem 0 .75rem;line-height:1.08}
+.pulldemo .goal-grid,.pulldemo .logic-grid,.pulldemo .learn-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.8rem;margin:1rem 0 1.5rem}.pulldemo .goal-card,.pulldemo .logic-card,.pulldemo .learn-card{padding:1rem;border:1px solid var(--pd-border);border-radius:14px;background:var(--pd-soft)}.pulldemo .goal-card strong,.pulldemo .logic-card strong,.pulldemo .learn-card strong{display:block;margin-bottom:.3rem}
+.pulldemo .callout{margin:1.25rem 0;padding:1rem 1.1rem;border-left:4px solid currentColor;border-radius:0 12px 12px 0;background:var(--pd-soft)}.pulldemo .callout p{margin:.25rem 0}
+.pulldemo .wiring{display:grid;grid-template-columns:1fr 1fr;gap:.8rem;margin:1rem 0}.pulldemo .wire{padding:1rem;border:1px solid var(--pd-border);border-radius:14px}.pulldemo .wire code{font-size:1rem}
+.pulldemo .code-shell{margin:1rem 0 1.5rem;border:1px solid var(--pd-border);border-radius:16px;overflow:hidden}.pulldemo .code-head{display:flex;justify-content:space-between;padding:.65rem .9rem;background:var(--pd-soft);font-size:.82rem;font-weight:700}.pulldemo .code-shell pre{margin:0;border:0;border-radius:0}
+.pulldemo .flow{display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.55rem;margin:1.25rem 0;padding:1.25rem;border:1px solid var(--pd-border);border-radius:16px;background:var(--pd-soft)}.pulldemo .flow span{padding:.55rem .75rem;border:1px solid var(--pd-border);border-radius:999px;font-weight:700}.pulldemo .flow b{opacity:.55}
+@media(max-width:700px){.pulldemo .goal-grid,.pulldemo .logic-grid,.pulldemo .learn-grid,.pulldemo .wiring{grid-template-columns:1fr}.pulldemo .lesson-hero{border-radius:14px}}
+</style>
+<article class="sheet pulldemo">
+<header class="lesson-hero">
+<div class="lesson-kicker">Arduino desde cero · entradas digitales</div>
 <h1>Controlar un LED con un pulsador usando INPUT_PULLUP</h1>
-<p>Después de aprender a encender LEDs desde las salidas digitales de Arduino, el siguiente paso es hacer que Arduino reciba información del exterior. En esta práctica utilizaremos un pulsador para encender un LED mientras lo mantenemos pulsado y apagarlo al soltarlo.</p>
+<p>Haz que Arduino reciba información del exterior: leeremos un pulsador y encenderemos un LED mientras lo mantenemos pulsado.</p>
 </header>
 
 <h2>Objetivo</h2>
-<pre><code>Pulsador sin pulsar → LED apagado
-Pulsador pulsado    → LED encendido
-Soltar pulsador     → LED apagado</code></pre>
+<div class="goal-grid">
+<div class="goal-card"><span class="eyebrow">01 · Reposo</span><strong>Botón suelto</strong><span>LED apagado</span></div>
+<div class="goal-card"><span class="eyebrow">02 · Acción</span><strong>Botón pulsado</strong><span>LED encendido</span></div>
+<div class="goal-card"><span class="eyebrow">03 · Vuelta</span><strong>Soltar botón</strong><span>LED apagado</span></div>
+</div>
 <p>Hasta ahora Arduino daba órdenes mediante <code>digitalWrite()</code>. Aquí aprenderemos también a leer una entrada mediante <code>digitalRead()</code>.</p>
 
 <h2>Material necesario</h2>
@@ -49,27 +62,18 @@ A ─── A ───── B ─── B</code></pre>
 
 <h2>Conexiones</h2>
 <p>En este ejemplo reutilizamos el LED rojo en el pin digital 8 y conectamos el pulsador al pin digital 2.</p>
-<pre><code>LED rojo → D8
-Pulsador → D2
-GND      → GND común
-
-D8 → resistencia → LED → GND común
-
-D2 → pulsador → GND común
-                   │
-Arduino GND ───────┘</code></pre>
+<div class="wiring"><div class="wire"><span class="eyebrow">Salida · LED</span><p><code>D8 → resistencia → LED → GND</code></p></div><div class="wire"><span class="eyebrow">Entrada · Pulsador</span><p><code>D2 → pulsador → GND</code></p></div></div>
 <p>El LED necesita su resistencia limitadora de corriente. Para el pulsador no necesitamos añadir una resistencia externa porque utilizaremos la resistencia pull-up interna del Arduino.</p>
 
 <h2>¿Qué es INPUT_PULLUP?</h2>
 <p>Una entrada digital no debe quedar flotante. Con <code>INPUT_PULLUP</code>, Arduino activa internamente una resistencia que mantiene el pin en un estado definido cuando el botón está suelto.</p>
 <pre><code>pinMode(boton, INPUT_PULLUP);</code></pre>
 <p>Esto produce una lógica que al principio puede parecer invertida:</p>
-<pre><code>Pulsador suelto  → HIGH
-Pulsador pulsado → LOW</code></pre>
+<div class="logic-grid"><div class="logic-card"><span class="eyebrow">Botón suelto</span><strong>HIGH</strong><span>La resistencia interna mantiene la entrada activa.</span></div><div class="logic-card"><span class="eyebrow">Botón pulsado</span><strong>LOW</strong><span>El pin queda conectado a GND.</span></div><div class="logic-card"><span class="eyebrow">Regla rápida</span><strong>LOW = pulsado</strong><span>Con <code>INPUT_PULLUP</code>, la lógica está invertida.</span></div></div><div class="callout"><strong>Recuerda</strong><p>Con <code>INPUT_PULLUP</code>, <code>LOW</code> significa que el pulsador está presionado.</p></div>
 <p>Al pulsar, el pin D2 queda conectado a GND y por eso <code>digitalRead()</code> devuelve <code>LOW</code>.</p>
 
 <h2>Programa completo</h2>
-<pre><code>const int rojo = 8;
+<div class="code-shell"><div class="code-head"><span>Arduino / C++</span><span>Programa completo</span></div><pre><code>const int rojo = 8;
 const int boton = 2;
 
 void setup() {
@@ -89,28 +93,15 @@ void loop() {
     // Suelto: apagamos el LED
     digitalWrite(rojo, LOW);
   }
-}</code></pre>
+}</code></pre></div>
 
 <h2>Qué ocurre al pulsar y soltar</h2>
 <p>Arduino ejecuta <code>loop()</code> continuamente. En cada vuelta lee el pin D2. Si detecta <code>LOW</code>, significa que el botón está pulsado y enciende el LED. Al soltarlo, D2 vuelve a <code>HIGH</code> y Arduino apaga el LED.</p>
-<pre><code>Arduino lee D2
-      │
-      ▼
-¿Está pulsado?
-   /       \
- SÍ         NO
- │           │
-LOW         HIGH
- │           │
- ▼           ▼
-LED ON     LED OFF
-   \         /
-    └── repetir ──┘</code></pre>
+<div class="flow"><span>Leer D2</span><b>→</b><span>¿Pulsado?</span><b>→</b><span>LOW · LED ON</span><b>/</b><span>HIGH · LED OFF</span><b>↻</b></div>
 
 <h2>Qué hemos aprendido</h2>
 <p><code>digitalWrite()</code> sirve para controlar una salida, como un LED. <code>digitalRead()</code> sirve para leer una entrada, como un pulsador. <code>INPUT_PULLUP</code> permite mantener la entrada en un estado estable utilizando una resistencia interna del microcontrolador.</p>
-<pre><code>OUTPUT: Arduino ─────→ componente
-INPUT:  componente ──→ Arduino</code></pre>
+<div class="learn-grid"><div class="learn-card"><strong><code>digitalWrite()</code></strong><span>Controla una salida.</span></div><div class="learn-card"><strong><code>digitalRead()</code></strong><span>Lee una entrada.</span></div><div class="learn-card"><strong><code>INPUT_PULLUP</code></strong><span>Evita una entrada flotante sin resistencia externa.</span></div></div>
 <p>El resultado final es sencillo: con el botón suelto el LED permanece apagado; al pulsar se enciende; al soltar vuelve a apagarse. Arduino ya no se limita a ejecutar una secuencia fija: ahora puede reaccionar a una acción del usuario.</p>
 
 <h2>Siguiente paso</h2>
