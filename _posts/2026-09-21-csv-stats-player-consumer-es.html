@@ -45,7 +45,7 @@ published: true
 
 <section id="problema">
 <div class="head"><span class="num">01</span><h2>El problema que resuelve</h2></div>
-<p><code>csv-stats-player-consumer</code> es un microservicio Spring Boot orientado a eventos. Su responsabilidad empieza cuando otro componente ya ha detectado o generado un fichero de estadísticas de jugadores. En vez de transportar el CSV completo dentro del mensaje Kafka, el productor publica un evento Avro con dos datos de negocio: qué tipo de fichero está listo y dónde puede encontrarlo el consumidor.</p>
+<p><a href="https://github.com/juanfranciscofernandezherreros/csv-stats-player-consumer"><code>csv-stats-player-consumer</code></a> es un microservicio Spring Boot orientado a eventos. Su responsabilidad empieza cuando otro componente ya ha detectado o generado un fichero de estadísticas de jugadores. En vez de transportar el CSV completo dentro del mensaje Kafka, el productor publica un evento Avro con dos datos de negocio: qué tipo de fichero está listo y dónde puede encontrarlo el consumidor.</p>
 <p>El consumer solo acepta eventos cuyo <code>fileType</code> sea <code>STATS_PLAYER</code>. Si recibe otro tipo, lo ignora. Cuando sí coincide, delega la importación a un servicio transaccional.</p>
 <div class="flow" aria-label="Flujo principal del csv-stats-player-consumer">
 <div class="card"><strong>01 · EVENTO</strong><p>Avro identifica el fichero y la ejecución.</p></div>
@@ -253,6 +253,6 @@ Avro/Kafka    ───►   CSV validado   ───►   DTO / Mapper   ──
 </section>
 
 <footer>
-<p>Este artículo describe el estado de <code>csv-stats-player-consumer</code> en la versión 1.0.25. El repositorio de implementación es privado actualmente, por lo que el enlace de GitHub solo es accesible a usuarios autorizados.</p>
+<p>Este artículo describe el estado de <a href="https://github.com/juanfranciscofernandezherreros/csv-stats-player-consumer"><code>csv-stats-player-consumer</code></a> en la versión 1.0.25. El repositorio de implementación es privado actualmente, por lo que el enlace de GitHub solo es accesible a usuarios autorizados.</p>
 </footer>
 </article>
