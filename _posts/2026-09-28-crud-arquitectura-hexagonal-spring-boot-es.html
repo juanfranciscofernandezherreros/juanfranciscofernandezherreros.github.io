@@ -1,0 +1,527 @@
+---
+layout: "article"
+title: "CRUD con Arquitectura Hexagonal en Java y Spring Boot: guía completa"
+description: "Construye un CRUD de usuarios con Arquitectura Hexagonal, Java, Spring Boot y JPA entendiendo dominio, casos de uso, puertos, adaptadores, DTOs, mappers y persistencia."
+permalink: "/java-spring/crud-arquitectura-hexagonal/es/"
+lang: "es"
+lang_url: "/java-spring/crud-arquitectura-hexagonal/es/"
+categories: ["Java & Spring"]
+subcategories: ["Arquitectura de Software"]
+tags: ["java","spring-boot","arquitectura-hexagonal","ports-and-adapters","crud","jpa","hibernate","backend"]
+date: "2026-09-28"
+reading_minutes: 18
+---
+<style>
+.hex-crud{--panel:var(--surface);--muted:var(--ink-soft);--line-local:var(--line);--code-local:var(--code-bg);--code-text-local:var(--code-ink);--notice-local:var(--accent-soft);max-width:920px;margin:36px auto 96px;padding:0 24px}
+.hex-crud .titleblock{background:var(--panel);border:1px solid var(--line-local);padding:clamp(28px,5vw,48px)}
+.hex-crud .back,.hex-crud .eyebrow,.hex-crud .num,.hex-crud .stamp dt,.hex-crud pre,.hex-crud code{font-family:"IBM Plex Mono",monospace}
+.hex-crud .back,.hex-crud .eyebrow,.hex-crud .num{font-size:.74rem}
+.hex-crud .eyebrow,.hex-crud .num{color:var(--accent);text-transform:uppercase;letter-spacing:.09em}
+.hex-crud h1,.hex-crud h2,.hex-crud h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}
+.hex-crud .titleblock h1{font-size:clamp(2.6rem,7vw,4.4rem);line-height:.96;max-width:18ch}
+.hex-crud .lede{font-size:1.05rem;color:var(--muted);max-width:68ch;line-height:1.68}
+.hex-crud .stamp{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;border-top:1px solid var(--line-local);padding-top:18px;margin-top:24px}
+.hex-crud .stamp div{padding:12px;background:var(--surface-2);border-radius:8px}
+.hex-crud .stamp dt{font-size:.66rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.hex-crud .stamp dd{margin:4px 0 0;font-weight:650}
+.hex-crud section{margin-top:64px}
+.hex-crud .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:20px}
+.hex-crud h2{font-size:clamp(1.6rem,4vw,2.15rem)}
+.hex-crud h3{font-size:1.2rem;margin-top:30px}
+.hex-crud p,.hex-crud li{max-width:74ch;line-height:1.75}
+.hex-crud pre{overflow:auto;background:var(--code-local);color:var(--code-text-local);border:1px solid var(--line-local);padding:18px;line-height:1.55;font-size:.82rem}
+.hex-crud .notice{border-left:4px solid var(--accent);background:var(--notice-local);padding:16px 18px;margin:22px 0}
+.hex-crud .grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin:24px 0}
+.hex-crud .card{background:var(--panel);border:1px solid var(--line-local);padding:18px}
+.hex-crud .card h3{margin:0 0 8px;font-size:1.05rem}
+.hex-crud .card p{margin:0;color:var(--muted);font-size:.92rem}
+.hex-crud .flow{display:flex;flex-wrap:wrap;align-items:center;gap:.55rem;margin:22px 0}
+.hex-crud .flow span{background:var(--panel);border:1px solid var(--line-local);border-radius:7px;padding:.65rem .78rem;font-family:"IBM Plex Mono",monospace;font-size:.75rem}
+.hex-crud .flow b{color:var(--accent)}
+.hex-crud table{width:100%;border-collapse:collapse;margin:22px 0;font-size:.92rem}
+.hex-crud th,.hex-crud td{border:1px solid var(--line-local);padding:10px 12px;text-align:left;vertical-align:top}
+.hex-crud th{background:var(--surface-2)}
+.hex-crud .tree{white-space:pre;overflow:auto}
+.hex-crud .summary{background:var(--panel);border:1px solid var(--line-local);padding:22px;margin-top:28px}
+@media(max-width:700px){.hex-crud{padding:0 16px}.hex-crud .grid,.hex-crud .stamp{grid-template-columns:1fr}.hex-crud .titleblock{padding:26px 20px}.hex-crud .flow{align-items:stretch}.hex-crud .flow span{flex:1 1 100%}.hex-crud .flow b{display:none}}
+</style>
+
+<div class="sheet hex-crud">
+  <div class="titleblock">
+    <p class="back"><a href="../../../">&larr; Volver al blog</a></p>
+    <p class="eyebrow">Java · Spring Boot · Arquitectura de Software</p>
+    <h1>CRUD con Arquitectura Hexagonal</h1>
+    <p class="lede">Un CRUD parece sencillo hasta que el controlador conoce JPA, el servicio conoce Hibernate y el modelo de negocio acaba lleno de anotaciones de infraestructura. En esta guía construiremos un CRUD de usuarios separando dominio, aplicación e infraestructura para entender de verdad qué significan <strong>Ports &amp; Adapters</strong>.</p>
+    <dl class="stamp">
+      <div><dt>Nivel</dt><dd>Intermedio</dd></div>
+      <div><dt>Stack</dt><dd>Java + Spring Boot + JPA</dd></div>
+      <div><dt>Objetivo</dt><dd>CRUD desacoplado</dd></div>
+    </dl>
+  </div>
+
+  <section id="problema">
+    <div class="head"><span class="num">01</span><h2>El problema que queremos evitar</h2></div>
+    <p>La estructura <code>Controller → Service → Repository</code> funciona bien para aplicaciones pequeñas. El problema aparece cuando esas capas empiezan a mezclar responsabilidades. Un servicio que debería expresar reglas de aplicación termina importando <code>JpaRepository</code>, una entidad de negocio acaba anotada con <code>@Entity</code> y una decisión de persistencia condiciona todo el código.</p>
+    <p>La Arquitectura Hexagonal propone que el núcleo de la aplicación no dependa de los detalles externos. Spring, REST, JPA, Hibernate o MySQL son mecanismos de entrada y salida. Son importantes, pero no deberían definir el modelo de negocio.</p>
+    <div class="notice"><strong>Modelo mental:</strong> el negocio define qué necesita. La infraestructura decide cómo satisfacerlo.</div>
+  </section>
+
+  <section id="capas">
+    <div class="head"><span class="num">02</span><h2>Las tres zonas del proyecto</h2></div>
+    <div class="grid">
+      <article class="card"><h3>Domain</h3><p>Modelos y conceptos del negocio. No conoce Spring, JPA ni HTTP.</p></article>
+      <article class="card"><h3>Application</h3><p>Casos de uso y orquestación. Decide qué debe ocurrir en cada operación.</p></article>
+      <article class="card"><h3>Infrastructure</h3><p>REST, JPA, base de datos, configuración y adaptadores tecnológicos.</p></article>
+    </div>
+    <p>La regla útil no es memorizar carpetas, sino controlar la dirección de las dependencias. El código interior debe poder compilarse conceptualmente sin saber si mañana persistiremos en MySQL, MongoDB o una API remota.</p>
+  </section>
+
+  <section id="estructura">
+    <div class="head"><span class="num">03</span><h2>Estructura completa</h2></div>
+    <pre class="tree">src/main/java/com/example/crud
+├── domain
+│   ├── model
+│   │   └── User.java
+│   └── port
+│       ├── in
+│       │   ├── CreateUserUseCase.java
+│       │   ├── GetUserUseCase.java
+│       │   ├── GetAllUsersUseCase.java
+│       │   ├── UpdateUserUseCase.java
+│       │   └── DeleteUserUseCase.java
+│       └── out
+│           └── UserRepositoryPort.java
+├── application
+│   └── service
+│       └── UserService.java
+├── infrastructure
+│   ├── adapter
+│   │   ├── in
+│   │   │   └── rest
+│   │   │       ├── UserController.java
+│   │   │       ├── dto
+│   │   │       │   ├── CreateUserRequest.java
+│   │   │       │   ├── UpdateUserRequest.java
+│   │   │       │   └── UserResponse.java
+│   │   │       └── mapper
+│   │   │           └── UserRestMapper.java
+│   │   └── out
+│   │       └── persistence
+│   │           ├── UserPersistenceAdapter.java
+│   │           ├── entity
+│   │           │   └── UserEntity.java
+│   │           ├── repository
+│   │           │   └── JpaUserRepository.java
+│   │           └── mapper
+│   │               └── UserPersistenceMapper.java
+│   └── config
+│       └── BeanConfiguration.java
+└── CrudApplication.java</pre>
+    <p>Hay más archivos que en un CRUD convencional, pero cada uno representa una frontera explícita. Esa separación solo compensa cuando evita acoplamientos reales; no se trata de crear interfaces por deporte.</p>
+  </section>
+
+  <section id="dominio">
+    <div class="head"><span class="num">04</span><h2>El dominio: User sin JPA</h2></div>
+    <p>Empezamos por el modelo que representa al usuario dentro de nuestro negocio. No es una tabla y no es una respuesta HTTP.</p>
+    <pre>public class User {
+    private final Long id;
+    private final String name;
+    private final String email;
+
+    public User(Long id, String name, String email) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+    }
+
+    public Long getId() { return id; }
+    public String getName() { return name; }
+    public String getEmail() { return email; }
+}</pre>
+    <p>La ausencia de <code>@Entity</code>, <code>@Table</code>, <code>@Id</code> o <code>@Column</code> es deliberada. El dominio no necesita saber cómo se almacenará el objeto.</p>
+  </section>
+
+  <section id="puertos-entrada">
+    <div class="head"><span class="num">05</span><h2>Puertos de entrada: qué puede hacer la aplicación</h2></div>
+    <p>Los puertos de entrada describen las capacidades del sistema. Para un CRUD podemos modelar cada operación como un caso de uso.</p>
+    <pre>public interface CreateUserUseCase {
+    User create(User user);
+}
+
+public interface GetUserUseCase {
+    User getById(Long id);
+}
+
+public interface GetAllUsersUseCase {
+    List&lt;User&gt; getAll();
+}
+
+public interface UpdateUserUseCase {
+    User update(Long id, User user);
+}
+
+public interface DeleteUserUseCase {
+    void delete(Long id);
+}</pre>
+    <p>Estas interfaces no dicen nada de REST. La misma aplicación podría invocar los casos de uso desde un controlador HTTP, un consumidor Kafka, una tarea batch o una CLI.</p>
+  </section>
+
+  <section id="puerto-salida">
+    <div class="head"><span class="num">06</span><h2>Puerto de salida: qué necesita la aplicación</h2></div>
+    <p>Para completar los casos de uso necesitamos persistencia, pero el núcleo no debería imponer JPA. Por eso definimos una abstracción propia.</p>
+    <pre>public interface UserRepositoryPort {
+    User save(User user);
+    Optional&lt;User&gt; findById(Long id);
+    List&lt;User&gt; findAll();
+    User update(User user);
+    void deleteById(Long id);
+    boolean existsById(Long id);
+}</pre>
+    <p>Este contrato expresa necesidades del caso de uso. La implementación puede cambiar sin obligar a modificar el servicio de aplicación.</p>
+  </section>
+
+  <section id="servicio">
+    <div class="head"><span class="num">07</span><h2>Application Service: implementar el CRUD</h2></div>
+    <p><code>UserService</code> implementa los puertos de entrada y depende únicamente del puerto de salida.</p>
+    <pre>public class UserService implements
+        CreateUserUseCase,
+        GetUserUseCase,
+        GetAllUsersUseCase,
+        UpdateUserUseCase,
+        DeleteUserUseCase {
+
+    private final UserRepositoryPort repository;
+
+    public UserService(UserRepositoryPort repository) {
+        this.repository = repository;
+    }
+
+    @Override
+    public User create(User user) {
+        return repository.save(user);
+    }
+
+    @Override
+    public User getById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() -&gt; new RuntimeException("User not found"));
+    }
+
+    @Override
+    public List&lt;User&gt; getAll() {
+        return repository.findAll();
+    }
+
+    @Override
+    public User update(Long id, User user) {
+        User existing = repository.findById(id)
+                .orElseThrow(() -&gt; new RuntimeException("User not found"));
+
+        User updated = new User(
+                existing.getId(),
+                user.getName(),
+                user.getEmail()
+        );
+
+        return repository.update(updated);
+    }
+
+    @Override
+    public void delete(Long id) {
+        if (!repository.existsById(id)) {
+            throw new RuntimeException("User not found");
+        }
+        repository.deleteById(id);
+    }
+}</pre>
+    <p>Los <code>RuntimeException</code> son intencionadamente provisionales en esta primera versión. El siguiente paso natural es introducir excepciones de dominio y traducirlas a respuestas HTTP coherentes con <code>@ControllerAdvice</code>.</p>
+  </section>
+
+  <section id="persistencia">
+    <div class="head"><span class="num">08</span><h2>Infraestructura de persistencia</h2></div>
+    <h3>UserEntity</h3>
+    <p>Ahora sí entramos en el mundo JPA. La entidad de persistencia puede conocer anotaciones y decisiones de base de datos.</p>
+    <pre>@Entity
+@Table(name = "users")
+public class UserEntity {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    private String name;
+    private String email;
+
+    public UserEntity() {}
+    // getters y setters
+}</pre>
+
+    <h3>JpaUserRepository</h3>
+    <pre>public interface JpaUserRepository
+        extends JpaRepository&lt;UserEntity, Long&gt; {
+}</pre>
+
+    <h3>Mapper de persistencia</h3>
+    <pre>@Component
+public class UserPersistenceMapper {
+    public UserEntity toEntity(User user) {
+        UserEntity entity = new UserEntity();
+        entity.setId(user.getId());
+        entity.setName(user.getName());
+        entity.setEmail(user.getEmail());
+        return entity;
+    }
+
+    public User toDomain(UserEntity entity) {
+        return new User(
+                entity.getId(),
+                entity.getName(),
+                entity.getEmail()
+        );
+    }
+}</pre>
+
+    <h3>Adaptador de salida</h3>
+    <pre>@Component
+public class UserPersistenceAdapter implements UserRepositoryPort {
+    private final JpaUserRepository repository;
+    private final UserPersistenceMapper mapper;
+
+    public UserPersistenceAdapter(
+            JpaUserRepository repository,
+            UserPersistenceMapper mapper) {
+        this.repository = repository;
+        this.mapper = mapper;
+    }
+
+    @Override
+    public User save(User user) {
+        UserEntity saved = repository.save(mapper.toEntity(user));
+        return mapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional&lt;User&gt; findById(Long id) {
+        return repository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List&lt;User&gt; findAll() {
+        return repository.findAll()
+                .stream()
+                .map(mapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public User update(User user) {
+        return mapper.toDomain(repository.save(mapper.toEntity(user)));
+    }
+
+    @Override
+    public void deleteById(Long id) {
+        repository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return repository.existsById(id);
+    }
+}</pre>
+    <div class="flow" aria-label="Flujo desde el servicio hasta la base de datos">
+      <span>UserService</span><b>→</b><span>UserRepositoryPort</span><b>→</b><span>UserPersistenceAdapter</span><b>→</b><span>JpaUserRepository</span><b>→</b><span>Database</span>
+    </div>
+  </section>
+
+  <section id="rest">
+    <div class="head"><span class="num">09</span><h2>Adaptador de entrada REST</h2></div>
+    <p>HTTP también es infraestructura. En lugar de exponer <code>UserEntity</code>, definimos contratos específicos para la API.</p>
+    <pre>public record CreateUserRequest(
+        String name,
+        String email
+) {}
+
+public record UpdateUserRequest(
+        String name,
+        String email
+) {}
+
+public record UserResponse(
+        Long id,
+        String name,
+        String email
+) {}</pre>
+
+    <p>El controlador depende de los puertos de entrada. No necesita conocer JPA ni el adaptador de persistencia.</p>
+    <pre>@RestController
+@RequestMapping("/users")
+public class UserController {
+    private final CreateUserUseCase createUser;
+    private final GetUserUseCase getUser;
+    private final GetAllUsersUseCase getAllUsers;
+    private final UpdateUserUseCase updateUser;
+    private final DeleteUserUseCase deleteUser;
+
+    public UserController(
+            CreateUserUseCase createUser,
+            GetUserUseCase getUser,
+            GetAllUsersUseCase getAllUsers,
+            UpdateUserUseCase updateUser,
+            DeleteUserUseCase deleteUser) {
+        this.createUser = createUser;
+        this.getUser = getUser;
+        this.getAllUsers = getAllUsers;
+        this.updateUser = updateUser;
+        this.deleteUser = deleteUser;
+    }
+
+    @PostMapping
+    public User create(@RequestBody CreateUserRequest request) {
+        return createUser.create(
+                new User(null, request.name(), request.email())
+        );
+    }
+
+    @GetMapping("/{id}")
+    public User getById(@PathVariable Long id) {
+        return getUser.getById(id);
+    }
+
+    @GetMapping
+    public List&lt;User&gt; getAll() {
+        return getAllUsers.getAll();
+    }
+
+    @PutMapping("/{id}")
+    public User update(
+            @PathVariable Long id,
+            @RequestBody UpdateUserRequest request) {
+        return updateUser.update(
+                id,
+                new User(id, request.name(), request.email())
+        );
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(@PathVariable Long id) {
+        deleteUser.delete(id);
+    }
+}</pre>
+    <p>Para producción, el paso siguiente sería usar <code>UserRestMapper</code> y devolver siempre <code>UserResponse</code>, evitando que el contrato HTTP quede acoplado al modelo de dominio.</p>
+  </section>
+
+  <section id="configuracion">
+    <div class="head"><span class="num">10</span><h2>Configurar UserService sin acoplarlo a Spring</h2></div>
+    <p>Podemos mantener <code>UserService</code> sin <code>@Service</code> y registrarlo desde infraestructura.</p>
+    <pre>@Configuration
+public class BeanConfiguration {
+    @Bean
+    public UserService userService(UserRepositoryPort repository) {
+        return new UserService(repository);
+    }
+}</pre>
+    <p>Spring encuentra <code>UserPersistenceAdapter</code>, que implementa <code>UserRepositoryPort</code>, y lo inyecta en el servicio. El núcleo sigue sin depender de anotaciones de Spring.</p>
+  </section>
+
+  <section id="flujo-create">
+    <div class="head"><span class="num">11</span><h2>El recorrido completo de un POST /users</h2></div>
+    <pre>POST /users
+{
+  "name": "Carlos",
+  "email": "carlos@email.com"
+}</pre>
+    <div class="flow" aria-label="Flujo completo de creación de un usuario">
+      <span>HTTP</span><b>→</b><span>CreateUserRequest</span><b>→</b><span>UserController</span><b>→</b><span>CreateUserUseCase</span><b>→</b><span>UserService</span><b>→</b><span>UserRepositoryPort</span><b>→</b><span>UserPersistenceAdapter</span><b>→</b><span>JPA</span><b>→</b><span>DB</span>
+    </div>
+    <p>Ese recorrido resume la arquitectura. El controller adapta HTTP a la aplicación; el servicio ejecuta el caso de uso; el puerto de salida expresa la necesidad de persistencia; y el adaptador JPA traduce esa necesidad a una tecnología concreta.</p>
+  </section>
+
+  <section id="endpoints">
+    <div class="head"><span class="num">12</span><h2>Endpoints del CRUD</h2></div>
+    <table>
+      <thead><tr><th>Método</th><th>Ruta</th><th>Caso de uso</th></tr></thead>
+      <tbody>
+        <tr><td><code>POST</code></td><td><code>/users</code></td><td>Crear un usuario</td></tr>
+        <tr><td><code>GET</code></td><td><code>/users</code></td><td>Listar usuarios</td></tr>
+        <tr><td><code>GET</code></td><td><code>/users/{id}</code></td><td>Obtener un usuario</td></tr>
+        <tr><td><code>PUT</code></td><td><code>/users/{id}</code></td><td>Actualizar un usuario</td></tr>
+        <tr><td><code>DELETE</code></td><td><code>/users/{id}</code></td><td>Eliminar un usuario</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section id="tradeoffs">
+    <div class="head"><span class="num">13</span><h2>Qué ganamos y qué pagamos</h2></div>
+    <p>Arquitectura Hexagonal no es gratis. Introduce más tipos, mappers y contratos. En un CRUD descartable puede ser una complejidad innecesaria. En una aplicación con reglas de negocio, varias entradas, persistencias cambiantes o una vida útil larga, esas fronteras empiezan a devolver valor.</p>
+    <table>
+      <thead><tr><th>Beneficio</th><th>Coste</th></tr></thead>
+      <tbody>
+        <tr><td>Dominio independiente de JPA y HTTP.</td><td>Más clases y conversiones.</td></tr>
+        <tr><td>Casos de uso fáciles de probar de forma aislada.</td><td>Hay que decidir bien dónde vive cada responsabilidad.</td></tr>
+        <tr><td>Persistencia sustituible mediante adaptadores.</td><td>Puede ser excesivo para CRUDs triviales.</td></tr>
+        <tr><td>Contratos explícitos entre capas.</td><td>Un diseño pobre puede producir abstracciones sin valor.</td></tr>
+      </tbody>
+    </table>
+    <div class="notice"><strong>La arquitectura no consiste en tener muchas carpetas.</strong> Consiste en proteger las reglas y casos de uso frente a detalles que deberían poder cambiar.</div>
+  </section>
+
+  <section id="tests">
+    <div class="head"><span class="num">14</span><h2>Por qué los tests se vuelven más sencillos</h2></div>
+    <p><code>UserService</code> solo depende de <code>UserRepositoryPort</code>. Eso permite probar la lógica con un fake o un mock sin arrancar una base de datos ni un contexto completo de Spring.</p>
+    <pre>@Test
+void shouldCreateUser() {
+    UserRepositoryPort repository = mock(UserRepositoryPort.class);
+    UserService service = new UserService(repository);
+
+    User input = new User(null, "Ana", "ana@email.com");
+    User saved = new User(1L, "Ana", "ana@email.com");
+
+    when(repository.save(input)).thenReturn(saved);
+
+    User result = service.create(input);
+
+    assertEquals(1L, result.getId());
+    verify(repository).save(input);
+}</pre>
+    <p>El test comprueba el caso de uso. JPA se prueba en otro nivel, mediante tests de integración del adaptador de persistencia.</p>
+  </section>
+
+  <section id="siguiente-paso">
+    <div class="head"><span class="num">15</span><h2>Qué falta para llevarlo a un proyecto real</h2></div>
+    <p>Este diseño deja visible el siguiente conjunto de mejoras: excepciones específicas, validación de entrada, respuestas HTTP consistentes, email único, mappers REST completos, paginación y tests de integración.</p>
+    <ul>
+      <li><code>UserNotFoundException</code> en lugar de <code>RuntimeException</code>.</li>
+      <li><code>EmailAlreadyExistsException</code> para una regla de unicidad.</li>
+      <li><code>@ControllerAdvice</code> para traducir errores a códigos HTTP.</li>
+      <li><code>@Valid</code>, <code>@NotBlank</code> y <code>@Email</code> en los DTOs.</li>
+      <li><code>UserRestMapper</code> para no devolver directamente el dominio.</li>
+      <li>Tests unitarios de casos de uso y tests de integración de adaptadores.</li>
+    </ul>
+    <p>El manejo de excepciones merece una pieza propia porque ahí aparece otra frontera importante: <strong>el dominio expresa el error y el adaptador HTTP decide cómo representarlo al cliente</strong>.</p>
+  </section>
+
+  <section id="conclusion">
+    <div class="head"><span class="num">16</span><h2>La idea que conviene recordar</h2></div>
+    <div class="summary">
+      <p><strong>Los puertos describen lo que la aplicación ofrece o necesita; los adaptadores conectan esos puertos con tecnologías concretas.</strong></p>
+      <p>El flujo final queda así:</p>
+      <pre>REST
+  ↓
+Controller
+  ↓
+Input Port
+  ↓
+Application Service
+  ↓
+Domain
+  ↓
+Output Port
+  ↓
+Persistence Adapter
+  ↓
+JPA / Hibernate
+  ↓
+Database</pre>
+      <p>Si mañana cambia la base de datos, el objetivo es modificar el adaptador, no reescribir el negocio. Si mañana REST deja de ser la única entrada, el caso de uso debería seguir siendo válido. Esa es la utilidad práctica de Ports &amp; Adapters.</p>
+    </div>
+  </section>
+</div>
