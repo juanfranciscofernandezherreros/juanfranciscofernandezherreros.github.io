@@ -1,258 +1,434 @@
 ---
 layout: "article"
-title: "De un evento Kafka a PostgreSQL: anatomía de csv-stats-player-consumer"
-description: "Cómo funciona un consumer Spring Boot que recibe eventos Avro por Kafka, valida un CSV de estadísticas, procesa por chunks, evita duplicados y persiste en PostgreSQL con transacciones, Flyway, DLT y tests reales."
+title: "csv-stats-player-consumer: arquitectura y funcionamiento interno"
+description: "Explicación teórica y detallada del microservicio csv-stats-player-consumer: Kafka y Avro, procesamiento de CSV, transacciones, idempotencia, sustitución de snapshots, PostgreSQL, Flyway, reintentos, DLT y observabilidad."
 permalink: "/java-spring/csv-stats-player-consumer/es/"
 lang: "es"
 lang_url: ""
 series: "Kafka & Spring Boot in Practice"
 categories: ["Java & Spring"]
 subcategories: ["Event Streaming"]
-tags: ["java","spring-boot","kafka","avro","postgresql","jpa","flyway","csv","mapstruct","testcontainers","event-driven"]
+tags: ["java","spring-boot","kafka","avro","postgresql","jpa","flyway","csv","mapstruct","micrometer","event-driven"]
 date: "2026-09-21"
-reading_minutes: 15
+reading_minutes: 24
 published: true
 ---
 <style>
-.csv-consumer{--panel:var(--surface);--panel2:var(--surface-2);--line-local:var(--line);--muted:var(--ink-soft);--code-local:var(--code-bg);--code-ink-local:var(--code-ink);max-width:940px;margin:36px auto 96px;padding:0 24px}
-.csv-consumer .hero,.csv-consumer .card,.csv-consumer .callout{background:var(--panel);border:1px solid var(--line-local)}
-.csv-consumer .hero{padding:clamp(26px,5vw,46px);border-top:5px solid var(--accent)}
-.csv-consumer .eyebrow,.csv-consumer .num,.csv-consumer pre,.csv-consumer code,.csv-consumer .metric strong{font-family:"IBM Plex Mono",monospace}
-.csv-consumer .eyebrow,.csv-consumer .num{color:var(--accent);font-size:.76rem;text-transform:uppercase;letter-spacing:.08em}
-.csv-consumer h1,.csv-consumer h2,.csv-consumer h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em}
-.csv-consumer h1{font-size:clamp(2.45rem,7vw,4.15rem);line-height:.98;max-width:20ch;margin:.2em 0}
-.csv-consumer h2{font-size:clamp(1.55rem,4vw,2rem);margin:0}.csv-consumer h3{font-size:1.08rem;margin:0 0 8px}
-.csv-consumer p,.csv-consumer li{max-width:72ch;line-height:1.72}
-.csv-consumer .lede{font-size:1.06rem;color:var(--muted);max-width:68ch}
-.csv-consumer section{margin-top:60px}.csv-consumer .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:20px}
-.csv-consumer .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:24px 0}
-.csv-consumer .flow .card{padding:14px}.csv-consumer .flow strong{display:block;color:var(--accent);font-size:.78rem;margin-bottom:7px}.csv-consumer .flow p{font-size:.84rem;line-height:1.45;margin:0;text-align:left}
-.csv-consumer .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0}.csv-consumer .card{padding:18px}.csv-consumer .card p{margin-bottom:0;color:var(--muted)}
-.csv-consumer .callout{padding:17px 20px;margin:22px 0;border-left:4px solid var(--accent);background:var(--panel2)}
-.csv-consumer pre{overflow:auto;background:var(--code-local);color:var(--code-ink-local);border:1px solid var(--line-local);padding:17px 18px;line-height:1.55;font-size:.82rem}
-.csv-consumer table{width:100%;border-collapse:collapse;margin:22px 0;font-size:.9rem}.csv-consumer th,.csv-consumer td{border:1px solid var(--line-local);padding:10px;text-align:left;vertical-align:top}.csv-consumer th{background:var(--panel2)}
-.csv-consumer .metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:22px 0}.csv-consumer .metric{background:var(--panel);border:1px solid var(--line-local);padding:18px}.csv-consumer .metric strong{display:block;color:var(--accent);font-size:1.25rem}.csv-consumer .metric span{color:var(--muted);font-size:.86rem}
-.csv-consumer footer{margin-top:54px;padding-top:22px;border-top:1px solid var(--line-local);color:var(--muted)}
-@media(max-width:760px){.csv-consumer{padding:0 16px}.csv-consumer .flow,.csv-consumer .grid,.csv-consumer .metrics{grid-template-columns:1fr}.csv-consumer table{display:block;overflow-x:auto}.csv-consumer .hero{padding:26px 20px}}
+.csv-consumer-theory{--panel:var(--surface);--panel2:var(--surface-2);--line-local:var(--line);--muted:var(--ink-soft);max-width:940px;margin:36px auto 96px;padding:0 24px}
+.csv-consumer-theory .hero,.csv-consumer-theory .card,.csv-consumer-theory .callout,.csv-consumer-theory .principle{background:var(--panel);border:1px solid var(--line-local)}
+.csv-consumer-theory .hero{padding:clamp(28px,5vw,48px);border-top:5px solid var(--accent)}
+.csv-consumer-theory .eyebrow,.csv-consumer-theory .num,.csv-consumer-theory pre,.csv-consumer-theory code,.csv-consumer-theory .metric strong{font-family:"IBM Plex Mono",monospace}
+.csv-consumer-theory .eyebrow,.csv-consumer-theory .num{color:var(--accent);font-size:.76rem;text-transform:uppercase;letter-spacing:.08em}
+.csv-consumer-theory h1,.csv-consumer-theory h2,.csv-consumer-theory h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em}
+.csv-consumer-theory h1{font-size:clamp(2.4rem,7vw,4.1rem);line-height:.98;max-width:20ch;margin:.2em 0}
+.csv-consumer-theory h2{font-size:clamp(1.55rem,4vw,2rem);margin:0}
+.csv-consumer-theory h3{font-size:1.12rem;margin:28px 0 8px}
+.csv-consumer-theory p,.csv-consumer-theory li{max-width:74ch;line-height:1.74}
+.csv-consumer-theory .lede{font-size:1.07rem;color:var(--muted);max-width:70ch}
+.csv-consumer-theory section{margin-top:62px}
+.csv-consumer-theory .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:22px}
+.csv-consumer-theory .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:24px 0}
+.csv-consumer-theory .flow .card{padding:14px}
+.csv-consumer-theory .flow strong{display:block;color:var(--accent);font-size:.76rem;margin-bottom:7px}
+.csv-consumer-theory .flow p{font-size:.84rem;line-height:1.45;margin:0;text-align:left}
+.csv-consumer-theory .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:22px 0}
+.csv-consumer-theory .card,.csv-consumer-theory .principle{padding:18px}
+.csv-consumer-theory .card p,.csv-consumer-theory .principle p{margin-bottom:0;color:var(--muted)}
+.csv-consumer-theory .callout{padding:18px 20px;margin:24px 0;border-left:4px solid var(--accent);background:var(--panel2)}
+.csv-consumer-theory pre{overflow:auto;background:var(--code-bg);color:var(--code-ink);border:1px solid var(--line-local);padding:17px 18px;line-height:1.55;font-size:.82rem}
+.csv-consumer-theory table{width:100%;border-collapse:collapse;margin:22px 0;font-size:.9rem}
+.csv-consumer-theory th,.csv-consumer-theory td{border:1px solid var(--line-local);padding:10px 11px;text-align:left;vertical-align:top}
+.csv-consumer-theory th{background:var(--panel2)}
+.csv-consumer-theory .metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:24px 0}
+.csv-consumer-theory .metric{background:var(--panel);border:1px solid var(--line-local);padding:16px}
+.csv-consumer-theory .metric strong{display:block;color:var(--accent);font-size:1.2rem}
+.csv-consumer-theory .metric span{display:block;color:var(--muted);font-size:.84rem;margin-top:5px}
+.csv-consumer-theory footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line-local);color:var(--muted)}
+@media(max-width:760px){.csv-consumer-theory{padding:0 16px}.csv-consumer-theory .flow,.csv-consumer-theory .grid,.csv-consumer-theory .metrics{grid-template-columns:1fr}.csv-consumer-theory table{display:block;overflow-x:auto}.csv-consumer-theory .hero{padding:26px 20px}.csv-consumer-theory p,.csv-consumer-theory li{text-align:left}}
 </style>
 
-<article class="sheet csv-consumer">
+<article class="sheet csv-consumer-theory">
 <header class="hero">
-<p class="eyebrow">Kafka · Spring Boot · Avro · PostgreSQL</p>
-<h1>De un evento Kafka a 23 estadísticas persistidas</h1>
-<p class="lede">Este proyecto no envía miles de filas por Kafka. Envía algo mucho más pequeño: un evento que dice «el fichero ya está disponible». A partir de ahí, el consumer decide si debe procesarlo, abre el CSV, valida sus 23 columnas, transforma cada jugador en una entidad JPA y lo guarda en PostgreSQL. Lo interesante está en todo lo que ocurre cuando algo falla, el mismo evento llega dos veces o el fichero contiene miles de filas.</p>
+<p class="eyebrow">Kafka · Avro · Spring Boot · PostgreSQL</p>
+<h1>Qué hace realmente csv-stats-player-consumer</h1>
+<p class="lede"><code>csv-stats-player-consumer</code> es un microservicio orientado a eventos cuya función no es “leer un CSV y guardarlo”. Su responsabilidad real es convertir una notificación asíncrona en una actualización consistente, repetible y observable del estado de estadísticas de jugadores almacenado en PostgreSQL. Para hacerlo coordina mensajería, acceso a fichero, validación de datos, transacciones, idempotencia, sustitución de snapshots, persistencia y recuperación ante errores.</p>
 </header>
 
-<section id="problema">
-<div class="head"><span class="num">01</span><h2>El problema que resuelve</h2></div>
-<p><a href="https://github.com/juanfranciscofernandezherreros/csv-stats-player-consumer"><code>csv-stats-player-consumer</code></a> es un microservicio Spring Boot orientado a eventos. Su responsabilidad empieza cuando otro componente ya ha detectado o generado un fichero de estadísticas de jugadores. En vez de transportar el CSV completo dentro del mensaje Kafka, el productor publica un evento Avro con dos datos de negocio: qué tipo de fichero está listo y dónde puede encontrarlo el consumidor.</p>
-<p>El consumer solo acepta eventos cuyo <code>fileType</code> sea <code>STATS_PLAYER</code>. Si recibe otro tipo, lo ignora. Cuando sí coincide, delega la importación a un servicio transaccional.</p>
-<div class="flow" aria-label="Flujo principal del csv-stats-player-consumer">
-<div class="card"><strong>01 · EVENTO</strong><p>Avro identifica el fichero y la ejecución.</p></div>
-<div class="card"><strong>02 · KAFKA</strong><p><code>file.ready</code> entrega la notificación.</p></div>
-<div class="card"><strong>03 · CSV</strong><p>El parser valida 23 columnas y tipos.</p></div>
-<div class="card"><strong>04 · JPA</strong><p>Se persiste por bloques de 500 filas.</p></div>
-<div class="card"><strong>05 · POSTGRES</strong><p>Se guardan jugadores e idempotencia.</p></div>
+<section id="vision-general">
+<div class="head"><span class="num">01</span><h2>La responsabilidad del microservicio</h2></div>
+<p>El sistema parte de una idea sencilla: otro componente ya ha producido un fichero CSV con estadísticas de jugadores y publica en Kafka un evento indicando que ese fichero está disponible. El mensaje no contiene las miles de filas del CSV. Contiene únicamente la información necesaria para localizar el fichero y clasificarlo.</p>
+<p>El consumidor escucha esos eventos, decide si el fichero pertenece a su dominio y, si corresponde a estadísticas de jugadores, inicia una importación. Esa importación debe cumplir varias propiedades al mismo tiempo: no procesar dos veces el mismo evento completado, validar el formato, reemplazar correctamente el estado anterior de cada partido, evitar duplicados lógicos, no dejar datos parciales si algo falla y permitir que Kafka vuelva a intentarlo.</p>
+<div class="flow" aria-label="Flujo conceptual del microservicio">
+<div class="card"><strong>01 · KAFKA</strong><p>Llega una notificación Avro de fichero disponible.</p></div>
+<div class="card"><strong>02 · FILTRO</strong><p>Solo se acepta el tipo <code>STATS_PLAYER</code>.</p></div>
+<div class="card"><strong>03 · CSV</strong><p>Se abre, valida y transforma el fichero.</p></div>
+<div class="card"><strong>04 · TRANSACCIÓN</strong><p>Se reemplaza el snapshot afectado y se persiste.</p></div>
+<div class="card"><strong>05 · CONFIRMACIÓN</strong><p>El evento queda marcado como procesado.</p></div>
 </div>
-<p>Esta arquitectura desacopla la notificación del contenido pesado. Kafka transporta el hecho de que existe trabajo pendiente; el fichero sigue siendo la fuente de las filas que hay que importar.</p>
+<p>Por tanto, el microservicio ocupa una frontera entre dos mundos: Kafka representa que ocurrió algo y PostgreSQL representa el estado materializado que debe quedar después de procesarlo.</p>
 </section>
 
-<section id="contrato-avro">
-<div class="head"><span class="num">02</span><h2>El contrato Avro: una key para la idempotencia</h2></div>
-<p>El mensaje utiliza dos esquemas Avro. La key contiene un <code>uniqueId</code> y el value contiene <code>fileType</code> y <code>filePath</code>.</p>
+<section id="arquitectura-eventos">
+<div class="head"><span class="num">02</span><h2>Arquitectura orientada a eventos: Kafka transporta una señal, no el dataset</h2></div>
+<p>El diseño usa Kafka como mecanismo de coordinación. El evento significa, conceptualmente, “hay un fichero listo para ser procesado”. Esto desacopla al productor del consumidor: el productor no necesita conocer la lógica JPA, el esquema de la tabla ni cómo se validan las estadísticas; el consumidor no necesita saber cómo se generó el fichero.</p>
+<p>El evento utiliza Avro y se divide en una key y un value:</p>
 <pre>FileEventKey
 └── uniqueId: string
 
 FileEventValue
 ├── fileType: string
 └── filePath: string</pre>
-<p>El <code>uniqueId</code> no es un identificador decorativo. Más adelante se guarda como clave primaria de <code>processed_file_event</code>. Esa decisión conecta el contrato de mensajería con la garantía de idempotencia de la base de datos.</p>
-<p>La configuración usa <code>KafkaAvroDeserializer</code> para key y value, <code>specific.avro.reader</code> externalizado y Schema Registry mediante <code>KAFKA_SCHEMA_REGISTRY_URL</code>. Los tipos Java se generan durante la build desde los ficheros <code>.avsc</code> con <code>avro-maven-plugin</code>.</p>
-<div class="callout"><strong>Consecuencia importante:</strong> el <code>filePath</code> debe ser accesible desde el proceso consumidor. Si productor y consumidor viven en máquinas o contenedores distintos, una ruta local del productor no sirve por sí sola. El diseño necesita un filesystem compartido, un volumen común o sustituir la ruta por una ubicación remota accesible.</div>
+<p><code>uniqueId</code> identifica de forma lógica la ejecución o evento. <code>fileType</code> permite que varios consumidores compartan un canal de eventos pero reaccionen solo a los tipos que entienden. <code>filePath</code> indica dónde está el recurso que contiene los datos reales.</p>
+<div class="callout"><strong>Implicación arquitectónica:</strong> Kafka no hace accesible el CSV por sí mismo. El proceso consumidor debe poder resolver <code>filePath</code>. En despliegues con contenedores o máquinas distintas esto exige un volumen compartido, un filesystem común o una estrategia equivalente de almacenamiento accesible para ambos lados.</div>
+<p>Avro aporta un contrato explícito para la mensajería. La aplicación configura deserialización Avro específica y Schema Registry, de modo que el evento no se trata como un mapa genérico de propiedades, sino como tipos generados que representan un contrato conocido.</p>
 </section>
 
 <section id="listener">
-<div class="head"><span class="num">03</span><h2>El listener hace poco, y eso es una virtud</h2></div>
-<p><code>FileReadyConsumer</code> tiene una responsabilidad deliberadamente pequeña. Recibe un <code>ConsumerRecord&lt;FileEventKey, FileEventValue&gt;</code>, registra el identificador, tipo y ruta, filtra eventos ajenos a <code>STATS_PLAYER</code> y delega el trabajo real.</p>
-<pre>@KafkaListener(
-    topics = "${app.kafka.topics.file-ready}",
-    groupId = "${spring.kafka.consumer.group-id}")
-public void listen(ConsumerRecord&lt;FileEventKey, FileEventValue&gt; record) {
-    if (!"STATS_PLAYER".equalsIgnoreCase(record.value().getFileType())) {
-        return;
-    }
+<div class="head"><span class="num">03</span><h2>El listener es deliberadamente fino</h2></div>
+<p><code>FileReadyConsumer</code> es la entrada del microservicio. Su diseño es intencionadamente pequeño: recibe el <code>ConsumerRecord</code>, extrae key y value, registra los datos básicos del mensaje, comprueba el tipo de fichero y delega.</p>
+<p>La decisión principal es esta:</p>
+<pre>si fileType != STATS_PLAYER
+    ignorar evento
 
-    importService.importFile(
-        record.key().getUniqueId(),
-        record.value().getFilePath());
-}</pre>
-<p>Topic y consumer group no están codificados dentro del Java: salen de configuración. El topic tiene <code>file.ready</code> como valor por defecto, mientras que el group id se inyecta desde el entorno.</p>
-<p>Separar listener e importación permite probar la decisión «¿este evento me pertenece?» sin mezclarla con parsing, JPA o filesystem.</p>
+si fileType == STATS_PLAYER
+    importar filePath usando uniqueId</pre>
+<p>Esta separación es importante porque evita que la capa Kafka se convierta en una clase que también conoce CSV, JPA y reglas de consistencia. El listener decide si el mensaje pertenece al microservicio; el servicio de importación decide cómo convertirlo en estado persistente.</p>
+<p>El topic se obtiene de configuración y por defecto es <code>file.ready</code>. El consumer group también llega desde configuración. Esto permite desplegar la misma aplicación en distintos entornos sin recompilarla y mantiene los detalles operativos fuera de la lógica de negocio.</p>
+</section>
+
+<section id="dos-identidades">
+<div class="head"><span class="num">04</span><h2>Dos identidades distintas: eventId y matchId</h2></div>
+<p>Una de las claves para entender el diseño actual es no confundir dos identificadores que resuelven problemas diferentes.</p>
+<table>
+<thead><tr><th>Identificador</th><th>Origen</th><th>Qué representa</th><th>Para qué se usa</th></tr></thead>
+<tbody>
+<tr><td><code>eventId</code></td><td><code>FileEventKey.uniqueId</code></td><td>La entrega lógica del fichero</td><td>Evitar reprocesar un evento que ya terminó correctamente</td></tr>
+<tr><td><code>matchId</code></td><td>Primera columna del CSV</td><td>El partido al que pertenece cada fila</td><td>Reemplazar la instantánea de jugadores de ese partido</td></tr>
+</tbody>
+</table>
+<p>El <code>eventId</code> protege el procesamiento frente a redeliveries del mismo mensaje. El <code>matchId</code> protege la semántica de negocio cuando llega una nueva versión de los datos del mismo partido.</p>
+<p>Esta distinción permite dos comportamientos complementarios. Si Kafka vuelve a entregar exactamente el mismo evento, el servicio puede ignorarlo. Si llega un evento diferente que contiene estadísticas actualizadas para un partido ya existente, el servicio sí debe procesarlo y sustituir el estado anterior del partido.</p>
+</section>
+
+<section id="idempotencia-evento">
+<div class="head"><span class="num">05</span><h2>Idempotencia por evento</h2></div>
+<p>Antes de abrir el fichero, <code>StatsPlayerImportService</code> consulta <code>processed_file_event</code>. Si ya existe una fila cuya primary key es el <code>eventId</code>, la importación termina inmediatamente.</p>
+<pre>processed_file_event
+├── event_id       PRIMARY KEY
+└── processed_at   TIMESTAMP WITH TIME ZONE</pre>
+<p>El marcador no se escribe al principio, sino al final de la importación correcta. Esta decisión evita un problema serio: si se marcara el evento como procesado antes de leer el CSV y luego fallara la fila 300, un retry encontraría el marcador y descartaría un trabajo que nunca se completó.</p>
+<p>El orden conceptual es:</p>
+<pre>1. ¿eventId ya procesado?
+   └─ sí → terminar
+
+2. procesar CSV y persistir snapshot
+
+3. guardar processed_file_event(eventId)
+
+4. confirmar transacción</pre>
+<p>La idempotencia no significa que Kafka entregue una sola vez. Significa que el efecto observable de repetir una entrega ya completada no cambia el estado.</p>
+<div class="callout"><strong>Límite:</strong> la consulta <code>existsById</code> y el insert final no constituyen un “claim” atómico previo al trabajo. Dos ejecuciones verdaderamente concurrentes del mismo <code>eventId</code> podrían empezar a trabajar a la vez. La primary key impide dos confirmaciones finales válidas, pero no evita el trabajo duplicado previo. Para un volumen de concurrencia extrema podría ser necesario un mecanismo de claim o locking más fuerte.</div>
+</section>
+
+<section id="snapshot">
+<div class="head"><span class="num">06</span><h2>El CSV representa una instantánea por partido</h2></div>
+<p>El comportamiento actual no es simplemente “insertar nuevas filas”. Cada fichero se interpreta como una instantánea completa de los partidos que contiene. Cuando aparece por primera vez un <code>matchId</code> durante la importación, el servicio elimina todas las filas ya persistidas para ese partido antes de insertar las nuevas.</p>
+<pre>para cada chunk:
+    entidades = mapear DTOs
+
+    matchIds nuevos en este fichero =
+        matchIds del chunk todavía no reemplazados
+
+    eliminar filas existentes de esos matchIds
+    insertar las filas nuevas del chunk</pre>
+<p>El conjunto <code>replacedMatchIds</code> vive durante toda la importación y garantiza que cada partido se borre una sola vez, aunque sus jugadores aparezcan repartidos entre varios chunks. Esto es importante porque borrar el partido en cada chunk eliminaría filas insertadas por un chunk anterior del mismo fichero.</p>
+<p>La semántica resultante es parecida a una operación de reemplazo: para cada partido presente en el CSV, el estado final en PostgreSQL debe reflejar el contenido del fichero que se está importando, no una acumulación histórica de todas las versiones recibidas.</p>
+<div class="grid">
+<div class="principle"><h3>Evento repetido</h3><p>Mismo <code>eventId</code>: no se vuelve a procesar.</p></div>
+<div class="principle"><h3>Snapshot nuevo</h3><p>Otro <code>eventId</code> con el mismo <code>matchId</code>: se reemplazan los jugadores anteriores de ese partido.</p></div>
+</div>
 </section>
 
 <section id="transaccion">
-<div class="head"><span class="num">04</span><h2>Una transacción para todo el fichero</h2></div>
-<p>La pieza central es <code>StatsPlayerImportService.importFile()</code>, anotado con <code>@Transactional</code>. Antes de abrir el CSV pregunta si el <code>eventId</code> ya existe en <code>processed_file_event</code>. Si existe, termina inmediatamente.</p>
-<pre>if (processedEventRepository.existsById(eventId)) {
-    return;
-}</pre>
-<p>Si es un evento nuevo, procesa el fichero. Solo después de terminar correctamente guarda:</p>
-<pre>new ProcessedFileEvent(eventId, Instant.now())</pre>
-<p>Eso produce una propiedad útil: jugadores e identificador de evento participan en la misma transacción. Si el parser falla en la fila 800, si una escritura JPA lanza una excepción o si cualquier paso rompe la importación, la excepción se propaga y Spring puede hacer rollback de la operación.</p>
-<div class="callout"><strong>Matiz:</strong> procesar en chunks reduce el tamaño del contexto JPA y permite hacer flush periódicamente, pero no convierte cada chunk en una transacción independiente. El método completo sigue siendo una única transacción por fichero. Es una decisión coherente con «todo o nada», aunque una importación muy grande mantiene la transacción abierta durante más tiempo.</div>
+<div class="head"><span class="num">07</span><h2>La transacción define la unidad real de consistencia</h2></div>
+<p><code>importFile()</code> está anotado con <code>@Transactional</code>. Por tanto, la unidad lógica no es una fila ni un chunk: es el fichero completo.</p>
+<p>Dentro de la misma transacción pueden ocurrir eliminaciones del snapshot anterior, inserciones de nuevos jugadores y el guardado del marcador de evento procesado. Si una excepción escapa del método, Spring puede revertir todas esas modificaciones.</p>
+<pre>BEGIN
+
+  comprobar eventId
+  borrar snapshots afectados
+  insertar jugadores
+  guardar processed_file_event
+
+COMMIT
+
+si algo falla:
+ROLLBACK</pre>
+<p>Este diseño busca una propiedad de “todo o nada”. No interesa dejar 500 jugadores nuevos de un partido y otros 200 antiguos porque la lectura falló a mitad del fichero. Tampoco interesa guardar el marcador idempotente si los datos no llegaron a consolidarse.</p>
+<p>El coste de esta garantía es que un fichero grande mantiene una transacción abierta durante más tiempo. Los chunks reducen memoria y tamaño del contexto JPA, pero no fragmentan la transacción. Es una elección entre consistencia fuerte de la importación y duración de la unidad transaccional.</p>
 </section>
 
 <section id="csv">
-<div class="head"><span class="num">05</span><h2>El CSV se trata como datos, no como texto separado por comas</h2></div>
-<p>El parser usa Apache Commons CSV. Eso evita un error clásico: hacer <code>split(",")</code> y romper nombres o campos que contienen comas entrecomilladas.</p>
-<p>Cada fila debe contener exactamente <strong>23 columnas</strong>. El parser mapea:</p>
+<div class="head"><span class="num">08</span><h2>El parser trata el CSV como un contrato de datos</h2></div>
+<p><code>StatsPlayerCsvParser</code> usa Apache Commons CSV. Esto permite respetar reglas reales de CSV, como campos entrecomillados, en lugar de asumir que cada coma equivale siempre a una separación válida.</p>
+<p>El parser actual exige exactamente <strong>24 columnas</strong> por fila. El orden tiene significado:</p>
 <table>
-<thead><tr><th>Grupo</th><th>Campos</th></tr></thead>
+<thead><tr><th>Posición</th><th>Campo</th><th>Tipo lógico</th></tr></thead>
 <tbody>
-<tr><td>Identidad</td><td><code>Name</code>, <code>Team</code></td></tr>
-<tr><td>Resumen</td><td><code>PTS</code>, <code>REB</code>, <code>AST</code>, <code>MIN</code></td></tr>
-<tr><td>Tiro</td><td><code>FGM</code>, <code>FGA</code>, <code>2PM</code>, <code>2PA</code>, <code>3PM</code>, <code>3PA</code>, <code>FTM</code>, <code>FTA</code></td></tr>
-<tr><td>Impacto y rebote</td><td><code>+/-</code>, <code>OR</code>, <code>DR</code></td></tr>
-<tr><td>Defensa y pérdidas</td><td><code>PF</code>, <code>ST</code>, <code>TO</code>, <code>BS</code>, <code>BA</code>, <code>TFS</code></td></tr>
+<tr><td>1</td><td><code>match_id</code></td><td>Texto</td></tr>
+<tr><td>2–3</td><td><code>Name</code>, <code>Team</code></td><td>Texto</td></tr>
+<tr><td>4–6</td><td><code>PTS</code>, <code>REB</code>, <code>AST</code></td><td>Entero nullable</td></tr>
+<tr><td>7</td><td><code>MIN</code></td><td>Texto</td></tr>
+<tr><td>8–15</td><td><code>FGM</code>, <code>FGA</code>, <code>2PM</code>, <code>2PA</code>, <code>3PM</code>, <code>3PA</code>, <code>FTM</code>, <code>FTA</code></td><td>Entero nullable</td></tr>
+<tr><td>16–18</td><td><code>+/-</code>, <code>OR</code>, <code>DR</code></td><td>Entero nullable</td></tr>
+<tr><td>19–24</td><td><code>PF</code>, <code>ST</code>, <code>TO</code>, <code>BS</code>, <code>BA</code>, <code>TFS</code></td><td>Entero nullable</td></tr>
 </tbody>
 </table>
-<p>Excepto <code>name</code>, <code>team</code> y <code>min</code>, las estadísticas cuantitativas se convierten a <code>Integer</code>. Si una fila contiene <code>ten</code> en <code>PTS</code>, no se deja pasar silenciosamente: se lanza una excepción que incluye número de fila, columna y valor problemático.</p>
-<p>Ese fallo termina llegando al servicio, que lo envuelve en <code>IllegalStateException</code>. Como el listener no lo absorbe, Spring Kafka puede aplicar la política de reintentos.</p>
+<p>La validación no se limita al número de columnas. Las estadísticas numéricas se convierten a <code>Integer</code>. El valor especial <code>-</code> significa “dato no disponible” y se convierte en <code>null</code>. Esto es distinto de un número negativo real: por ejemplo, <code>-9</code> en <code>+/-</code> sigue siendo un entero válido y conserva su signo.</p>
+<p>Si aparece texto no convertible en una columna numérica, el parser lanza una excepción con información de fila, columna y valor. No intenta corregir silenciosamente el dato ni sustituirlo por cero, porque eso alteraría el significado estadístico.</p>
+<div class="callout"><strong>Idea importante:</strong> validar pronto desplaza el fallo hacia la frontera de entrada. Es preferible rechazar una fila inválida antes de transformarla en una entidad que descubrir el problema más tarde, cuando el estado ya está parcialmente mezclado con persistencia.</div>
 </section>
 
 <section id="chunks">
-<div class="head"><span class="num">06</span><h2>Chunks de 500 y batching JDBC de 100</h2></div>
-<p>El parser no necesita materializar todo el fichero en memoria. <code>parseInChunks()</code> acumula como máximo 500 DTOs y entrega cada bloque al servicio.</p>
-<p>Para cada chunk ocurre esta secuencia:</p>
-<pre>CSVRecord
-   ↓
-StatsPlayerDTO
-   ↓ MapStruct
-StatsPlayer
-   ↓
-saveAllAndFlush(500)
-   ↓
-EntityManager.clear()</pre>
-<p><code>saveAllAndFlush()</code> fuerza la sincronización con la base de datos y <code>EntityManager.clear()</code> evita que miles de entidades ya procesadas sigan gestionadas por el contexto de persistencia.</p>
-<p>Además, Hibernate configura <code>hibernate.jdbc.batch_size=100</code> y <code>order_inserts=true</code>. La entidad usa una secuencia con <code>allocationSize=100</code>, alineada con la estrategia de batching para no depender de un identificador generado por cada insert individual.</p>
+<div class="head"><span class="num">09</span><h2>Chunks de 500: controlar memoria sin perder atomicidad</h2></div>
+<p>El parser no necesita cargar el fichero completo en una lista. <code>parseInChunks()</code> acumula hasta 500 DTOs y entrega cada bloque al servicio. Al terminar el fichero, entrega también el último bloque aunque tenga menos elementos.</p>
+<p>Esto cambia el perfil de memoria. En lugar de retener todos los jugadores antes de empezar a persistir, el consumo se mantiene aproximadamente acotado por el tamaño de chunk y por los objetos que JPA tenga gestionados en ese momento.</p>
+<pre>CSVParser
+   │
+   ├─ 500 filas → List&lt;StatsPlayerDTO&gt;
+   │                 │
+   │                 ▼
+   │              MapStruct
+   │                 │
+   │                 ▼
+   │              entidades
+   │                 │
+   │                 ▼
+   │           saveAllAndFlush()
+   │                 │
+   │                 ▼
+   │        EntityManager.clear()
+   │
+   └─ siguiente chunk</pre>
+<p>Después de <code>saveAllAndFlush()</code>, el servicio ejecuta <code>EntityManager.clear()</code>. El objetivo es evitar que el persistence context mantenga referencias a miles de entidades ya sincronizadas con la base de datos.</p>
+<p>El chunk de aplicación es 500, mientras que Hibernate configura <code>hibernate.jdbc.batch_size=100</code>. Son dos niveles distintos: uno regula cuántos objetos procesa la aplicación de una vez y el otro regula cómo Hibernate agrupa operaciones JDBC.</p>
 <div class="metrics">
-<div class="metric"><strong>500</strong><span>filas por chunk de aplicación</span></div>
-<div class="metric"><strong>100</strong><span>tamaño de batch JDBC</span></div>
-<div class="metric"><strong>23</strong><span>columnas esperadas por fila</span></div>
+<div class="metric"><strong>24</strong><span>columnas requeridas por fila</span></div>
+<div class="metric"><strong>500</strong><span>DTOs por chunk de aplicación</span></div>
+<div class="metric"><strong>100</strong><span>batch JDBC configurado</span></div>
+<div class="metric"><strong>100</strong><span>allocationSize de la secuencia</span></div>
 </div>
 </section>
 
-<section id="mapstruct">
-<div class="head"><span class="num">07</span><h2>MapStruct y Lombok: código generado que también necesita pruebas</h2></div>
-<p>El proyecto separa el formato leído del modelo persistente mediante <code>StatsPlayerDTO</code> y <code>StatsPlayer</code>. <code>StatsPlayerMapper</code> usa MapStruct para generar las conversiones en compilación.</p>
-<p>Hay un detalle histórico importante: el proyecto necesitó <code>lombok-mapstruct-binding</code> en los annotation processors para que MapStruct vea correctamente las propiedades generadas por Lombok. Sin esa coordinación, el mapper podía compilar y, aun así, construir entidades sin copiar los valores.</p>
-<p>Ese fallo ya tiene una prueba específica sobre el mapper real. Lo documenté con una ejecución end-to-end en <a href="{{ '/java-spring/kafka-consumer-local-test/es/' | relative_url }}">Probar un Kafka consumer en local: 5.000 filas, Avro y un bug invisible</a>.</p>
-<div class="callout"><strong>Lección general:</strong> si una parte esencial de tu aplicación la genera una herramienta durante compilación, no basta con mockear su interfaz. Al menos una prueba debe ejercitar el código generado real.</div>
+<section id="mapeo">
+<div class="head"><span class="num">10</span><h2>DTO, MapStruct y entidad: separar entrada de persistencia</h2></div>
+<p>El parser produce <code>StatsPlayerDTO</code>. Ese objeto representa los datos ya interpretados desde CSV. Después, <code>StatsPlayerMapper</code> transforma cada DTO en una entidad <code>StatsPlayer</code> que JPA puede persistir.</p>
+<p>La separación evita acoplar directamente el parser al modelo de persistencia. Conceptualmente hay tres etapas:</p>
+<pre>texto CSV
+   ↓ interpretación
+StatsPlayerDTO
+   ↓ mapeo
+StatsPlayer
+   ↓ persistencia
+tabla stats_player</pre>
+<p>MapStruct genera el código de mapeo en compilación. Lombok genera parte del boilerplate de los modelos. El proyecto incluye la integración entre ambos annotation processors para que MapStruct pueda reconocer correctamente las propiedades generadas.</p>
+<p>La entidad utiliza una secuencia PostgreSQL y un <code>allocationSize</code> de 100. Esto encaja con el procesamiento por lotes: obtener rangos de identificadores evita depender de un round-trip para cada fila individual.</p>
 </section>
 
 <section id="postgres">
-<div class="head"><span class="num">08</span><h2>PostgreSQL: Flyway manda, Hibernate valida</h2></div>
-<p>La aplicación no deja que Hibernate improvise el esquema en cada arranque. Flyway gestiona la evolución y Hibernate usa <code>ddl-auto: validate</code> para comprobar que las entidades siguen siendo compatibles con la base existente.</p>
-<p>La migración crea tres piezas clave:</p>
-<pre>stats_player_seq
-stats_player
-processed_file_event</pre>
-<p><code>stats_player</code> conserva las 23 propiedades del jugador más su identificador. <code>processed_file_event</code> tiene <code>event_id</code> como primary key y <code>processed_at</code> como timestamp con zona horaria.</p>
-<p>La migración también normaliza a <code>INTEGER</code> las estadísticas numéricas y cita explícitamente columnas como <code>"or"</code> y <code>"to"</code>, cuyos nombres pueden ser problemáticos en SQL. Al final realinea la secuencia con el mayor identificador existente.</p>
-<p>La configuración de conexión no contiene credenciales fijas: <code>DB_URL</code>, <code>DB_USER</code> y <code>DB_PASS</code> llegan por variables de entorno.</p>
-</section>
-
-<section id="errores">
-<div class="head"><span class="num">09</span><h2>Cuando el fichero falla: retry y Dead Letter Topic</h2></div>
-<p><code>KafkaConsumerConfig</code> configura un <code>DefaultErrorHandler</code> con <code>FixedBackOff(2000, 2)</code>. En términos operativos, después del intento inicial puede haber <strong>dos reintentos adicionales</strong>, separados por 2 segundos.</p>
-<p>Si sigue fallando, <code>DeadLetterPublishingRecoverer</code> publica el registro en un topic con sufijo <code>.DLT</code> y conserva el número de partición:</p>
-<pre>file.ready partition 3
-        │
-        ├── intento inicial
-        ├── retry +2 s
-        ├── retry +2 s
-        └──► file.ready.DLT partition 3</pre>
-<p>El servicio no marca el evento como procesado si la importación termina con error. Esto permite que un retry vuelva a recorrer la lógica en lugar de encontrarse un falso positivo de idempotencia.</p>
-</section>
-
-<section id="idempotencia">
-<div class="head"><span class="num">10</span><h2>Qué garantiza realmente la idempotencia</h2></div>
-<p>Si Kafka vuelve a entregar un evento ya completado, <code>existsById(eventId)</code> evita volver a abrir el fichero y duplicar jugadores. Es una protección sencilla y explícita.</p>
-<p>Hay un matiz de concurrencia interesante. La comprobación <code>existsById</code> y el posterior insert del marcador no forman una única operación atómica de «claim». Dos consumidores concurrentes podrían comprobar a la vez que el identificador aún no existe y empezar a procesar. La primary key de <code>processed_file_event</code> impide que ambos commits terminen correctamente y, al estar todo dentro de la transacción, el perdedor debería revertir también sus jugadores. Aun así, habría hecho trabajo duplicado antes de chocar.</p>
-<p>Si el sistema necesitase mucha concurrencia sobre el mismo evento, sería razonable evolucionar hacia una estrategia de claim atómico o bloqueo. Para el contrato actual, la combinación de marcador persistente y transacción proporciona una semántica clara y fácil de auditar.</p>
-</section>
-
-<section id="testing">
-<div class="head"><span class="num">11</span><h2>Tests rápidos sin Docker y una frontera de integración real</h2></div>
-<p>La suite separa intencionadamente dos niveles. <code>mvn clean test</code> ejecuta tests unitarios y de configuración sin requerir Docker. Allí se comprueba el filtro del listener, el contrato del parser, los chunks, la idempotencia, la transacción, el mapper y la política Kafka de retry/DLT.</p>
-<p>La integración con PostgreSQL real vive en <code>PostgreSqlMigrationIT</code>, con naming de Maven Failsafe. Se ejecuta mediante:</p>
-<pre>mvn clean verify -Pintegration</pre>
-<p>Ese test arranca <code>postgres:15-alpine</code> con Testcontainers, ejecuta Flyway y consulta <code>information_schema</code> para comprobar tablas, secuencia y tipos de columnas.</p>
-<div class="callout"><strong>Decisión práctica:</strong> un desarrollador puede ejecutar la suite normal aunque no tenga Docker. CI, en cambio, ejecuta <code>mvn -B verify -Pintegration</code> y añade la validación del PostgreSQL real.</div>
-</section>
-
-<section id="operacion">
-<div class="head"><span class="num">12</span><h2>Configuración y ejecución</h2></div>
-<p>Las variables principales son:</p>
-<table>
-<thead><tr><th>Variable</th><th>Responsabilidad</th></tr></thead>
-<tbody>
-<tr><td><code>DB_URL</code>, <code>DB_USER</code>, <code>DB_PASS</code></td><td>Conexión PostgreSQL.</td></tr>
-<tr><td><code>KAFKA_BOOTSTRAP_SERVERS</code></td><td>Broker o cluster Kafka.</td></tr>
-<tr><td><code>KAFKA_CONSUMER_GROUP_ID</code></td><td>Grupo del consumer.</td></tr>
-<tr><td><code>KAFKA_AUTO_OFFSET_RESET</code></td><td>Política de offset inicial.</td></tr>
-<tr><td><code>KAFKA_SCHEMA_REGISTRY_URL</code></td><td>Registro de esquemas Avro.</td></tr>
-<tr><td><code>KAFKA_SPECIFIC_AVRO_READER</code></td><td>Lectura en tipos Avro específicos.</td></tr>
-<tr><td><code>KAFKA_FILE_READY_TOPIC</code></td><td>Topic de entrada; por defecto <code>file.ready</code>.</td></tr>
-</tbody>
-</table>
-<p>El artefacto Maven se genera como <code>target/app.jar</code>. El Dockerfile de runtime es deliberadamente pequeño: usa <code>eclipse-temurin:21-jre</code>, copia ese JAR y ejecuta <code>java -jar app.jar</code>.</p>
-</section>
-
-<section id="evolucion">
-<div class="head"><span class="num">13</span><h2>Lo interesante está también en cómo evolucionó</h2></div>
-<p>El changelog cuenta una historia técnica bastante clara. El consumer no nació con todas estas garantías: se fueron añadiendo como respuestas a fallos o límites concretos.</p>
+<div class="head"><span class="num">11</span><h2>PostgreSQL no es solo almacenamiento: también impone invariantes</h2></div>
+<p>La tabla <code>stats_player</code> contiene los datos del jugador y su <code>match_id</code>. La base de datos añade una restricción única sobre:</p>
+<pre>(match_id, name, team)</pre>
+<p>Esta restricción expresa una regla de identidad lógica: dentro de un mismo partido no debería existir dos veces el mismo jugador del mismo equipo. Es una defensa adicional incluso si la aplicación contiene un error o recibe un fichero con duplicados incompatibles.</p>
+<p>El esquema se gestiona con Flyway. Hibernate usa <code>ddl-auto: validate</code>, de modo que no intenta modificar automáticamente el esquema para hacerlo coincidir con las entidades. La responsabilidad de evolucionar la base pertenece a las migraciones; Hibernate comprueba que el modelo esperado y el real son compatibles.</p>
+<p>Las migraciones actuales establecen, entre otras cosas, la secuencia, la tabla de estadísticas, la tabla de eventos procesados, la columna <code>match_id</code> y la deduplicación necesaria antes de crear la restricción única.</p>
 <div class="grid">
-<div class="card"><h3>Parsing</h3><p>El <code>split(",")</code> inicial se sustituyó por Apache Commons CSV y validación de 23 columnas.</p></div>
-<div class="card"><h3>Tipos</h3><p>Las estadísticas pasaron de texto a <code>Integer</code> con validación explícita de valores no numéricos.</p></div>
-<div class="card"><h3>Resiliencia</h3><p>Se incorporaron retries, backoff y DLT en vez de limitarse a registrar el error.</p></div>
-<div class="card"><h3>Consistencia</h3><p>La importación se movió a un servicio transaccional y se añadió idempotencia por evento.</p></div>
-<div class="card"><h3>Volumen</h3><p>Llegaron batching JDBC, secuencia optimizada, chunks de 500 y limpieza del persistence context.</p></div>
-<div class="card"><h3>Esquema y pruebas</h3><p>Flyway, <code>ddl-auto: validate</code>, Testcontainers y pruebas del mapper real cerraron fronteras que antes quedaban implícitas.</p></div>
+<div class="card"><h3>Flyway</h3><p>Define cómo cambia el esquema con una secuencia versionada de migraciones.</p></div>
+<div class="card"><h3>Hibernate validate</h3><p>Comprueba el esquema al arrancar, pero no lo reescribe.</p></div>
 </div>
-<p>La versión actual es <strong>1.0.25</strong>, sobre Java 21 y Spring Boot 3.1.12.</p>
 </section>
 
-<section id="gobierno">
-<div class="head"><span class="num">14</span><h2>El repositorio también automatiza cómo se cambia</h2></div>
-<p>Hay una segunda parte del proyecto que no ejecuta negocio pero sí protege su mantenimiento. <code>AGENTS.md</code> define una política específica para cambios realizados por agentes de IA: rama dedicada, incremento de versión, sincronización de <code>pom.xml</code>/<code>README.md</code>/<code>CHANGELOG.md</code>, tests y Pull Request obligatorio.</p>
-<p>GitHub Actions refuerza esa política:</p>
+<section id="reintentos">
+<div class="head"><span class="num">12</span><h2>Los errores vuelven a Kafka: retries y Dead Letter Topic</h2></div>
+<p>El listener no absorbe los fallos de importación. Si el servicio lanza una excepción, Spring Kafka la recibe y aplica el <code>DefaultErrorHandler</code>.</p>
+<p>La configuración por defecto usa un <code>FixedBackOff</code> de 2 segundos y un máximo de 2 reintentos después del intento inicial:</p>
+<pre>intento inicial
+   │
+   ├─ falla
+   ▼
+espera 2 s
+   │
+   ├─ retry 1 falla
+   ▼
+espera 2 s
+   │
+   ├─ retry 2 falla
+   ▼
+Dead Letter Topic</pre>
+<p>Cuando se agotan los intentos, <code>DeadLetterPublishingRecoverer</code> publica el registro en el topic original con un sufijo configurable, por defecto <code>.DLT</code>, conservando la partición.</p>
+<pre>file.ready[3]
+   └─ error definitivo
+      └─► file.ready.DLT[3]</pre>
+<p>La DLT no arregla el fichero. Su función es separar los mensajes que no pudieron completarse del flujo normal para que puedan inspeccionarse, corregirse o reprocesarse mediante una estrategia operativa explícita.</p>
+<p>Como el marcador de <code>processed_file_event</code> se escribe solo al final de una transacción correcta, cada retry encuentra el evento todavía pendiente y puede intentar la importación completa otra vez.</p>
+</section>
+
+<section id="semantica-entrega">
+<div class="head"><span class="num">13</span><h2>Semántica práctica: asumir redelivery y diseñar efectos repetibles</h2></div>
+<p>En sistemas de mensajería distribuidos es peligroso diseñar como si cada mensaje solo pudiera aparecer una vez. Un error de proceso, un rebalanceo, un timeout o un problema de confirmación pueden provocar una nueva entrega.</p>
+<p>Este microservicio afronta esa realidad en dos capas:</p>
+<div class="grid">
+<div class="card"><h3>Idempotencia técnica</h3><p><code>eventId</code> evita aplicar dos veces una entrega ya completada.</p></div>
+<div class="card"><h3>Idempotencia de negocio</h3><p><code>matchId</code> más el reemplazo del snapshot impide que una nueva versión del partido se limite a duplicar filas anteriores.</p></div>
+</div>
+<p>No es exactamente lo mismo que una garantía de “exactly once” distribuida entre Kafka, filesystem y PostgreSQL. Es una estrategia de procesamiento robusta construida sobre transacción local, identificadores persistentes y reglas de reemplazo.</p>
+</section>
+
+<section id="observabilidad">
+<div class="head"><span class="num">14</span><h2>Observabilidad: saber si procesa, falla o deriva a DLT</h2></div>
+<p>El microservicio incorpora Spring Boot Actuator, Micrometer y el registro Prometheus. Además de métricas técnicas de la plataforma, expone métricas funcionales que describen el comportamiento de la importación.</p>
 <table>
-<thead><tr><th>Workflow</th><th>Qué protege</th></tr></thead>
+<thead><tr><th>Métrica</th><th>Significado</th></tr></thead>
 <tbody>
-<tr><td><code>documentation-policy</code></td><td>Versión Maven, README, changelog y formato del mensaje de commit.</td></tr>
-<tr><td><code>test</code></td><td>Suite completa con perfil de integración.</td></tr>
-<tr><td><code>master-guard</code></td><td>Detecta commits directos no-merge que lleguen a <code>master</code>.</td></tr>
-<tr><td><code>cleanup-merged-branch</code></td><td>Elimina la rama origen tras un merge correcto.</td></tr>
+<tr><td><code>csv_files_processed_total</code></td><td>Número de ficheros completados correctamente.</td></tr>
+<tr><td><code>csv_files_failed_total</code></td><td>Número de intentos de importación que terminaron con error.</td></tr>
+<tr><td><code>csv_rows_processed_total</code></td><td>Filas contabilizadas en importaciones completadas.</td></tr>
+<tr><td><code>csv_processing_duration_seconds</code></td><td>Duración del procesamiento de los ficheros.</td></tr>
+<tr><td><code>kafka_dlt_messages_total</code></td><td>Mensajes enviados a DLT tras agotar reintentos.</td></tr>
 </tbody>
 </table>
-<p>La protección real frente a pushes directos depende además del Branch Protection/Ruleset configurado en GitHub; el workflow sirve como segunda red y como evidencia visible de la política.</p>
+<p>Estas métricas permiten responder preguntas operativas diferentes. Un aumento de <code>csv_files_failed_total</code> indica fallos de procesamiento. Un aumento de <code>kafka_dlt_messages_total</code> indica que los reintentos tampoco solucionaron el problema. Una degradación de <code>csv_processing_duration_seconds</code> puede señalar ficheros mayores, lentitud de base de datos o presión de I/O.</p>
+<p>La aplicación expone también endpoints Actuator como <code>/actuator/health</code> y <code>/actuator/prometheus</code>, lo que permite integrar salud y métricas en la plataforma de observabilidad.</p>
+</section>
+
+<section id="configuracion">
+<div class="head"><span class="num">15</span><h2>Configuración externa: el mismo binario en distintos entornos</h2></div>
+<p>Kafka, Schema Registry y PostgreSQL se configuran mediante propiedades y variables de entorno. El objetivo es que la lógica compilada no dependa de una IP, un usuario de base de datos o un topic fijo.</p>
+<table>
+<thead><tr><th>Área</th><th>Variables principales</th></tr></thead>
+<tbody>
+<tr><td>PostgreSQL</td><td><code>DB_URL</code>, <code>DB_USER</code>, <code>DB_PASS</code></td></tr>
+<tr><td>Kafka</td><td><code>KAFKA_BOOTSTRAP_SERVERS</code>, <code>KAFKA_CONSUMER_GROUP_ID</code>, <code>KAFKA_AUTO_OFFSET_RESET</code></td></tr>
+<tr><td>Avro</td><td><code>KAFKA_SCHEMA_REGISTRY_URL</code>, <code>KAFKA_SPECIFIC_AVRO_READER</code></td></tr>
+<tr><td>Topic</td><td><code>KAFKA_FILE_READY_TOPIC</code>, por defecto <code>file.ready</code></td></tr>
+<tr><td>Resiliencia</td><td><code>KAFKA_RETRY_INTERVAL_MS</code>, <code>KAFKA_MAX_RETRIES</code>, <code>KAFKA_DLT_SUFFIX</code></td></tr>
+</tbody>
+</table>
+<p>La configuración está separada por responsabilidad: un fichero para Kafka y otro para PostgreSQL/JPA/Flyway. Esta separación hace más evidente qué propiedades pertenecen a infraestructura de mensajería y cuáles afectan a persistencia.</p>
+</section>
+
+<section id="consistencia">
+<div class="head"><span class="num">16</span><h2>Qué propiedades garantiza y cuáles no</h2></div>
+<p>Es útil describir el microservicio en términos de garantías concretas en vez de decir simplemente que es “robusto”.</p>
+<table>
+<thead><tr><th>Propiedad</th><th>Cómo se consigue</th><th>Límite</th></tr></thead>
+<tbody>
+<tr><td>Un fichero no deja un snapshot parcial tras una excepción</td><td>Transacción alrededor de la importación completa</td><td>Una transacción grande puede durar bastante</td></tr>
+<tr><td>El mismo evento completado no se aplica otra vez</td><td><code>processed_file_event</code> por <code>eventId</code></td><td>La comprobación inicial no es un claim distribuido</td></tr>
+<tr><td>Una nueva versión de un partido sustituye la anterior</td><td>Borrado por <code>matchId</code> antes de insertar el snapshot</td><td>El fichero debe representar correctamente el estado completo de ese partido</td></tr>
+<tr><td>No se duplican jugadores idénticos dentro de un partido</td><td>Unique constraint <code>(match_id, name, team)</code></td><td>No detecta identidades equivalentes con nombres diferentes</td></tr>
+<tr><td>Errores temporales pueden recuperarse</td><td>Retries con backoff</td><td>Errores deterministas seguirán fallando</td></tr>
+<tr><td>Errores definitivos no bloquean silenciosamente el flujo</td><td>Dead Letter Topic</td><td>La DLT necesita operación y reproceso posterior</td></tr>
+</tbody>
+</table>
+</section>
+
+<section id="fallos">
+<div class="head"><span class="num">17</span><h2>Cómo se propaga un fallo de extremo a extremo</h2></div>
+<p>Supongamos que una fila contiene <code>abc</code> en la columna <code>PTS</code>. El parser intenta convertirla a <code>Integer</code> y lanza una excepción. El servicio captura el error para registrar métricas y logs, pero vuelve a lanzar una <code>IllegalStateException</code>.</p>
+<pre>CSV inválido
+   ↓
+StatsPlayerCsvParser
+   ↓ excepción
+StatsPlayerImportService
+   ├─ incrementa csv_files_failed_total
+   ├─ registra el error
+   └─ vuelve a lanzar
+        ↓
+@Transactional
+   └─ rollback
+        ↓
+Spring Kafka
+   ├─ retry
+   ├─ retry
+   └─ DLT si persiste</pre>
+<p>Este recorrido muestra por qué las capas no son independientes. Una decisión del parser acaba provocando un rollback en PostgreSQL y, después, una política de recuperación en Kafka. La arquitectura funciona porque las excepciones atraviesan las fronteras adecuadas en vez de quedar ocultas.</p>
+</section>
+
+<section id="rendimiento">
+<div class="head"><span class="num">18</span><h2>Rendimiento: tres niveles que trabajan juntos</h2></div>
+<p>El rendimiento no depende de una única optimización. El proyecto combina tres mecanismos con objetivos distintos.</p>
+<div class="grid">
+<div class="card"><h3>Streaming del CSV</h3><p>Evita materializar todo el fichero en memoria antes de empezar.</p></div>
+<div class="card"><h3>Chunks de 500</h3><p>Limitan los objetos manejados por la aplicación y permiten limpiar el contexto JPA.</p></div>
+<div class="card"><h3>Batch JDBC de 100</h3><p>Reduce el número de intercambios necesarios para ejecutar inserts.</p></div>
+<div class="card"><h3>Secuencia con allocationSize 100</h3><p>Reduce la necesidad de obtener un identificador nuevo de la base para cada entidad.</p></div>
+</div>
+<p>Estas optimizaciones no cambian la semántica transaccional. Mejoran cómo se ejecuta la importación, pero el commit sigue representando el fichero completo.</p>
 </section>
 
 <section id="modelo-mental">
-<div class="head"><span class="num">15</span><h2>El modelo mental que me quedo</h2></div>
-<p>Este consumer puede resumirse como una tubería con cuatro fronteras que conviene proteger por separado:</p>
-<pre>MENSAJE              FICHERO                DOMINIO              BASE DE DATOS
-Avro/Kafka    ───►   CSV validado   ───►   DTO / Mapper   ───►  JPA / Flyway
-    │                    │                     │                     │
-    ├─ filtro            ├─ 23 columnas       ├─ tipos              ├─ transacción
-    ├─ retry/DLT         ├─ numericidad       ├─ código generado    ├─ idempotencia
-    └─ eventId           └─ chunks            └─ entidad            └─ esquema real</pre>
-<p>El valor del proyecto no está en una clase aislada. Está en cómo esas fronteras se conectan: un identificador Avro termina protegiendo la persistencia, una excepción del parser activa la política Kafka, el tamaño de chunk condiciona JPA y una migración real se comprueba contra PostgreSQL real.</p>
-<p>Ese es el detalle que convierte «leer un CSV y hacer inserts» en un consumer mantenible: cada decisión importante tiene una responsabilidad concreta y, en la mayoría de los casos, una prueba que la protege.</p>
+<div class="head"><span class="num">19</span><h2>El modelo mental más útil</h2></div>
+<p>La forma más clara de razonar sobre este microservicio es verlo como una tubería de transformación con varias fronteras de confianza:</p>
+<pre>KAFKA
+evento Avro
+   │
+   ▼
+FILTRO
+¿STATS_PLAYER?
+   │
+   ▼
+IDEMPOTENCIA
+¿eventId ya completado?
+   │
+   ▼
+FILESYSTEM
+abrir filePath
+   │
+   ▼
+CSV
+24 columnas + tipos + nulls
+   │
+   ▼
+DTO
+datos interpretados
+   │
+   ▼
+MAPSTRUCT
+entidades JPA
+   │
+   ▼
+SNAPSHOT
+reemplazo por matchId
+   │
+   ▼
+POSTGRESQL
+batch + constraints + Flyway
+   │
+   ▼
+MARCADOR
+processed_file_event
+   │
+   ▼
+COMMIT</pre>
+<p>Cada frontera responde una pregunta distinta. Kafka responde qué trabajo existe. El filtro responde si pertenece al dominio. La idempotencia responde si ya terminó. El parser responde si los datos son válidos. La capa de snapshot responde qué estado debe reemplazarse. PostgreSQL responde qué invariantes persisten. La transacción responde qué ocurre si cualquier etapa falla.</p>
+</section>
+
+<section id="por-que-microservicio">
+<div class="head"><span class="num">20</span><h2>Por qué tiene sentido como microservicio separado</h2></div>
+<p>Separar este consumidor puede tener valor cuando la generación del fichero y su materialización en base de datos evolucionan con ritmos distintos. El productor puede centrarse en detectar o producir archivos; el consumidor puede cambiar validaciones, persistencia, batching o estrategias de resiliencia sin convertir al productor en responsable de toda la cadena.</p>
+<p>También permite escalar y operar de forma independiente la parte que procesa estadísticas. Kafka actúa como frontera temporal: productor y consumidor no tienen que estar disponibles exactamente al mismo tiempo.</p>
+<p>El coste es la complejidad distribuida. Aparecen contratos de eventos, Schema Registry, accesibilidad del fichero, semántica de reintentos, DLT y observabilidad. Por eso el valor del diseño no está simplemente en “usar Kafka”, sino en que esas responsabilidades estén explícitas y tengan límites claros.</p>
+</section>
+
+<section id="resumen">
+<div class="head"><span class="num">21</span><h2>Resumen conceptual</h2></div>
+<p><code>csv-stats-player-consumer</code> convierte un evento ligero de Kafka en una actualización transaccional de estadísticas de jugadores. Usa Avro para el contrato del evento, un identificador persistente para idempotencia, Apache Commons CSV para validar 24 columnas, MapStruct para separar DTO y entidad, chunks para controlar memoria, JPA/Hibernate para persistencia, PostgreSQL para invariantes, Flyway para evolución del esquema, retries y DLT para recuperación y Micrometer para observabilidad.</p>
+<p>La parte más importante no es ninguna tecnología por separado. Es la combinación de reglas: el marcador de evento se guarda solo si el fichero termina; los partidos se sustituyen una única vez por importación; los chunks no rompen la transacción; los errores del parser llegan hasta Kafka; y la base de datos refuerza invariantes que la aplicación por sí sola no debería asumir.</p>
+<div class="callout"><strong>Idea final:</strong> el microservicio no está diseñado para acumular filas indefinidamente. Está diseñado para materializar snapshots de estadísticas de forma repetible y consistente a partir de eventos que pueden llegar más de una vez y de ficheros que pueden fallar durante el procesamiento.</div>
 </section>
 
 <footer>
-<p>Este artículo describe el estado de <a href="https://github.com/juanfranciscofernandezherreros/csv-stats-player-consumer"><code>csv-stats-player-consumer</code></a> en la versión 1.0.25. El repositorio de implementación es privado actualmente, por lo que el enlace de GitHub solo es accesible a usuarios autorizados.</p>
+<p>Este artículo describe teóricamente el comportamiento actual del repositorio <a href="https://github.com/juanfranciscofernandezherreros/csv-stats-player-consumer"><code>csv-stats-player-consumer</code></a>, cuya versión declarada actualmente es <strong>1.5.2</strong>.</p>
 </footer>
 </article>
