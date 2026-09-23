@@ -28,12 +28,14 @@ published: true
 .csv-consumer .badge{display:inline-block;margin-top:12px;padding:5px 9px;border:1px solid var(--line-local);background:var(--panel2);font-size:.76rem}
 .csv-consumer section{margin-top:58px;scroll-margin-top:92px}
 .csv-consumer .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line-local);padding-bottom:10px;margin-bottom:22px}
-.csv-consumer .toc-wrap{position:sticky;top:10px;z-index:5;margin:18px 0 34px;padding:10px;background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(8px)}
-.csv-consumer .toc{display:flex;gap:8px;overflow-x:auto;list-style:none;margin:0;padding:0;scrollbar-width:thin}
-.csv-consumer .toc li{margin:0;flex:0 0 auto}
-.csv-consumer .toc a{display:block;padding:8px 10px;border:1px solid transparent;text-decoration:none;font-size:.76rem;white-space:nowrap;color:var(--muted)}
-.csv-consumer .toc a:hover,.csv-consumer .toc a:focus-visible{border-color:var(--line-local);color:var(--ink)}
-.csv-consumer .toc a[aria-current="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.csv-consumer .toc-wrap{margin:24px 0 38px;padding:18px;background:var(--panel2)}
+.csv-consumer .toc{display:grid;grid-template-columns:1fr;gap:0;list-style:none;margin:0;padding:0}
+.csv-consumer .toc li{margin:0;border-bottom:1px solid var(--line-local)}
+.csv-consumer .toc li:last-child{border-bottom:0}
+.csv-consumer .toc a{display:grid;grid-template-columns:42px 1fr;gap:12px;align-items:center;padding:11px 8px;text-decoration:none;font-size:.86rem;color:var(--ink)}
+.csv-consumer .toc-num{color:var(--accent);font-weight:700}
+.csv-consumer .toc a:hover,.csv-consumer .toc a:focus-visible{background:var(--panel);outline:none}
+.csv-consumer .toc a[aria-current="true"]{background:var(--accent-soft);box-shadow:inset 3px 0 0 var(--accent)}
 .csv-consumer .flow{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:24px 0}
 .csv-consumer .flow .card{padding:14px}
 .csv-consumer .flow strong{display:block;color:var(--accent);font-size:.76rem;margin-bottom:7px}
@@ -47,7 +49,7 @@ published: true
 .csv-consumer th,.csv-consumer td{border:1px solid var(--line-local);padding:10px 11px;text-align:left;vertical-align:top}
 .csv-consumer th{background:var(--panel2)}
 .csv-consumer footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line-local);color:var(--muted)}
-@media(max-width:760px){.csv-consumer{padding:0 16px}.csv-consumer .flow,.csv-consumer .grid{grid-template-columns:1fr}.csv-consumer table{display:block;overflow-x:auto}.csv-consumer .hero{padding:26px 20px}.csv-consumer p,.csv-consumer li{text-align:left}.csv-consumer .toc-wrap{top:0;margin-left:-16px;margin-right:-16px;border-left:0;border-right:0}}
+@media(max-width:760px){.csv-consumer{padding:0 16px}.csv-consumer .flow,.csv-consumer .grid{grid-template-columns:1fr}.csv-consumer table{display:block;overflow-x:auto}.csv-consumer .hero{padding:26px 20px}.csv-consumer p,.csv-consumer li{text-align:left}.csv-consumer .toc-wrap{padding:14px}}
 </style>
 
 <article class="sheet csv-consumer">
@@ -60,17 +62,17 @@ published: true
 
 <nav class="toc-wrap" aria-label="Índice del artículo">
 <ul class="toc">
-<li><a href="#flujo">01 Flujo</a></li>
-<li><a href="#evento">02 Evento</a></li>
-<li><a href="#validacion">03 Validación</a></li>
-<li><a href="#identidades">04 Identidades</a></li>
-<li><a href="#snapshot">05 Snapshot</a></li>
-<li><a href="#csv">06 CSV</a></li>
-<li><a href="#persistencia">07 Persistencia</a></li>
-<li><a href="#errores">08 Errores</a></li>
-<li><a href="#observabilidad">09 Observabilidad</a></li>
-<li><a href="#docker">10 Docker</a></li>
-<li><a href="#garantias">11 Garantías</a></li>
+<li><a href="#flujo"><span class="toc-num">1</span><span>El flujo completo</span></a></li>
+<li><a href="#evento"><span class="toc-num">2</span><span>Kafka y contrato Avro</span></a></li>
+<li><a href="#validacion"><span class="toc-num">3</span><span>Validación del evento y del CSV</span></a></li>
+<li><a href="#identidades"><span class="toc-num">4</span><span>eventId y matchId</span></a></li>
+<li><a href="#snapshot"><span class="toc-num">5</span><span>Reemplazo de snapshots</span></a></li>
+<li><a href="#csv"><span class="toc-num">6</span><span>Contrato del CSV</span></a></li>
+<li><a href="#persistencia"><span class="toc-num">7</span><span>Persistencia con PostgreSQL y Flyway</span></a></li>
+<li><a href="#errores"><span class="toc-num">8</span><span>Retries y Dead Letter Topic</span></a></li>
+<li><a href="#observabilidad"><span class="toc-num">9</span><span>Observabilidad y métricas</span></a></li>
+<li><a href="#docker"><span class="toc-num">10</span><span>Docker Compose y Redpanda Console</span></a></li>
+<li><a href="#garantias"><span class="toc-num">11</span><span>Garantías y límites del diseño</span></a></li>
 </ul>
 </nav>
 
