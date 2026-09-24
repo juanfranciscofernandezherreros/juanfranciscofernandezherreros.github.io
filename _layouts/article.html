@@ -1,6 +1,13 @@
 ---
 layout: default
 ---
+{% if page.series == "Basketball CSV Microservices" %}
+<div class="changelog-wrap">
+  <article class="changelog-sheet">
+    {{ content }}
+  </article>
+</div>
+{% else %}
 <div class="meta-bar-wrap" aria-label="Article taxonomy">
   {% for category in page.categories %}<a class="badge badge-cat" href="{{ '/' | relative_url }}?category={{ category | slugify }}">{{ category }}</a>{% endfor %}
   {% for subcategory in page.subcategories %}<a class="badge badge-subcat" href="{{ '/' | relative_url }}?subcategory={{ subcategory | slugify }}">{{ subcategory }}</a>{% endfor %}
@@ -8,6 +15,7 @@ layout: default
 </div>
 
 {{ content }}
+{% endif %}
 
 {% assign previous_article = nil %}
 {% assign next_article = nil %}
@@ -53,7 +61,7 @@ layout: default
   {% endif %}
 {% endcapture %}
 
-{% if previous_article or next_article or related_count > 0 %}
+{% if page.series != "Basketball CSV Microservices" and (previous_article or next_article or related_count > 0) %}
 <section class="article-discovery" aria-label="{% if page.lang == 'en' %}Continue reading{% else %}Seguir leyendo{% endif %}">
   {% if previous_article or next_article %}
   <div class="series-nav-wrap">
