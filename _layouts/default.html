@@ -69,6 +69,7 @@
       <nav class="sidebar-nav" aria-label="{% if page.lang == 'en' %}Main navigation{% else %}Navegación principal{% endif %}">
         <a href="{{ '/' | relative_url }}"><span aria-hidden="true">⌂</span>{% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}</a>
         <a href="{{ '/#articles' | relative_url }}"><span aria-hidden="true">✎</span>{% if page.lang == 'en' %}Articles{% else %}Artículos{% endif %}</a>
+        <a href="{% if page.lang == 'en' %}{{ '/interviews/' | relative_url }}{% else %}{{ '/entrevistas/' | relative_url }}{% endif %}"><span aria-hidden="true">◈</span>{% if page.lang == 'en' %}Interviews{% else %}Entrevistas{% endif %}</a>
         <a href="https://github.com/juanfranciscofernandezherreros" rel="me"><span aria-hidden="true">↗</span>GitHub</a>
       </nav>
       {% if page.lang_url %}
