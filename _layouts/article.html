@@ -7,7 +7,13 @@ layout: default
   {% for tag in page.tags %}<a class="badge badge-tag" href="{{ '/' | relative_url }}?tag={{ tag | slugify }}">#{{ tag }}</a>{% endfor %}
 </div>
 
+{% if page.series == "Basketball CSV Microservices" %}
+<div class="sheet">
 {{ content }}
+</div>
+{% else %}
+{{ content }}
+{% endif %}
 
 {% assign previous_article = nil %}
 {% assign next_article = nil %}
