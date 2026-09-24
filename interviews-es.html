@@ -1,0 +1,47 @@
+---
+layout: default
+title: Entrevistas
+description: Artículos y notas técnicas orientadas a entrevistas de ingeniería de software.
+permalink: /entrevistas/
+lang: es
+lang_url: /interviews/
+---
+<style>
+  .interviews-page{max-width:920px;margin:0 auto;padding:48px 24px 96px}
+  .interviews-header{margin-bottom:32px}
+  .interviews-kicker{font-family:"IBM Plex Mono",monospace;font-size:.75rem;letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+  .interviews-page h1{font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:clamp(2.8rem,7vw,4.5rem);line-height:.95;text-transform:uppercase;margin:8px 0 16px}
+  .interviews-intro{max-width:68ch;color:var(--ink-soft);line-height:1.7}
+  .interviews-list{display:grid;gap:16px}
+  .interview-card{display:block;padding:22px;border:1px solid var(--line);background:var(--surface);text-decoration:none;color:var(--ink)}
+  .interview-card:hover{border-color:var(--line-strong)}
+  .interview-card h2{margin:0 0 8px;font-family:"Barlow Condensed","Arial Narrow",sans-serif;font-size:1.65rem}
+  .interview-card p{margin:0;color:var(--ink-soft);line-height:1.6}
+  .interviews-empty{padding:24px;border:1px dashed var(--line-strong);background:var(--surface);color:var(--ink-soft);line-height:1.65}
+</style>
+
+<div class="interviews-page">
+  <header class="interviews-header">
+    <p class="interviews-kicker">Categoría</p>
+    <h1>Entrevistas</h1>
+    <p class="interviews-intro">Aquí aparecerán los artículos que estén categorizados como <strong>Entrevistas</strong>. La categoría está preparada, pero todavía no contiene artículos.</p>
+  </header>
+
+  {% assign interview_posts = site.posts | where: "lang", "es" %}
+  {% assign has_interviews = false %}
+  <section class="interviews-list" aria-label="Artículos de entrevistas">
+    {% for post in interview_posts %}
+      {% if post.categories contains "Entrevistas" %}
+        {% assign has_interviews = true %}
+        <a class="interview-card" href="{{ post.url | relative_url }}">
+          <h2>{{ post.title }}</h2>
+          <p>{{ post.description }}</p>
+        </a>
+      {% endif %}
+    {% endfor %}
+  </section>
+
+  {% unless has_interviews %}
+    <p class="interviews-empty">Todavía no hay artículos publicados en esta categoría.</p>
+  {% endunless %}
+</div>
