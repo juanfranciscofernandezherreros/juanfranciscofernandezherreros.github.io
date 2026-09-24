@@ -61,7 +61,8 @@ layout: default
   {% endif %}
 {% endcapture %}
 
-{% if page.series != "Basketball CSV Microservices" and (previous_article or next_article or related_count > 0) %}
+{% if page.series != "Basketball CSV Microservices" %}
+{% if previous_article or next_article or related_count > 0 %}
 <section class="article-discovery" aria-label="{% if page.lang == 'en' %}Continue reading{% else %}Seguir leyendo{% endif %}">
   {% if previous_article or next_article %}
   <div class="series-nav-wrap">
@@ -94,6 +95,7 @@ layout: default
   </div>
   {% endif %}
 </section>
+{% endif %}
 {% endif %}
 
 {% if page.url == '/state-machines/es/' %}
