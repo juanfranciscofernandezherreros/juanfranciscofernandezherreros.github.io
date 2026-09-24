@@ -26,6 +26,7 @@
 <link rel="stylesheet" href="{{ '/assets/css/base.css' | relative_url }}" />
 <link rel="stylesheet" href="{{ '/assets/css/theme.css' | relative_url }}" />
 {% if page.layout == 'article' %}<link rel="stylesheet" href="{{ '/assets/css/article-discovery.css' | relative_url }}" />{% endif %}
+{% if page.series == "Basketball CSV Microservices" %}<link rel="stylesheet" href="{{ '/assets/css/changelog.css' | relative_url }}" />{% endif %}
 <link rel="canonical" href="{{ page.url | absolute_url }}" />
 {% if page.layout == 'article' %}
 <script type="application/ld+json">
@@ -56,7 +57,7 @@
 {% endif %}
 {% feed_meta %}
 </head>
-<body class="devblog-body{% if page.layout == 'article' %} devblog-article{% endif %}">
+<body class="devblog-body{% if page.layout == 'article' %} devblog-article{% endif %}{% if page.series == "Basketball CSV Microservices" %} changelog-page{% endif %}">
 <div class="devblog-shell">
   <aside class="devblog-sidebar">
     <div class="sidebar-inner">
