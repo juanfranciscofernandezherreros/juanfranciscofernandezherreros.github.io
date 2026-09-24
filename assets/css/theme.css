@@ -289,9 +289,19 @@ body {
 .sidebar-nav a:hover,.sidebar-nav a:focus-visible{
   background:color-mix(in srgb,var(--accent-ink) 14%,transparent);outline:none
 }
-.sidebar-lang{
-  margin-top:20px;padding:8px 11px;border:1px solid color-mix(in srgb,var(--accent-ink) 40%,transparent);
-  border-radius:7px;color:inherit;font-family:"IBM Plex Mono",monospace;font-size:.7rem;text-decoration:none
+.sidebar-languages{
+  width:100%;display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:20px
+}
+.sidebar-language{
+  display:flex;align-items:center;justify-content:center;gap:6px;padding:8px 9px;
+  border:1px solid color-mix(in srgb,var(--accent-ink) 40%,transparent);border-radius:7px;
+  color:inherit;font-family:"IBM Plex Mono",monospace;font-size:.67rem;text-decoration:none
+}
+.sidebar-language:hover,.sidebar-language:focus-visible{
+  background:color-mix(in srgb,var(--accent-ink) 14%,transparent);outline:none
+}
+.sidebar-language.is-current{
+  background:color-mix(in srgb,var(--accent-ink) 18%,transparent);font-weight:600
 }
 .sidebar-stack{
   margin:auto 0 0;padding-top:24px;font-family:"IBM Plex Mono",monospace;
@@ -377,12 +387,14 @@ body {
   .sidebar-avatar{width:52px;height:52px;margin:0;border-width:2px;font-size:1.25rem}
   .sidebar-name{font-size:1.15rem;line-height:1}
   .sidebar-role{margin:0}
-  .sidebar-bio,.sidebar-stack,.sidebar-lang{display:none}
+  .sidebar-bio,.sidebar-stack{display:none}
   .sidebar-nav{
     grid-column:1/-1;display:flex;width:auto;gap:4px;padding:10px 0 0;border-top:1px solid
     color-mix(in srgb,var(--accent-ink) 22%,transparent);border-bottom:0;overflow-x:auto
   }
   .sidebar-nav a{width:auto;white-space:nowrap;padding:8px 10px}
+  .sidebar-languages{grid-column:1/-1;width:auto;display:flex;margin-top:4px}
+  .sidebar-language{min-width:118px}
   .devblog-main{margin-left:0}
   .devblog-body:not(.devblog-article) .wrap{padding:40px 24px 72px!important}
 }
@@ -390,6 +402,8 @@ body {
   .sidebar-inner{display:flex;flex-direction:column;align-items:flex-start}
   .sidebar-role{margin-left:64px;margin-top:-18px}
   .sidebar-nav{width:100%}
+  .sidebar-languages{width:100%}
+  .sidebar-language{flex:1;min-width:0}
   .devblog-body:not(.devblog-article) .portfolio-hero{padding-bottom:28px!important;margin-bottom:28px!important}
   .devblog-body:not(.devblog-article) .layout{grid-template-columns:1fr!important}
   .devblog-body:not(.devblog-article) .filters{
