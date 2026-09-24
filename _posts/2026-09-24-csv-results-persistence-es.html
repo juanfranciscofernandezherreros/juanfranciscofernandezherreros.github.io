@@ -1,0 +1,80 @@
+---
+layout: "article"
+title: "csv-results-persistence: de results.parsed a PostgreSQL idempotente"
+description: "Cómo csv-results-persistence consume MatchResult Avro y materializa resultados en PostgreSQL usando match_id como clave primaria frente a reentregas."
+permalink: "/java-spring/csv-results-persistence/es/"
+lang: "es"
+lang_url: ""
+series: "Basketball CSV Microservices"
+categories: ["Java & Spring"]
+subcategories: ["Event Streaming"]
+tags: ["java","spring-boot","kafka","avro","csv","microservices","postgresql","jpa","flyway"]
+date: "2026-09-24"
+reading_minutes: 5
+published: true
+---
+
+<article class="sheet">
+<header>
+<p><a href="{{ '/java-spring/csv-event-consumers-family/es/' | relative_url }}">&larr; Ver la familia CSV</a></p>
+<p><strong>Persistence RESULTS</strong> · versión documentada <code>1.0.1</code></p>
+<h1>csv-results-persistence: de results.parsed a PostgreSQL idempotente</h1>
+<p>Cómo csv-results-persistence consume MatchResult Avro y materializa resultados en PostgreSQL usando match_id como clave primaria frente a reentregas.</p>
+</header>
+
+<section>
+<h2>La responsabilidad en una frase</h2>
+<p><code>csv-results-persistence</code> recibe MatchResultKey / MatchResultValue desde results.parsed y produce una fila materializada en PostgreSQL results. Su responsabilidad termina en PostgreSQL; no publica un nuevo topic.</p>
+<pre>results.parsed\n      |\n      v\ncsv-results-persistence\n      |\n      +--&gt; Avro consumer\n      +--&gt; JPA + Flyway\n      |\n      v\nPostgreSQL: results</pre>
+<p>Esta frontera evita que “procesar un CSV” se convierta en una responsabilidad monolítica. El servicio posee una etapa concreta del pipeline y puede evolucionar sin arrastrar todas las demás.</p>
+</section>
+
+<section>
+<h2>Contrato de entrada y salida</h2>
+<table>
+<thead><tr><th>Elemento</th><th>Contrato</th></tr></thead>
+<tbody>
+<tr><td>Entrada</td><td>MatchResultKey / MatchResultValue desde results.parsed</td></tr>
+<tr><td>Salida</td><td>una fila materializada en PostgreSQL results</td></tr>
+<tr><td>Frontera</td><td>Su responsabilidad termina en PostgreSQL; no publica un nuevo topic.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Decisiones que definen el microservicio</h2>
+<ul>
+<li>match_id es la clave primaria, de modo que una reentrega actualiza el partido en lugar de crear un duplicado lógico.</li>
+<li>Flyway es dueño del esquema y JPA materializa el contrato parseado.</li>
+<li>La integración con PostgreSQL se valida con Testcontainers mediante el perfil de integración.</li>
+</ul>
+<p>La separación no busca multiplicar repositorios por estética. Busca que las reglas del CSV, el contrato Kafka y la persistencia tengan propietarios claros y fallos independientes.</p>
+</section>
+
+<section>
+<h2>Evolución registrada en CHANGELOG</h2>
+<table>
+<thead><tr><th>Versión</th><th>Cambio relevante</th></tr></thead>
+<tbody>
+<tr><td><code>1.0.0</code></td><td>Crea el persistence, la tabla results, consumo Avro y pruebas con Testcontainers.</td></tr>
+<tr><td><code>1.0.1</code></td><td>Añade limpieza automática de ramas mergeadas.</td></tr>
+</tbody>
+</table>
+<p>El historial se toma del <code>CHANGELOG.md</code> actual del repositorio; esta página documenta el estado observado el 24 de septiembre de 2026.</p>
+</section>
+
+<section>
+<h2>Dónde encaja en el pipeline</h2>
+<p>El sistema usa Kafka como frontera entre etapas: el router distribuye ficheros, los parsers convierten CSV en contratos Avro y los persistence materializan esos contratos en PostgreSQL. Después, otros componentes pueden construir modelos de lectura sin volver a interpretar los CSV originales.</p>
+<p>Continúa con <a href="{{ '/java-spring/csv-results-parser/es/' | relative_url }}"><code>csv-results-parser</code></a> para ver la otra mitad de esta frontera.</p>
+</section>
+
+<section>
+<h2>Qué conviene vigilar al evolucionarlo</h2>
+<p>Cambiar un nombre de topic, una key Avro, una convención de filename o una clave de unicidad no es un refactor local: modifica un contrato entre procesos. Parser y persistence deben mantenerse sincronizados cuando formen pareja, y el CHANGELOG debe explicar qué garantía cambia, no solo qué clases se tocaron.</p>
+</section>
+
+<footer>
+<p>Fuente: <a href="https://github.com/juanfranciscofernandezherreros/csv-results-persistence"><code>csv-results-persistence</code></a>. Para una visión transversal, consulta <a href="{{ '/java-spring/csv-event-consumers-family/es/' | relative_url }}">la familia CSV</a>.</p>
+</footer>
+</article>

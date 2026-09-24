@@ -166,6 +166,28 @@ MATCH_SUMMARY
 <p>Visto así, <code>csv-stats-player-consumer</code> deja de ser un importador aislado. Es una especialización dentro de una familia que transforma artefactos CSV heterogéneos en tablas con contratos claros y procesamiento repetible.</p>
 </section>
 
+
+<section id="arquitectura-actual">
+<div class="head"><span class="num">10</span><h2>Arquitectura actual: una página por microservicio</h2></div>
+<p>La arquitectura evolucionó desde consumers monolíticos hacia un router y parejas parser/persistence conectadas mediante topics Avro. Estas páginas documentan el estado actual de cada microservicio y su CHANGELOG:</p>
+<ul>
+<li><a href="{{ '/java-spring/csv-file-event-router/es/' | relative_url }}"><code>csv-file-event-router</code></a> — Router Kafka Streams, versión 0.1.5.</li>
+<li><a href="{{ '/java-spring/csv-results-parser/es/' | relative_url }}"><code>csv-results-parser</code></a> — Parser RESULTS, versión 2.0.2.</li>
+<li><a href="{{ '/java-spring/csv-results-persistence/es/' | relative_url }}"><code>csv-results-persistence</code></a> — Persistence RESULTS, versión 1.0.1.</li>
+<li><a href="{{ '/java-spring/csv-fixtures-parser/es/' | relative_url }}"><code>csv-fixtures-parser</code></a> — Parser FIXTURES, versión 1.0.0.</li>
+<li><a href="{{ '/java-spring/csv-fixtures-persistence/es/' | relative_url }}"><code>csv-fixtures-persistence</code></a> — Persistence FIXTURES, versión 1.0.0.</li>
+<li><a href="{{ '/java-spring/csv-stats-match-parser/es/' | relative_url }}"><code>csv-stats-match-parser</code></a> — Parser MATCH_SUMMARY, versión 1.0.1.</li>
+<li><a href="{{ '/java-spring/csv-stats-match-persistence/es/' | relative_url }}"><code>csv-stats-match-persistence</code></a> — Persistence MATCH_SUMMARY, versión 1.0.1.</li>
+<li><a href="{{ '/java-spring/csv-stats-player-parser/es/' | relative_url }}"><code>csv-stats-player-parser</code></a> — Parser STATS_PLAYER, versión 1.0.1.</li>
+<li><a href="{{ '/java-spring/csv-stats-player-persistence/es/' | relative_url }}"><code>csv-stats-player-persistence</code></a> — Persistence STATS_PLAYER, versión 1.0.2.</li>
+<li><a href="{{ '/java-spring/csv-point-by-point-parser/es/' | relative_url }}"><code>csv-point-by-point-parser</code></a> — Parser POINT_BY_POINT, versión 1.0.2.</li>
+<li><a href="{{ '/java-spring/csv-point-by-point-persistence/es/' | relative_url }}"><code>csv-point-by-point-persistence</code></a> — Persistence POINT_BY_POINT, versión 1.0.1.</li>
+<li><a href="{{ '/java-spring/csv-team-stats-parser/es/' | relative_url }}"><code>csv-team-stats-parser</code></a> — Parser TEAM_STATS, versión 1.0.0.</li>
+<li><a href="{{ '/java-spring/csv-team-stats-persistence/es/' | relative_url }}"><code>csv-team-stats-persistence</code></a> — Persistence TEAM_STATS, versión 1.0.0.</li>
+</ul>
+<p>La división deja una regla fácil de seguir: los parsers son Kafka → Kafka y no conocen PostgreSQL; los persistence son Kafka → PostgreSQL y no vuelven a interpretar el CSV.</p>
+</section>
+
 <footer>
 <p>Este artículo revisa el estado de los repositorios privados <a href="https://github.com/juanfranciscofernandezherreros/csv-seassons"><code>csv-seassons</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-stats-match"><code>csv-stats-match</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-point-by-point"><code>csv-point-by-point</code></a>, <a href="https://github.com/juanfranciscofernandezherreros/csv-results"><code>csv-results</code></a> y <a href="https://github.com/juanfranciscofernandezherreros/csv-fixtures"><code>csv-fixtures</code></a>. Los enlaces requieren autorización mientras sigan siendo privados.</p>
 </footer>

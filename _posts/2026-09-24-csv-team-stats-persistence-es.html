@@ -1,0 +1,79 @@
+---
+layout: "article"
+title: "csv-team-stats-persistence: upsert de métricas por partido y periodo"
+description: "Cómo csv-team-stats-persistence materializa estadísticas Overall y por cuarto con una clave lógica por partido, periodo, categoría y métrica."
+permalink: "/java-spring/csv-team-stats-persistence/es/"
+lang: "es"
+lang_url: ""
+series: "Basketball CSV Microservices"
+categories: ["Java & Spring"]
+subcategories: ["Event Streaming"]
+tags: ["java","spring-boot","kafka","avro","csv","microservices","postgresql","jpa","flyway"]
+date: "2026-09-24"
+reading_minutes: 5
+published: true
+---
+
+<article class="sheet">
+<header>
+<p><a href="{{ '/java-spring/csv-event-consumers-family/es/' | relative_url }}">&larr; Ver la familia CSV</a></p>
+<p><strong>Persistence TEAM_STATS</strong> · versión documentada <code>1.0.0</code></p>
+<h1>csv-team-stats-persistence: upsert de métricas por partido y periodo</h1>
+<p>Cómo csv-team-stats-persistence materializa estadísticas Overall y por cuarto con una clave lógica por partido, periodo, categoría y métrica.</p>
+</header>
+
+<section>
+<h2>La responsabilidad en una frase</h2>
+<p><code>csv-team-stats-persistence</code> recibe TeamStatsKey / TeamStatsValue desde team-stats.parsed y produce métricas en PostgreSQL team_stats. El servicio termina en PostgreSQL y deja la agregación de lectura al projector/API.</p>
+<pre>team-stats.parsed\n       |\n       v\ncsv-team-stats-persistence\n       |\n       +--&gt; upsert JPA\n       +--&gt; Flyway\n       |\n       v\nPostgreSQL: team_stats</pre>
+<p>Esta frontera evita que “procesar un CSV” se convierta en una responsabilidad monolítica. El servicio posee una etapa concreta del pipeline y puede evolucionar sin arrastrar todas las demás.</p>
+</section>
+
+<section>
+<h2>Contrato de entrada y salida</h2>
+<table>
+<thead><tr><th>Elemento</th><th>Contrato</th></tr></thead>
+<tbody>
+<tr><td>Entrada</td><td>TeamStatsKey / TeamStatsValue desde team-stats.parsed</td></tr>
+<tr><td>Salida</td><td>métricas en PostgreSQL team_stats</td></tr>
+<tr><td>Frontera</td><td>El servicio termina en PostgreSQL y deja la agregación de lectura al projector/API.</td></tr>
+</tbody>
+</table>
+</section>
+
+<section>
+<h2>Decisiones que definen el microservicio</h2>
+<ul>
+<li>La unicidad (match_id, period, category, metric) define una métrica lógica y hace segura la reentrega.</li>
+<li>Los valores siguen siendo texto en PostgreSQL para no perder porcentajes o formatos de la fuente.</li>
+<li>Los índices por partido y por (match_id, period) preparan consultas de lectura y proyección.</li>
+</ul>
+<p>La separación no busca multiplicar repositorios por estética. Busca que las reglas del CSV, el contrato Kafka y la persistencia tengan propietarios claros y fallos independientes.</p>
+</section>
+
+<section>
+<h2>Evolución registrada en CHANGELOG</h2>
+<table>
+<thead><tr><th>Versión</th><th>Cambio relevante</th></tr></thead>
+<tbody>
+<tr><td><code>1.0.0</code></td><td>Consume Avro, persiste Overall/cuarto, añade upsert e índices para lectura.</td></tr>
+</tbody>
+</table>
+<p>El historial se toma del <code>CHANGELOG.md</code> actual del repositorio; esta página documenta el estado observado el 24 de septiembre de 2026.</p>
+</section>
+
+<section>
+<h2>Dónde encaja en el pipeline</h2>
+<p>El sistema usa Kafka como frontera entre etapas: el router distribuye ficheros, los parsers convierten CSV en contratos Avro y los persistence materializan esos contratos en PostgreSQL. Después, otros componentes pueden construir modelos de lectura sin volver a interpretar los CSV originales.</p>
+<p>Continúa con <a href="{{ '/java-spring/csv-team-stats-parser/es/' | relative_url }}"><code>csv-team-stats-parser</code></a> para ver la otra mitad de esta frontera.</p>
+</section>
+
+<section>
+<h2>Qué conviene vigilar al evolucionarlo</h2>
+<p>Cambiar un nombre de topic, una key Avro, una convención de filename o una clave de unicidad no es un refactor local: modifica un contrato entre procesos. Parser y persistence deben mantenerse sincronizados cuando formen pareja, y el CHANGELOG debe explicar qué garantía cambia, no solo qué clases se tocaron.</p>
+</section>
+
+<footer>
+<p>Fuente: <a href="https://github.com/juanfranciscofernandezherreros/csv-team-stats-persistence"><code>csv-team-stats-persistence</code></a>. Para una visión transversal, consulta <a href="{{ '/java-spring/csv-event-consumers-family/es/' | relative_url }}">la familia CSV</a>.</p>
+</footer>
+</article>
