@@ -73,7 +73,15 @@
         <a href="https://github.com/juanfranciscofernandezherreros" rel="me"><span aria-hidden="true">↗</span>GitHub</a>
       </nav>
       {% if page.lang_url %}
-      <a class="sidebar-lang" href="{{ page.lang_url | relative_url }}">{% if page.lang == 'en' %}Leer en español{% else %}Read in English{% endif %}</a>
+      <div class="sidebar-languages" aria-label="{% if page.lang == 'en' %}Language selector{% else %}Selector de idioma{% endif %}">
+        {% if page.lang == 'en' %}
+          <a class="sidebar-language" href="{{ page.lang_url | relative_url }}" hreflang="es" lang="es"><span aria-hidden="true">🇪🇸</span> Español</a>
+          <span class="sidebar-language is-current" aria-current="page"><span aria-hidden="true">🇬🇧</span> English</span>
+        {% else %}
+          <span class="sidebar-language is-current" aria-current="page"><span aria-hidden="true">🇪🇸</span> Español</span>
+          <a class="sidebar-language" href="{{ page.lang_url | relative_url }}" hreflang="en" lang="en"><span aria-hidden="true">🇬🇧</span> English</a>
+        {% endif %}
+      </div>
       {% endif %}
       <p class="sidebar-stack">Java · Spring Boot · Kafka · Microservices · Architecture</p>
     </div>
