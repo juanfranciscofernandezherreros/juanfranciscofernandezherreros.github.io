@@ -416,3 +416,83 @@ body {
   .devblog-article .sheet{margin-top:22px!important}
   .site-footer-inner{padding:26px 22px!important}
 }
+
+
+/* Shared fallback presentation for posts that do not provide their own .sheet markup. */
+.devblog-article .article-body > h1,
+.devblog-article .article-body > h2,
+.devblog-article .article-body > h3,
+.devblog-article .article-body > p,
+.devblog-article .article-body > ul,
+.devblog-article .article-body > ol,
+.devblog-article .article-body > pre,
+.devblog-article .article-body > blockquote,
+.devblog-article .article-body > table,
+.devblog-article .article-body > hr {
+  width: min(812px, calc(100% - 68px));
+  margin-left: auto;
+  margin-right: auto;
+}
+.devblog-article .article-body > h1 {
+  margin-top: 28px;
+  margin-bottom: 28px;
+  padding: 0 0 30px;
+  border-bottom: 1px solid var(--line);
+  font-family: "IBM Plex Sans","Segoe UI",sans-serif;
+  font-size: clamp(2.35rem,5vw,3.7rem);
+  font-weight: 700;
+  line-height: 1.08;
+  letter-spacing: -.035em;
+}
+.devblog-article .article-body > h2 {
+  margin-top: 54px;
+  margin-bottom: 18px;
+  font-family: "IBM Plex Sans","Segoe UI",sans-serif;
+  font-size: clamp(1.5rem,3vw,1.95rem);
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+.devblog-article .article-body > h3 {
+  margin-top: 34px;
+  margin-bottom: 12px;
+}
+.devblog-article .article-body > p,
+.devblog-article .article-body > li {
+  line-height: 1.72;
+}
+.devblog-article .article-body > pre {
+  overflow-x: auto;
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--code-bg);
+  color: var(--code-ink);
+}
+.devblog-article .article-body > blockquote {
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border-left: 3px solid var(--accent);
+  background: var(--accent-soft);
+}
+.devblog-article .article-body > table {
+  border-collapse: collapse;
+}
+.devblog-article .article-body > table th,
+.devblog-article .article-body > table td {
+  padding: 10px 11px;
+  border: 1px solid var(--line);
+  text-align: left;
+}
+@media(max-width:720px){
+  .devblog-article .article-body > h1,
+  .devblog-article .article-body > h2,
+  .devblog-article .article-body > h3,
+  .devblog-article .article-body > p,
+  .devblog-article .article-body > ul,
+  .devblog-article .article-body > ol,
+  .devblog-article .article-body > pre,
+  .devblog-article .article-body > blockquote,
+  .devblog-article .article-body > table,
+  .devblog-article .article-body > hr {
+    width: calc(100% - 40px);
+  }
+}
