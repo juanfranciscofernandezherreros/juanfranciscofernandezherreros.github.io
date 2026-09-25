@@ -1,5 +1,6 @@
 # juanfranciscofernandezherreros.github.io
 
+![version](https://img.shields.io/badge/version-unversioned-blue)
 Personal GitHub Pages site — a Jekyll blog built and deployed via GitHub
 Actions (`.github/workflows/pages.yml`). See `AGENTS.md` for the Codex
 authoring conventions (post front matter, permalink rules, categories/subcategories/tags).
