@@ -68,6 +68,7 @@
       <p class="sidebar-bio">{% if page.lang == 'en' %}Java, Spring Boot, Kafka and distributed systems. Notes, tutorials and real-world engineering.{% else %}Java, Spring Boot, Kafka y sistemas distribuidos. Apuntes, tutoriales y experiencias reales de ingeniería.{% endif %}</p>
       <nav class="sidebar-nav" aria-label="{% if page.lang == 'en' %}Main navigation{% else %}Navegación principal{% endif %}">
         <a href="{{ '/' | relative_url }}"><span aria-hidden="true">⌂</span>{% if page.lang == 'en' %}Home{% else %}Inicio{% endif %}</a>
+        <a href="{{ '/#about' | relative_url }}"><span aria-hidden="true">●</span>{% if page.lang == 'en' %}About me{% else %}Sobre mí{% endif %}</a>
         <a href="{{ '/#articles' | relative_url }}"><span aria-hidden="true">✎</span>{% if page.lang == 'en' %}Articles{% else %}Artículos{% endif %}</a>
         <a href="{% if page.lang == 'en' %}{{ '/interviews/' | relative_url }}{% else %}{{ '/entrevistas/' | relative_url }}{% endif %}"><span aria-hidden="true">◈</span>{% if page.lang == 'en' %}Interviews{% else %}Entrevistas{% endif %}</a>
         <a href="https://github.com/juanfranciscofernandezherreros" rel="me"><span aria-hidden="true">↗</span>GitHub</a>
