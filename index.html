@@ -511,7 +511,7 @@ lang: es
 
 <div class="wrap">
   {% assign spanish_posts = site.posts | where_exp: "p", "p.lang == 'es'" %}
-  {% assign posts = spanish_posts %}
+  {% assign posts = spanish_posts | where_exp: "p", "p.index_hidden != true" %}
   {% assign all_series = posts | map: "series" | compact | uniq | sort %}
   {% assign all_categories = posts | map: "categories" | flatten | uniq | sort %}
 
