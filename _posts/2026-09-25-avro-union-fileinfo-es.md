@@ -12,77 +12,19 @@ date: "2026-09-25"
 reading_minutes: 6
 published: true
 ---
+<style>
+.interview-note{--panel:var(--surface);--muted:var(--ink-soft);--line:var(--line);--notice:var(--accent-soft);--warn:#8b5a16;--warn-bg:#f7eddd;max-width:940px;margin:36px auto 96px;padding:0 24px}.interview-note .titleblock,.interview-note .card,.interview-note .answer{background:var(--panel);border:1px solid var(--line)}.interview-note .titleblock{position:relative;padding:32px;overflow:hidden}.interview-note .back,.interview-note .lang,.interview-note .eyebrow,.interview-note .num,.interview-note .stamp dt,.interview-note pre,.interview-note code{font-family:"IBM Plex Mono",monospace}.interview-note .back,.interview-note .lang{font-size:.74rem}.interview-note .lang{position:absolute;right:24px;top:20px}.interview-note .eyebrow,.interview-note .num{color:var(--accent);font-size:.76rem;text-transform:uppercase}.interview-note h1,.interview-note h2,.interview-note h3{font-family:"Barlow Condensed","Arial Narrow",sans-serif;text-transform:uppercase;letter-spacing:.01em;margin:0}.interview-note .titleblock h1{font-size:clamp(2.35rem,7vw,4rem);line-height:1;max-width:20ch}.interview-note .lede{font-size:1.03rem;color:var(--muted);max-width:68ch}.interview-note .stamp{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid var(--line);padding-top:16px}.interview-note .stamp>div{padding:12px;background:var(--surface-2);border-radius:8px}.interview-note .stamp dt{font-size:.67rem;color:var(--muted);text-transform:uppercase}.interview-note .stamp dd{margin:4px 0 0;font-weight:600}.interview-note section{margin-top:64px}.interview-note .head{display:flex;gap:12px;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:9px}.interview-note h2{font-size:clamp(1.6rem,4vw,2rem)}.interview-note h3{font-size:1.12rem;margin-top:30px}.interview-note p,.interview-note li{max-width:74ch;line-height:1.72}.interview-note .answer{padding:20px 22px;border-left:4px solid var(--accent);font-size:1.02rem;border-radius:10px}.interview-note .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:20px 0}.interview-note .card{padding:17px;border-radius:10px}.interview-note .card h3{margin:0 0 7px}.interview-note .card p{font-size:.93rem;color:var(--muted);margin:0}.interview-note pre{overflow:auto;background:var(--code-bg);color:var(--code-ink);padding:16px;border-radius:10px;line-height:1.55;font-size:.82rem}.interview-note .notice,.interview-note .trap{padding:15px 18px;border-radius:10px}.interview-note .notice{border-left:3px solid var(--accent);background:var(--notice)}.interview-note .trap{border-left:3px solid var(--warn);background:var(--warn-bg)}.interview-note footer{color:var(--muted);border-top:1px solid var(--line);margin-top:52px;padding-top:20px}.interview-note .small{font-size:.9rem}@media(max-width:680px){.interview-note{padding:0 16px}.interview-note .grid,.interview-note .stamp{grid-template-columns:1fr}.interview-note .titleblock{padding:24px 20px}.interview-note .lang{position:static}.interview-note p,.interview-note li{text-align:left}}
+</style>
+<div class="sheet interview-note">
+<div class="titleblock"><p class="back"><a href="{{ '/' | relative_url }}">&larr; Volver al blog</a></p><p class="lang"><a href="../">EN · English</a></p><p class="eyebrow">Java & Spring · Event Streaming · Avro</p><h1>Union en Avro</h1><p class="lede">Por qué cambiar <code>FileInfo fileInfo;</code> por <code>FileInfo? fileInfo = null;</code> puede hacer que el nombre completo del record aparezca en la representación JSON.</p><dl class="stamp"><div><dt>Nivel</dt><dd>Fundamentos</dd></div><div><dt>Ámbito</dt><dd>Apache Avro</dd></div><div><dt>Idea clave</dt><dd>Un campo opcional es una union</dd></div></dl></div>
 
-# Union en Avro: por qué cambia la representación JSON de `FileInfo`
-
-Un cambio aparentemente pequeño en un schema Avro puede producir un cambio visible en el JSON. Eso es exactamente lo que ocurre cuando un campo pasa de ser obligatorio a opcional.
-
-El caso concreto es este:
-
-```avro
-FileInfo fileInfo;
-```
-
-pasa a ser:
-
-```avro
-FileInfo? fileInfo = null;
-```
-
-Aunque visualmente solo hemos añadido `?` y `= null`, para Avro el tipo del campo ha cambiado. Y ese cambio explica por qué en algunas representaciones JSON aparece el nombre completo del record.
-
-## El caso inicial: `FileInfo` obligatorio
-
-Partimos de un protocolo como este:
-
-```avro
-@namespace("com.fernandez.topic.item")
-protocol ItemProtocol {
-
-    record ItemCommand {
-        string? itemId = null;
-        string? itemType = null;
-        string? command = null;
-        string? itemDate = null;
-        timestamp_ms? creationTimestamp = null;
-        FileInfo fileInfo;
-        string? endDate = null;
-        string? mode = null;
-        string? period = null;
-        string? startDate = null;
-        int? year = null;
-    }
-
-    record FileInfo {
-        string fileName;
-        string fileUrl;
-        string? version = null;
-        int? numberRecords = 0;
-        timestamp_ms? creationTimestamp = null;
-    }
-}
-```
-
-La línea importante es:
-
-```avro
-FileInfo fileInfo;
-```
-
-Aquí `fileInfo` tiene un único tipo posible: `FileInfo`.
-
-Podemos imaginarlo así:
-
-```text
-fileInfo -> FileInfo
-```
-
-El campo no puede ser `null`. Si existe un `ItemCommand`, ese campo debe contener un valor compatible con el record `FileInfo`.
-
-Por eso una representación JSON puede ser directa:
-
-```json
-{
+<section id="case"><div class="head"><span class="num">01</span><h2>El cambio que provoca todo</h2></div>
+<p>Partimos de un campo obligatorio:</p>
+<pre>FileInfo fileInfo;</pre>
+<p>En ese caso, <code>fileInfo</code> solo puede contener un <code>FileInfo</code>:</p>
+<pre>fileInfo -> FileInfo</pre>
+<p>Por eso una representación JSON puede ser directa:</p>
+<pre>{
   "fileInfo": {
     "creationTimestamp": null,
     "fileName": "",
@@ -90,79 +32,30 @@ Por eso una representación JSON puede ser directa:
     "numberRecords": 0,
     "version": null
   }
-}
-```
+}</pre>
+<p>Avro no necesita indicar qué tipo hay dentro de <code>fileInfo</code>, porque el schema ya dice que solo puede ser <code>FileInfo</code>.</p>
+</section>
 
-Avro no necesita indicar qué tipo hay dentro de `fileInfo`, porque el schema ya establece que solo puede ser `FileInfo`.
-
-## El cambio: hacer `fileInfo` opcional
-
-Ahora cambiamos la definición a:
-
-```avro
-FileInfo? fileInfo = null;
-```
-
-El objetivo es sencillo: permitir que `fileInfo` pueda no estar informado.
-
-Pero en Avro esto no se modela como «el mismo tipo con una marca de opcionalidad». Se modela mediante una **union**.
-
-Conceptualmente, el tipo pasa a ser:
-
-```text
-fileInfo -> null | FileInfo
-```
-
-Es decir, el campo puede contener una de estas dos alternativas:
-
-```text
-null
-FileInfo
-```
-
-Ese es el punto clave del caso.
-
-Antes teníamos un único tipo:
-
-```text
-FileInfo
-```
-
-Después tenemos una union:
-
-```text
-null | FileInfo
-```
-
-## ¿Qué es una union en este caso?
-
-Una union en Avro significa que un valor puede pertenecer a uno entre varios tipos posibles.
-
-En nuestro ejemplo, `FileInfo?` es una forma cómoda de expresar una union nullable.
-
-Conceptualmente equivale a algo como:
-
-```json
-[
+<section id="union"><div class="head"><span class="num">02</span><h2>Al hacerlo opcional aparece una union</h2></div>
+<p>Después cambiamos la definición:</p>
+<pre>FileInfo? fileInfo = null;</pre>
+<p>Para Avro, esto significa que el campo puede contener dos alternativas:</p>
+<pre>fileInfo -> null | FileInfo</pre>
+<p class="answer"><strong>Ese es el punto importante:</strong> <code>FileInfo?</code> no es simplemente “FileInfo con null permitido”. En el modelo de tipos de Avro se convierte en una <strong>union</strong> entre <code>null</code> y <code>FileInfo</code>.</p>
+<p>Conceptualmente, esa union puede verse así:</p>
+<pre>[
   "null",
   "com.fernandez.topic.item.FileInfo"
-]
-```
+]</pre>
+</section>
 
-Por tanto, cuando el valor es `null`, no hay duda sobre qué rama de la union se está utilizando:
-
-```json
-{
+<section id="json"><div class="head"><span class="num">03</span><h2>Por qué aparece el nombre completo del tipo</h2></div>
+<p>Cuando el valor es <code>null</code>, la rama seleccionada es evidente:</p>
+<pre>{
   "fileInfo": null
-}
-```
-
-Pero cuando contiene un objeto, Avro puede necesitar indicar explícitamente que la rama seleccionada es `FileInfo`.
-
-Ahí aparece la representación que suele resultar extraña al verla por primera vez:
-
-```json
-{
+}</pre>
+<p>Cuando contiene un record, una representación explícita de la union puede indicar qué rama se ha elegido:</p>
+<pre>{
   "fileInfo": {
     "com.fernandez.topic.item.FileInfo": {
       "creationTimestamp": null,
@@ -172,138 +65,37 @@ Ahí aparece la representación que suele resultar extraña al verla por primera
       "version": null
     }
   }
-}
-```
+}</pre>
+<p>La clave <code>com.fernandez.topic.item.FileInfo</code> no es un nuevo campo de negocio. Es el identificador del tipo seleccionado dentro de la union.</p>
+</section>
 
-El objeto interior sigue siendo exactamente el mismo `FileInfo`.
-
-La parte nueva:
-
-```text
-com.fernandez.topic.item.FileInfo
-```
-
-sirve para identificar la rama de la union que contiene el valor.
-
-## ¿De dónde sale `com.fernandez.topic.item.FileInfo`?
-
-Sale directamente del namespace:
-
-```avro
-@namespace("com.fernandez.topic.item")
-```
-
-y de la definición:
-
-```avro
-record FileInfo {
+<section id="namespace"><div class="head"><span class="num">04</span><h2>De dónde sale com.fernandez.topic.item.FileInfo</h2></div>
+<p>Sale del namespace del protocolo:</p>
+<pre>@namespace("com.fernandez.topic.item")
+protocol ItemProtocol {
     ...
-}
-```
+}</pre>
+<p>y del record:</p>
+<pre>record FileInfo {
+    string fileName;
+    string fileUrl;
+    string? version = null;
+    int? numberRecords = 0;
+    timestamp_ms? creationTimestamp = null;
+}</pre>
+<p>El nombre corto es <code>FileInfo</code>, pero su nombre completo es:</p>
+<pre>com.fernandez.topic.item.FileInfo</pre>
+<p>Es parecido al nombre completo de una clase Java dentro de un package.</p>
+</section>
 
-El nombre corto del record es:
+<section id="comparison"><div class="head"><span class="num">05</span><h2>La comparación que hay que recordar</h2></div>
+<div class="grid"><article class="card"><h3>Sin union</h3><pre>FileInfo fileInfo;</pre><p>Solo existe una posibilidad: <code>FileInfo</code>.</p></article><article class="card"><h3>Con union</h3><pre>FileInfo? fileInfo = null;</pre><p>Existen dos posibilidades: <code>null</code> o <code>FileInfo</code>.</p></article></div>
+<p class="notice"><strong>El record FileInfo no ha cambiado.</strong> Lo que ha cambiado es el tipo de <code>ItemCommand.fileInfo</code>.</p>
+</section>
 
-```text
-FileInfo
-```
-
-y su nombre completo es:
-
-```text
-com.fernandez.topic.item.FileInfo
-```
-
-Es muy parecido al concepto de package en Java.
-
-Por ejemplo:
-
-```java
-package com.fernandez.topic.item;
-
-class FileInfo {
-}
-```
-
-El nombre completo de esa clase sería:
-
-```text
-com.fernandez.topic.item.FileInfo
-```
-
-En Avro, los records son tipos con nombre, y el namespace forma parte de su identidad.
-
-## Comparación directa
-
-La diferencia se entiende mejor viendo ambos casos juntos.
-
-### Sin union
-
-Schema:
-
-```avro
-FileInfo fileInfo;
-```
-
-Modelo mental:
-
-```text
-fileInfo -> FileInfo
-```
-
-Representación:
-
-```json
-{
-  "fileInfo": {
-    "fileName": "",
-    "fileUrl": "",
-    "version": null,
-    "numberRecords": 0,
-    "creationTimestamp": null
-  }
-}
-```
-
-### Con union
-
-Schema:
-
-```avro
-FileInfo? fileInfo = null;
-```
-
-Modelo mental:
-
-```text
-fileInfo -> null | FileInfo
-```
-
-Una representación explícita de la union puede ser:
-
-```json
-{
-  "fileInfo": {
-    "com.fernandez.topic.item.FileInfo": {
-      "fileName": "",
-      "fileUrl": "",
-      "version": null,
-      "numberRecords": 0,
-      "creationTimestamp": null
-    }
-  }
-}
-```
-
-La diferencia no está en el record `FileInfo`. Su contenido no ha cambiado.
-
-Lo que ha cambiado es el **tipo de `ItemCommand.fileInfo`**.
-
-## ¿Por qué ahora puede volver a verse sin el wrapper?
-
-En algunos casos el mensaje puede volver a mostrarse así:
-
-```json
-{
+<section id="wrapper"><div class="head"><span class="num">06</span><h2>¿Y si ahora vuelve a verse sin el wrapper?</h2></div>
+<p>Es posible volver a ver el mensaje así:</p>
+<pre>{
   "fileInfo": {
     "creationTimestamp": null,
     "fileName": "",
@@ -311,68 +103,11 @@ En algunos casos el mensaje puede volver a mostrarse así:
     "numberRecords": 0,
     "version": null
   }
-}
-```
+}</pre>
+<p>aunque el schema siga utilizando:</p>
+<pre>FileInfo? fileInfo = null;</pre>
+<p>Eso no demuestra que la union haya desaparecido. Hay que distinguir el <strong>schema Avro</strong> de la <strong>representación JSON</strong> generada por una librería, una UI de Kafka, un mapper o un serializer. Una herramienta puede ocultar el wrapper aunque internamente el tipo continúe siendo <code>null | FileInfo</code>.</p>
+</section>
 
-aunque el schema siga declarando:
-
-```avro
-FileInfo? fileInfo = null;
-```
-
-Esto no implica necesariamente que la union haya desaparecido.
-
-Hay que distinguir entre dos cosas:
-
-```text
-Schema Avro
-Representación JSON que muestra una herramienta o serializer
-```
-
-El schema puede seguir siendo:
-
-```text
-null | FileInfo
-```
-
-mientras una librería, una UI de Kafka, un mapper o una capa de serialización decide mostrar el objeto sin el wrapper del tipo.
-
-Por eso, cuando cambia la apariencia del JSON, lo primero que hay que comprobar es si realmente cambió el schema o si simplemente cambió la forma de convertir o visualizar el dato Avro.
-
-## La idea que conviene recordar
-
-Todo el caso se reduce a este cambio:
-
-```avro
-FileInfo fileInfo;
-```
-
-frente a:
-
-```avro
-FileInfo? fileInfo = null;
-```
-
-El primero significa:
-
-```text
-Siempre hay un FileInfo.
-```
-
-El segundo significa:
-
-```text
-Puede haber null o FileInfo.
-```
-
-Y eso, en Avro, es una **union**.
-
-Cuando una representación JSON necesita hacer explícita la rama utilizada, puede mostrar:
-
-```text
-com.fernandez.topic.item.FileInfo
-```
-
-El namespace no se ha convertido en un nuevo campo del modelo. Simplemente identifica el tipo `FileInfo` dentro de la union.
-
-Ese es el motivo por el que un cambio tan pequeño en el schema puede producir una diferencia tan visible en el JSON.
+<footer><p><strong>Idea clave:</strong> pasar de <code>FileInfo fileInfo;</code> a <code>FileInfo? fileInfo = null;</code> convierte el campo en una union. El nombre <code>com.fernandez.topic.item.FileInfo</code> puede aparecer en JSON para indicar qué rama de esa union contiene el valor.</p></footer>
+</div>
