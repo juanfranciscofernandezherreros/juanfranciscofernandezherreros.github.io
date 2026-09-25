@@ -7,6 +7,7 @@ layout: default
   {% for tag in page.tags %}<a class="badge badge-tag" href="{{ '/' | relative_url }}?tag={{ tag | slugify }}">#{{ tag }}</a>{% endfor %}
 </div>
 
+<div class="article-body">
 {% if page.series == "Basketball CSV Microservices" %}
 <div class="sheet">
 {{ content }}
@@ -14,6 +15,7 @@ layout: default
 {% else %}
 {{ content }}
 {% endif %}
+</div>
 
 {% assign previous_article = nil %}
 {% assign next_article = nil %}
